@@ -8,7 +8,7 @@ from typing import List, Dict
 
 from app.config.settings import settings
 from app.db.session import get_db_session
-from app.db.models import NerdcastSegment
+from app.db.models import NerdcastSegment, NerdcastEpisode
 from app.services.embedding_service import EmbeddingService
 from app.utils.text_utils import truncate_text
 from app.utils.logger import logger
@@ -131,8 +131,25 @@ class SearchService:
                     # L2 distance to similarity: use inverse
                     similarity_score = 1 / (1 + float(distance))
                     
+                    # Get episode metadata (image_url, title_original) from NerdcastEpisode table
+                    episode_metadata = db.query(NerdcastEpisode).filter(
+                        NerdcastEpisode.filename == segment.episode
+                    ).first()
+                    
+                    # Use metadata if available, otherwise use segment episode name
+                    title = episode_metadata.title_original if episode_metadata else segment.episode
+                    image_url = episode_metadata.image_url if episode_metadata else None
+                    published_date = episode_metadata.published_date if episode_metadata else None
+                    duration_seconds = episode_metadata.duration_seconds if episode_metadata else None
+                    file_size_mb = episode_metadata.file_size_mb if episode_metadata else None
+                    
                     results.append({
-                        "episode": segment.episode,
+                        "episode": segment.episode,  # Keep filename for backwards compatibility
+                        "title": title,
+                        "image_url": image_url,
+                        "published_date": published_date.isoformat() if published_date else None,
+                        "duration_seconds": duration_seconds,
+                        "file_size_mb": file_size_mb,
                         "excerpt": truncate_text(segment.content, settings.EXCERPT_MAX_LENGTH),
                         "score": round(similarity_score, 4)
                     })

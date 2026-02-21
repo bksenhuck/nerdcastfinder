@@ -189,8 +189,7 @@ app.layout = html.Div([
         dbc.Row([
             dbc.Col([
                 html.Div(
-                    id="results-container",
-                    style={"paddingBottom": "100px"}
+                    id="results-container"
                 )
             ], md=8, className="mx-auto")
         ])
@@ -295,12 +294,12 @@ def update_container_style(theme):
     """Update main container style based on theme"""
     if theme == "dark":
         return {
-            "minHeight": "90vh",
+            "minHeight": "100vh",
             "backgroundColor": "#1a1a1a",
             "color": "#f8f9fa"
         }
     return {
-        "minHeight": "90vh",
+        "minHeight": "100vh",
         "backgroundColor": "#ffffff",
         "color": "#212529"
     }
@@ -398,6 +397,23 @@ def update_control_labels_style(theme):
 
 
 @app.callback(
+    Output("results-container", "style"),
+    Input("theme-store", "data")
+)
+def update_results_container_style(theme):
+    """Update results container style based on theme"""
+    if theme == "dark":
+        return {
+            "paddingBottom": "100px",
+            "backgroundColor": "#1a1a1a"
+        }
+    return {
+        "paddingBottom": "100px",
+        "backgroundColor": "#ffffff"
+    }
+
+
+@app.callback(
     [Output("results-container", "children"),
      Output("loading-output", "children")],
     [Input("search-button", "n_clicks"),
@@ -440,6 +456,8 @@ def search_podcasts(
         warning_border = "#ffc107"
         info_bg = "#f8f9fa"
         info_border = "#dee2e6"
+    
+    is_dark_mode = (theme == "dark")
     
     print(f"\n{'='*60}")
     print(f"🔍 FRONTEND SEARCH REQUEST")
@@ -651,6 +669,8 @@ def search_podcasts(
         cards = []
         for i, result in enumerate(filtered_results, 1):
             score = result['score']
+            title = result.get('title', result['episode'])
+            image_url = result.get('image_url')
             
             # Highlight similar words in excerpt
             highlighted_text = highlight_similar_words(
@@ -658,26 +678,113 @@ def search_podcasts(
                 query
             )
             
+            # Image component (with fixed size)
+            if image_url:
+                image_component = html.Img(
+                    src=image_url,
+                    style={
+                        "width": "150px",
+                        "height": "150px",
+                        "borderRadius": "8px",
+                        "objectFit": "cover"
+                    }
+                )
+            else:
+                # Placeholder for episodes without image
+                image_component = html.Div([
+                    html.I(className="bi bi-mic-fill", style={"fontSize": "60px", "color": "#6c757d"}),
+                ], style={
+                    "width": "150px",
+                    "height": "150px",
+                    "borderRadius": "8px",
+                    "backgroundColor": "#2d2d2d" if is_dark_mode else "#e9ecef",
+                    "display": "flex",
+                    "alignItems": "center",
+                    "justifyContent": "center"
+                })
+            
+            # Metadata area (30% right side)
+            published_date = result.get('published_date')
+            duration_seconds = result.get('duration_seconds')
+            file_size_mb = result.get('file_size_mb')
+            
+            # Format metadata
+            metadata_items = []
+            if published_date:
+                # Convert ISO date to readable format
+                from datetime import datetime
+                try:
+                    date_obj = datetime.fromisoformat(published_date.replace('Z', '+00:00'))
+                    formatted_date = date_obj.strftime('%d/%m/%Y')
+                    metadata_items.append(html.Div([
+                        html.I(className="bi bi-calendar3 me-2", style={"color": "#6c757d"}),
+                        html.Span(formatted_date, style={"fontSize": "0.85rem"})
+                    ], className="mb-2"))
+                except:
+                    pass
+            
+            if duration_seconds:
+                # Convert seconds to MM:SS or HH:MM:SS
+                hours = duration_seconds // 3600
+                minutes = (duration_seconds % 3600) // 60
+                seconds = duration_seconds % 60
+                if hours > 0:
+                    duration_str = f"{hours}h {minutes}m"
+                else:
+                    duration_str = f"{minutes}m {seconds}s"
+                metadata_items.append(html.Div([
+                    html.I(className="bi bi-clock me-2", style={"color": "#6c757d"}),
+                    html.Span(duration_str, style={"fontSize": "0.85rem"})
+                ], className="mb-2"))
+            
+            if file_size_mb:
+                metadata_items.append(html.Div([
+                    html.I(className="bi bi-hdd me-2", style={"color": "#6c757d"}),
+                    html.Span(f"{file_size_mb:.1f} MB", style={"fontSize": "0.85rem"})
+                ], className="mb-2"))
+            
+            # Build card with 3-column layout
             card = dbc.Card([
                 dbc.CardBody([
-                    html.Div([
-                        html.H5(
-                            f"🎧 {result['episode']}",
-                            className="card-title d-inline",
-                            style={"color": card_text}
-                        ),
-                        dbc.Badge(
-                            f"{score:.2%}",
-                            color="primary",
-                            className="float-end"
-                        )
-                    ]),
-                    html.P(
-                        highlighted_text,
-                        className="card-text mt-2",
-                        style={"color": card_text}
-                    )
-                ])
+                    dbc.Row([
+                        # Image column (fixed width)
+                        dbc.Col([
+                            image_component
+                        ], width="auto", className="d-flex align-items-start"),
+                        
+                        # Content column (flexible)
+                        dbc.Col([
+                            html.H5(
+                                f"🎧 {title}",
+                                className="card-title mb-2",
+                                style={"color": card_text, "fontSize": "1.1rem"}
+                            ),
+                            html.P(
+                                highlighted_text,
+                                className="card-text mb-0",
+                                style={"color": card_text, "fontSize": "0.95rem"}
+                            )
+                        ], className="flex-grow-1"),
+                        
+                        # Metadata column (smaller, right side)
+                        dbc.Col([
+                            # Similarity badge at top
+                            html.Div([
+                                dbc.Badge(
+                                    f"{score:.2%}",
+                                    color="primary",
+                                    className="mb-3",
+                                    style={"fontSize": "1rem", "padding": "0.5rem 1rem"}
+                                ),
+                            ], className="text-center mb-3"),
+                            # Metadata items below
+                            html.Div(
+                                metadata_items,
+                                style={"color": card_text}
+                            )
+                        ], width=2, className="d-flex flex-column align-items-center border-start", style={"borderColor": info_border + "!important"})
+                    ], className="g-3")
+                ], style={"padding": "1rem"})
             ], className="mb-3", style={
                 "backgroundColor": card_bg,
                 "borderColor": info_border

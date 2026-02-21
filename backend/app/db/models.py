@@ -18,6 +18,8 @@ class NerdcastEpisode(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     filename = Column(String(255), nullable=False, unique=True, index=True)  # Chave: nome tratado
     title_original = Column(String(500), nullable=False)  # Nome original do RSS
+    summary = Column(Text, nullable=True)  # Descrição do episódio
+    image_url = Column(Text, nullable=True)  # URL da imagem/capa do episódio
     published_date = Column(DateTime, nullable=True)  # Data de publicação
     duration_seconds = Column(Integer, nullable=True)  # Duração em segundos
     file_size_mb = Column(Float, nullable=True)  # Tamanho do arquivo em MB

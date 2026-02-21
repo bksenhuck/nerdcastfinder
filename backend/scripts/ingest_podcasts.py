@@ -12,7 +12,6 @@ Usage:
 """
 import sys
 import numpy as np
-import faiss
 from pathlib import Path
 
 # Add backend to path
@@ -25,6 +24,9 @@ from app.services.embedding_service import EmbeddingService
 from app.db.session import init_db, get_db_session
 from app.db.models import NerdcastSegment
 from app.utils.logger import logger
+
+# Import shared rebuild function
+from backend.scripts.rebuild_faiss_index import rebuild_faiss_index
 
 
 class PodcastIngestionPipeline:
@@ -40,10 +42,6 @@ class PodcastIngestionPipeline:
         self.podcasts_dir = podcasts_dir or str(settings.get_podcasts_dir())
         self.transcription_service = TranscriptionService()
         self.embedding_service = EmbeddingService()
-        
-        # Paths from settings
-        self.faiss_dir = settings.get_faiss_dir()
-        self.index_path = settings.get_faiss_index_path()
     
     def run(self):
         """Execute the full ingestion pipeline"""
@@ -100,8 +98,11 @@ class PodcastIngestionPipeline:
         
         # Step 4: Rebuild FAISS index from database
         logger.section("[4/5] Rebuilding FAISS index from database...")
-        self._rebuild_faiss_from_db()
-        logger.success(f"FAISS index built and saved to {self.index_path}")
+        index_path, total_vectors = rebuild_faiss_index()
+        if index_path:
+            logger.success(f"FAISS index built: {total_vectors} vectors")
+        else:
+            logger.warning("FAISS index rebuild failed (no segments)")
         
         logger.header("INGESTION COMPLETE!")
         logger.info(f"Total segments indexed: {total_segments}")
@@ -155,60 +156,6 @@ class PodcastIngestionPipeline:
             db.close()
         
         return stored_count
-    
-    def _rebuild_faiss_from_db(self):
-        """
-        Rebuild FAISS index from all embeddings stored in database
-        """
-        db = get_db_session()
-        
-        try:
-            # Load all segments ordered by embedding_id
-            segments = db.query(NerdcastSegment).order_by(NerdcastSegment.embedding_id).all()
-            
-            if not segments:
-                logger.warning("No segments found in database!")
-                return
-            
-            # Extract embeddings and embedding_ids
-            embeddings_list = []
-            embedding_ids = []
-            
-            for segment in segments:
-                emb = segment.get_embedding()
-                if emb is None:
-                    logger.warning(f"Segment {segment.id} has no embedding, skipping")
-                    continue
-                embeddings_list.append(emb)
-                embedding_ids.append(segment.embedding_id)
-            
-            embeddings = np.array(embeddings_list, dtype='float32')
-            
-            # Build FAISS index
-            dimension = embeddings.shape[1]
-            index = faiss.IndexFlatL2(dimension)
-            index.add(embeddings)
-            
-            # Ensure directory exists
-            self.faiss_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Save FAISS index
-            faiss.write_index(index, str(self.index_path))
-            
-            # Save mapping from FAISS position to embedding_id
-            mapping_path = self.faiss_dir / "embedding_id_mapping.npy"
-            np.save(str(mapping_path), np.array(embedding_ids, dtype='int32'))
-            
-            logger.info(f"  Index type: IndexFlatL2")
-            logger.info(f"  Dimension: {dimension}")
-            logger.info(f"  Total vectors: {index.ntotal}")
-            logger.info(f"  Mapping saved to: {mapping_path.name}")
-            
-        except Exception as e:
-            logger.error(f"Failed to rebuild FAISS index: {e}")
-            raise
-        finally:
-            db.close()
 
 
 def main():

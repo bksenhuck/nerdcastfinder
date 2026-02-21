@@ -18,6 +18,11 @@ log = logging.getLogger("uvicorn.error")
 
 class SearchResult(BaseModel):
     episode: str
+    title: str
+    image_url: str | None = None
+    published_date: str | None = None
+    duration_seconds: int | None = None
+    file_size_mb: float | None = None
     excerpt: str
     score: float
 
@@ -102,6 +107,11 @@ async def search(
         return [
             SearchResult(
                 episode=result["episode"],
+                title=result.get("title", result["episode"]),
+                image_url=result.get("image_url"),
+                published_date=result.get("published_date"),
+                duration_seconds=result.get("duration_seconds"),
+                file_size_mb=result.get("file_size_mb"),
                 excerpt=result["excerpt"],
                 score=result["score"]
             )

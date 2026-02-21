@@ -10,7 +10,7 @@ class Settings:
     """Application settings and configuration"""
     
     # ===== Model Configuration =====
-    WHISPER_MODEL: str = "large-v3"  # Options: tiny, base, small, medium, large-v3
+    WHISPER_MODEL: str = "medium"  # Options: tiny, base, small, medium, large-v3 | medium = 6x faster, ~95% accuracy
     WHISPER_DEVICE: str = "cuda"  # "cuda" for GPU, "cpu" for CPU
     # RTX 5070 now supported with PyTorch 2.10.0 + CUDA 12.8!
     

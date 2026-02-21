@@ -185,12 +185,22 @@ def extract_episode_info(entry: feedparser.FeedParserDict) -> Optional[Dict]:
             except (TypeError, ValueError):
                 pass
         
+        # Extract summary/description
+        summary = entry.get('summary', '').strip()
+        
+        # Extract image URL
+        image_url = None
+        if 'image' in entry and isinstance(entry['image'], dict):
+            image_url = entry['image'].get('href', '')
+        
         return {
             'title': title,
             'audio_url': audio_url,
             'duration_seconds': duration_seconds,
             'published_date': published_date,
-            'enclosure_length': int(enclosure_length) if enclosure_length else None
+            'enclosure_length': int(enclosure_length) if enclosure_length else None,
+            'summary': summary,
+            'image_url': image_url
         }
         
     except Exception as e:
@@ -308,7 +318,9 @@ def download_episode(
         'title_original': title,
         'audio_url': audio_url,
         'duration_seconds': episode.get('duration_seconds'),
-        'published_date': episode.get('published_date')
+        'published_date': episode.get('published_date'),
+        'summary': episode.get('summary'),
+        'image_url': episode.get('image_url')
     }
     
     # Check if already exists
@@ -341,7 +353,9 @@ def download_episode(
             'audio_url': audio_url,
             'file_size_mb': file_size_mb,
             'duration_seconds': episode.get('duration_seconds'),
-            'published_date': episode.get('published_date')
+            'published_date': episode.get('published_date'),
+            'summary': episode.get('summary'),
+            'image_url': episode.get('image_url')
         }
         
         return True, f"✓ Download: {title} ({file_size_mb:.1f}MB)", metadata
@@ -452,6 +466,8 @@ def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
                         
                         if existing:
                             existing.title_original = metadata['title_original']
+                            existing.summary = metadata.get('summary')
+                            existing.image_url = metadata.get('image_url')
                             existing.audio_url = metadata['audio_url']
                             existing.file_size_mb = metadata['file_size_mb']
                             existing.duration_seconds = metadata['duration_seconds']
@@ -462,6 +478,8 @@ def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
                             episode = NerdcastEpisode(
                                 filename=metadata['filename'],
                                 title_original=metadata['title_original'],
+                                summary=metadata.get('summary'),
+                                image_url=metadata.get('image_url'),
                                 audio_url=metadata['audio_url'],
                                 file_size_mb=metadata['file_size_mb'],
                                 duration_seconds=metadata['duration_seconds'],

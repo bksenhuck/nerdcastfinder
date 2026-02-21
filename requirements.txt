@@ -8,22 +8,21 @@ wheel
 # ===== PyTorch (Choose GPU or CPU) =====
 # IMPORTANT: Install PyTorch BEFORE other dependencies
 # 
-# For GPU (NVIDIA CUDA 12.1 - RECOMMENDED for faster transcription):
-#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# For GPU (NVIDIA RTX 50/40/30 series - CUDA 12.8 - RECOMMENDED):
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 #
-# For GPU (NVIDIA CUDA 11.8):
-#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# For GPU (Older NVIDIA GPUs - CUDA 12.1):
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 #
 # For CPU only (slower transcription):
 #   pip install torch torchvision torchaudio
 #
 # After installing PyTorch, install the rest with: pip install -r requirements.txt
 #
-# Note: Whisper requires PyTorch. The lines below ensure correct versions
-# but PyTorch itself must be installed separately using the commands above.
-torch>=2.0.0
-torchvision>=0.15.0
-torchaudio>=2.0.0
+# Note: RTX 5070 requires PyTorch 2.10+ with CUDA 12.8
+torch>=2.10.0
+torchvision>=0.25.0
+torchaudio>=2.10.0
 
 # ===== Backend Dependencies =====
 

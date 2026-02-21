@@ -10,8 +10,9 @@ class Settings:
     """Application settings and configuration"""
     
     # ===== Model Configuration =====
-    WHISPER_MODEL: str = "large-v3"
+    WHISPER_MODEL: str = "tiny"  # Options: tiny, base, small, medium, large-v3
     WHISPER_DEVICE: str = "cuda"  # "cuda" for GPU, "cpu" for CPU
+    # RTX 5070 now supported with PyTorch 2.10.0 + CUDA 12.8!
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
     
     # ===== Transcription Settings =====

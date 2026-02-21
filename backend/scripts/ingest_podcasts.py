@@ -70,37 +70,45 @@ class PodcastIngestionPipeline:
         embeddings = self.embedding_service.generate_embeddings(chunk_texts)
         logger.success(f"Generated {len(embeddings)} embeddings")
         
-        # Step 4: Store in database (idempotent)
+        # Step 4: Store in database (with merge by episode)
         logger.section("[4/5] Storing in database...")
         db = get_db_session()
         stored_count = 0
-        updated_count = 0
+        episodes_updated = set()
         
         try:
+            # Group chunks by episode for efficient processing
+            chunks_by_episode = {}
             for i, chunk in enumerate(chunks):
-                # Check if this chunk already exists
-                existing = db.query(NerdcastSegment).filter(
-                    NerdcastSegment.episode == chunk.episode_name,
-                    NerdcastSegment.content == chunk.chunk_text
-                ).first()
+                if chunk.episode_name not in chunks_by_episode:
+                    chunks_by_episode[chunk.episode_name] = []
+                chunks_by_episode[chunk.episode_name].append((i, chunk))
+            
+            # Process each episode
+            for episode_name, episode_chunks in chunks_by_episode.items():
+                # Delete all existing segments for this episode (merge strategy)
+                deleted_count = db.query(NerdcastSegment).filter(
+                    NerdcastSegment.episode == episode_name
+                ).delete()
                 
-                if existing:
-                    # Update embedding_id if needed
-                    if existing.embedding_id != i:
-                        existing.embedding_id = i
-                        updated_count += 1
-                else:
-                    # Create new segment
+                if deleted_count > 0:
+                    logger.info(f"  {episode_name}: Removed {deleted_count} old segments")
+                    episodes_updated.add(episode_name)
+                
+                # Insert new segments
+                for embedding_id, chunk in episode_chunks:
                     segment = NerdcastSegment(
                         episode=chunk.episode_name,
                         content=chunk.chunk_text,
-                        embedding_id=i
+                        embedding_id=embedding_id
                     )
                     db.add(segment)
                     stored_count += 1
             
             db.commit()
-            logger.success(f"Database updated: {stored_count} new, {updated_count} updated")
+            logger.success(f"Database updated: {stored_count} segments stored")
+            if episodes_updated:
+                logger.info(f"Updated {len(episodes_updated)} episodes")
         
         except Exception as e:
             db.rollback()

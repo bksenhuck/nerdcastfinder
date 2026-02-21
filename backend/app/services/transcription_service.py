@@ -1,15 +1,24 @@
 """
 Transcription service using Whisper
 """
+import os
+import shutil
 from typing import List
 from dataclasses import dataclass
 import whisper
+import torch
 from pathlib import Path
 
 from app.config.settings import settings
 from app.utils.text_utils import split_text_into_chunks
 from app.utils.file_utils import find_audio_files, get_episode_name
 from app.utils.logger import logger
+
+# Ensure FFmpeg is in PATH (for Windows winget installation)
+if os.name == 'nt':  # Windows
+    ffmpeg_path = Path.home() / "AppData/Local/Microsoft/WinGet/Links"
+    if ffmpeg_path.exists() and str(ffmpeg_path) not in os.environ.get('PATH', ''):
+        os.environ['PATH'] = str(ffmpeg_path) + os.pathsep + os.environ.get('PATH', '')
 
 
 @dataclass
@@ -45,10 +54,25 @@ class TranscriptionService:
     def load_model(self):
         """Load Whisper model (lazy loading)"""
         if self.model is None:
+            # Determine device - verify CUDA is actually available
             device = settings.WHISPER_DEVICE
+            if device == "cuda" and not torch.cuda.is_available():
+                logger.warning("CUDA requested but not available. Falling back to CPU")
+                device = "cpu"
+            
             logger.info(f"Loading Whisper model: {self.model_name} on {device}...")
-            self.model = whisper.load_model(self.model_name, device=device)
-            logger.success(f"Model loaded successfully on {device}")
+            try:
+                self.model = whisper.load_model(self.model_name, device=device)
+                logger.success(f"Model loaded successfully on {device}")
+            except Exception as e:
+                if device == "cuda":
+                    logger.warning(f"Failed to load on CUDA: {e}")
+                    logger.info("Retrying with CPU...")
+                    device = "cpu"
+                    self.model = whisper.load_model(self.model_name, device=device)
+                    logger.success(f"Model loaded successfully on {device}")
+                else:
+                    raise
     
     def transcribe_audio(self, audio_path: str) -> str:
         """

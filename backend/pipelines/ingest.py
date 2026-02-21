@@ -10,24 +10,16 @@ This script:
 Usage:
     python -m backend.scripts.ingest_podcasts
 """
-import sys
 import numpy as np
 from pathlib import Path
 
-# Add backend to path
-backend_dir = Path(__file__).parent.parent
-sys.path.insert(0, str(backend_dir))
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from app.config.settings import settings
-from app.services.transcription_service import TranscriptionService
-from app.services.embedding_service import EmbeddingService
-from app.db.session import init_db, get_db_session
-from app.db.models import NerdcastSegment
-from utils.logger import logger
-
-# Import shared rebuild function
-from backend.scripts.rebuild_faiss_index import rebuild_faiss_index
+from backend.app.core.config import settings
+from backend.app.core.logger import logger
+from backend.app.services.transcription_service import TranscriptionService
+from backend.app.services.embedding_service import EmbeddingService
+from backend.app.db.session import init_db, get_db_session
+from backend.app.db.models import NerdcastSegment
+from backend.pipelines.rebuild_index import rebuild_faiss_index
 
 
 class PodcastIngestionPipeline:

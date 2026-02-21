@@ -172,101 +172,117 @@ def home_layout():
                         className="btn-lg",
                         n_clicks=0
                     )
-                ], className="mb-3")
+                ], className="mb-3"),
+                # Advanced options toggle
+                html.Div([
+                    dbc.Button(
+                        [
+                            html.I(className="bi bi-gear me-2"),
+                            "Opções avançadas"
+                        ],
+                        id="toggle-advanced",
+                        color="link",
+                        size="sm",
+                        className="text-decoration-none",
+                        n_clicks=0
+                    )
+                ], className="text-center mb-2")
             ], md=8, className="mx-auto")
         ]),
             
-        # Search controls
+        # Advanced search controls (collapsible)
         dbc.Row([
             dbc.Col([
-                dbc.Row([
-                    # Number of results control
-                    dbc.Col([
-                        dbc.Card(id="top-k-card", children=[
-                            dbc.CardBody([
-                                html.Div([
-                                    html.Label(
-                                        "Número de resultados:",
-                                        id="top-k-label",
-                                        className="fw-bold d-inline"
-                                    ),
-                                    html.I(
-                                        className="bi bi-question-circle ms-2",
-                                        id="tooltip-top-k",
-                                        style={"cursor": "pointer"}
-                                    ),
-                                    dbc.Tooltip(
-                                        "Quanto maior, mais resultados serão "
-                                        "retornados pela busca.",
-                                        target="tooltip-top-k"
+                dbc.Collapse([
+                    dbc.Row([
+                        # Number of results control
+                        dbc.Col([
+                            dbc.Card(id="top-k-card", children=[
+                                dbc.CardBody([
+                                    html.Div([
+                                        html.Label(
+                                            "Número de resultados:",
+                                            id="top-k-label",
+                                            className="fw-bold d-inline"
+                                        ),
+                                        html.I(
+                                            className="bi bi-question-circle ms-2",
+                                            id="tooltip-top-k",
+                                            style={"cursor": "pointer"}
+                                        ),
+                                        dbc.Tooltip(
+                                            "Quanto maior, mais resultados serão "
+                                            "retornados pela busca.",
+                                            target="tooltip-top-k"
+                                        )
+                                    ]),
+                                    dcc.Slider(
+                                        id="top-k-slider",
+                                        min=1,
+                                        max=20,
+                                        step=1,
+                                        value=20,
+                                        marks={
+                                            1: "1",
+                                            5: "5",
+                                            10: "10",
+                                            15: "15",
+                                            20: "20"
+                                        },
+                                        tooltip={
+                                            "placement": "bottom",
+                                            "always_visible": True
+                                        }
                                     )
-                                ]),
-                                dcc.Slider(
-                                    id="top-k-slider",
-                                    min=1,
-                                    max=20,
-                                    step=1,
-                                    value=10,
-                                    marks={
-                                        1: "1",
-                                        5: "5",
-                                        10: "10",
-                                        15: "15",
-                                        20: "20"
-                                    },
-                                    tooltip={
-                                        "placement": "bottom",
-                                        "always_visible": True
-                                    }
-                                )
-                            ])
-                        ], className="mb-4")
-                    ], md=6),
+                                ])
+                            ], className="mb-4")
+                        ], md=6),
                     
-                    # Similarity threshold control
-                    dbc.Col([
-                        dbc.Card(id="similarity-card", children=[
-                            dbc.CardBody([
-                                html.Div([
-                                    html.Label(
-                                        "Similaridade mínima:",
-                                        id="similarity-label",
-                                        className="fw-bold d-inline"
-                                    ),
-                                    html.I(
-                                        className="bi bi-question-circle ms-2",
-                                        id="tooltip-similarity",
-                                        style={"cursor": "pointer"}
-                                    ),
-                                    dbc.Tooltip(
-                                        "Quanto maior, mais preciso e restrito "
-                                        "serão os resultados.",
-                                        target="tooltip-similarity"
+                        # Similarity threshold control
+                        dbc.Col([
+                            dbc.Card(id="similarity-card", children=[
+                                dbc.CardBody([
+                                    html.Div([
+                                        html.Label(
+                                            "Confiabilidade mínima:",
+                                            id="similarity-label",
+                                            className="fw-bold d-inline"
+                                        ),
+                                        html.I(
+                                            className="bi bi-question-circle ms-2",
+                                            id="tooltip-similarity",
+                                            style={"cursor": "pointer"}
+                                        ),
+                                        dbc.Tooltip(
+                                            "Quanto maior, mais preciso e restrito "
+                                            "serão os resultados.",
+                                            target="tooltip-similarity"
+                                        )
+                                    ]),
+                                    dcc.Slider(
+                                        id="similarity-threshold",
+                                        min=0,
+                                        max=1,
+                                        step=0.05,
+                                        value=0.5,
+                                        marks={
+                                            0.0: "0.0",
+                                            0.2: "0.2",
+                                            0.4: "0.4",
+                                            0.6: "0.6",
+                                            0.8: "0.8",
+                                            1.0: "1.0"
+                                        },
+                                        tooltip={
+                                            "placement": "bottom",
+                                            "always_visible": True
+                                        }
                                     )
-                                ]),
-                                dcc.Slider(
-                                    id="similarity-threshold",
-                                    min=0,
-                                    max=1,
-                                    step=0.05,
-                                    value=0.8,
-                                    marks={
-                                        0.0: "0.0",
-                                        0.2: "0.2",
-                                        0.4: "0.4",
-                                        0.6: "0.6",
-                                        0.8: "0.8",
-                                        1.0: "1.0"
-                                    },
-                                    tooltip={
-                                        "placement": "bottom",
-                                        "always_visible": True
-                                    }
-                                )
-                            ])
-                        ], className="mb-4")
-                    ], md=6)
-                ])
+                                ])
+                            ], className="mb-4")
+                        ], md=6)
+                    ])
+                ], id="advanced-options", is_open=False)
             ], md=8, className="mx-auto")
         ]),
             
@@ -378,7 +394,7 @@ def about_layout():
                             html.Li([
                                 html.Strong("Backend (FastAPI):"), 
                                 " API REST construída com FastAPI, responsável por processar ",
-                                "as buscas e retornar resultados ranqueados por similaridade semântica."
+                                "as buscas e retornar resultados ranqueados por confiabilidade semântica."
                             ]),
                             html.Li([
                                 html.Strong("Banco de Dados (SQLite):"), 
@@ -403,7 +419,7 @@ def about_layout():
                             html.Li([
                                 html.Strong("Busca Vetorial (FAISS):"), 
                                 " Facebook AI Similarity Search (IndexFlatL2) permite busca rápida ",
-                                "por similaridade de cosseno em milhares de vetores."
+                                "por confiabilidade de cosseno em milhares de vetores."
                             ]),
                             html.Li([
                                 html.Strong("Frontend (Dash + Bootstrap):"), 
@@ -421,7 +437,7 @@ def about_layout():
                             html.Li("Os vetores são indexados no FAISS para busca eficiente"),
                             html.Li("Quando você faz uma busca, sua query também é vetorizada"),
                             html.Li("O FAISS compara seu vetor com todos os segmentos indexados"),
-                            html.Li("Resultados são ranqueados por similaridade semântica"),
+                            html.Li("Resultados são ranqueados por confiabilidade semântica"),
                             html.Li("A interface exibe os trechos mais relevantes com metadados")
                         ], className="mb-3")
                     ])
@@ -555,6 +571,26 @@ app.clientside_callback(
     Output("theme-store", "data"),
     Input("theme-toggle", "n_clicks"),
     State("theme-store", "data"),
+    prevent_initial_call=True
+)
+
+
+# Advanced options toggle callback - clientside for instant response
+app.clientside_callback(
+    """
+    function(n_clicks, is_open) {
+        // Only proceed if this is a real click
+        if (!n_clicks || n_clicks === 0 || typeof n_clicks !== 'number') {
+            return window.dash_clientside.no_update;
+        }
+        
+        // Toggle the current state
+        return !is_open;
+    }
+    """,
+    Output("advanced-options", "is_open"),
+    Input("toggle-advanced", "n_clicks"),
+    State("advanced-options", "is_open"),
     prevent_initial_call=True
 )
 
@@ -736,7 +772,7 @@ def search_podcasts(
                                     style={"color": card_text}
                                 ),
                                 html.Li(
-                                    "Reduza a similaridade",
+                                    "Reduza a confiabilidade",
                                     className="small",
                                     style={"color": card_text}
                                 )
@@ -777,7 +813,7 @@ def search_podcasts(
                                 }
                             ),
                             html.H5(
-                                "Resultados com baixa similaridade",
+                                "Resultados com baixa confiabilidade",
                                 className="text-center mb-2",
                                 style={"color": card_text}
                             ),
@@ -798,7 +834,7 @@ def search_podcasts(
                             ),
                             html.Ul([
                                 html.Li(
-                                    f"Similaridade: {similarity_threshold:.0%}",
+                                    f"Confiabilidade: {similarity_threshold:.0%}",
                                     className="small",
                                     style={"color": card_text}
                                 ),
@@ -930,7 +966,10 @@ def search_podcasts(
                             # Similarity badge at top
                             html.Div([
                                 dbc.Badge(
-                                    f"{score:.2%}",
+                                    [
+                                        html.Div("Confiabilidade", className="small", style={"fontSize": "0.7rem"}),
+                                        html.Div(f"{score:.2%}", style={"fontSize": "1.1rem", "fontWeight": "bold"})
+                                    ],
                                     color="primary",
                                     className="mb-3",
                                     style={"fontSize": "1rem", "padding": "0.5rem 1rem"}
@@ -961,7 +1000,7 @@ def search_podcasts(
                 style={"color": card_text}
             ),
             html.P(
-                f"Similaridade mínima: {similarity_threshold:.2f}",
+                f"Confiabilidade mínima: {similarity_threshold:.2f}",
                 className="mb-2",
                 style={"color": card_text}
             )

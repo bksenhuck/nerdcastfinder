@@ -7,13 +7,10 @@ from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
-from app.config.settings import settings
-from app.db.session import get_db_session
-from app.db.models import NerdcastEpisode
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-from utils.logger import logger
+from backend.app.core.config import settings
+from backend.app.core.logger import logger
+from backend.app.db.session import get_db_session
+from backend.app.db.models import NerdcastEpisode
 
 router = APIRouter()
 

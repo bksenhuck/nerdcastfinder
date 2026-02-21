@@ -6,11 +6,8 @@ from typing import List
 from sentence_transformers import SentenceTransformer
 import torch
 
-from app.config.settings import settings
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-from utils.logger import logger
+from backend.app.core.config import settings
+from backend.app.core.logger import logger
 
 
 class EmbeddingService:

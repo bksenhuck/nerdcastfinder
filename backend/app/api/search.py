@@ -1,18 +1,14 @@
 """
 Search API endpoint
 """
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-
 import logging
 from fastapi import APIRouter, Query, HTTPException
 from typing import List
 from pydantic import BaseModel
 
-from app.config.settings import settings
-from app.services.search_service import SearchService
-from utils.logger import logger
+from backend.app.core.config import settings
+from backend.app.core.logger import logger
+from backend.app.services.search_service import SearchService
 
 router = APIRouter()
 

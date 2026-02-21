@@ -8,22 +8,16 @@ stored in the SQLite database. Use this after:
 - Adding new segments without rebuilding index
 
 Usage:
-    python -m backend.scripts.rebuild_faiss_index
+    python -m backend.pipelines.rebuild_index
 """
-import sys
 import numpy as np
 import faiss
 from pathlib import Path
 
-# Add backend to path
-backend_dir = Path(__file__).parent.parent
-sys.path.insert(0, str(backend_dir))
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from app.config.settings import settings
-from app.db.session import get_db_session
-from app.db.models import NerdcastSegment
-from utils.logger import logger
+from backend.app.core.config import settings
+from backend.app.core.logger import logger
+from backend.app.db.session import get_db_session
+from backend.app.db.models import NerdcastSegment
 
 
 def rebuild_faiss_index():

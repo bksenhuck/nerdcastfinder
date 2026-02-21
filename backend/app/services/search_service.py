@@ -22,7 +22,8 @@ class SearchService:
     
     def __init__(self):
         """Initialize search service"""
-        self.embedding_service = EmbeddingService()
+        # Use CPU for search (frontend use) to ensure stable performance
+        self.embedding_service = EmbeddingService(force_cpu=True)
         self.index = None
         self.embedding_id_mapping = None  # Maps FAISS position to embedding_id
         self.index_path = str(settings.get_faiss_index_path())

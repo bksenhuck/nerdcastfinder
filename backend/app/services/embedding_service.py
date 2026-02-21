@@ -4,6 +4,7 @@ Embedding service using sentence-transformers
 import numpy as np
 from typing import List
 from sentence_transformers import SentenceTransformer
+import torch
 
 from app.config.settings import settings
 from app.utils.logger import logger
@@ -12,29 +13,59 @@ from app.utils.logger import logger
 class EmbeddingService:
     """Handles text embedding generation"""
     
-    def __init__(self, model_name: str = None):
+    def __init__(self, model_name: str = None, force_cpu: bool = False):
         """
         Initialize embedding service
         
         Args:
             model_name: sentence-transformers model to use
                 (default: from settings)
+            force_cpu: Force CPU usage (useful for frontend)
         """
         self.model_name = model_name or settings.EMBEDDING_MODEL
         self.model = None
         self.embedding_dim = None
+        self.force_cpu = force_cpu
+        self.device = None
     
     def load_model(self):
         """Load sentence-transformers model (lazy loading)"""
         if self.model is None:
             logger.info(f"Loading embedding model: {self.model_name}...")
-            # Force CPU to avoid RTX 5070 compatibility issues
-            self.model = SentenceTransformer(self.model_name, device='cpu')
+            
+            # Determine device
+            if self.force_cpu:
+                device = 'cpu'
+                logger.info("✓ Using CPU (forced)")
+            else:
+                # Try GPU first, fallback to CPU
+                if torch.cuda.is_available():
+                    try:
+                        device = 'cuda'
+                        logger.info(
+                            f"✓ GPU available: "
+                            f"{torch.cuda.get_device_name(0)}"
+                        )
+                        logger.info("✓ Using GPU for embeddings")
+                    except Exception as e:
+                        device = 'cpu'
+                        logger.warning(
+                            f"GPU initialization failed: {e}. "
+                            f"Falling back to CPU"
+                        )
+                        logger.info("✓ Using CPU (GPU fallback)")
+                else:
+                    device = 'cpu'
+                    logger.info("✓ GPU not available, using CPU")
+            
+            self.device = device
+            self.model = SentenceTransformer(self.model_name, device=device)
             self.embedding_dim = (
                 self.model.get_sentence_embedding_dimension()
             )
             logger.success(
-                f"Model loaded. Embedding dimension: {self.embedding_dim}"
+                f"Model loaded on {device.upper()}. "
+                f"Embedding dimension: {self.embedding_dim}"
             )
     
     def generate_embedding(self, text: str) -> np.ndarray:

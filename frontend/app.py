@@ -20,7 +20,7 @@ from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastEpisode
 
 # Configuration
-BACKEND_URL = "http://localhost:8000/api/search"
+BACKEND_URL = "http://localhost:8001/api/search"
 
 
 def get_podcast_stats():
@@ -45,7 +45,7 @@ def get_available_filters():
     """Get available feeds and programs for filtering"""
     try:
         response = requests.get(
-            "http://localhost:8000/api/filters",
+            "http://localhost:8001/api/filters",
             timeout=5
         )
         if response.status_code == 200:
@@ -629,6 +629,54 @@ app.layout = html.Div([
     
     # Store for theme state (dark/light) - persists to localStorage
     dcc.Store(id="theme-store", storage_type="local"),
+    
+    # Custom CSS for dark theme dropdowns
+    html.Style("""
+        /* Dark theme dropdown styles */
+        [data-theme="dark"] .VirtualizedSelectFocusedOption {
+            background-color: #1a1a1a !important;
+            color: #f8f9fa !important;
+        }
+        
+        [data-theme="dark"] .VirtualizedSelectOption {
+            background-color: #1a1a1a !important;
+            color: #f8f9fa !important;
+        }
+        
+        [data-theme="dark"] .Select-menu {
+            background-color: #1a1a1a !important;
+            border-color: #444444 !important;
+        }
+        
+        [data-theme="dark"] .Select-menu-outer {
+            background-color: #1a1a1a !important;
+            border-color: #444444 !important;
+        }
+        
+        [data-theme="dark"] .Select-input input {
+            background-color: #2d2d2d !important;
+            color: #f8f9fa !important;
+        }
+        
+        [data-theme="dark"] .Select-control {
+            background-color: #2d2d2d !important;
+            border-color: #444444 !important;
+            color: #f8f9fa !important;
+        }
+        
+        [data-theme="dark"] .Select-value {
+            color: #f8f9fa !important;
+        }
+        
+        /* Dash dropdown styles */
+        [data-theme="dark"] .dash-dropdown {
+            background-color: #2d2d2d !important;
+        }
+        
+        [data-theme="dark"] .Select-menu {
+            background-color: #1a1a1a !important;
+        }
+    """),
     
     # Page wrapper
     html.Div(id="page-wrapper", children=[

@@ -6,7 +6,7 @@ cursor = conn.cursor()
 # Filename que apareceu no resultado da API
 episode_name = "empreendedor_67_-_debetti_tradição_e_inovação"
 
-cursor.execute("SELECT filename, title_original, published_date, duration_seconds, file_size_mb FROM nerdcast_episodes WHERE filename = ?", (episode_name,))
+cursor.execute("SELECT filename, title_original, published_date, duration_seconds, file_size_mb FROM podcast_episodes WHERE filename = ?", (episode_name,))
 result = cursor.fetchone()
 
 if result:
@@ -20,7 +20,7 @@ else:
     print(f"NOT FOUND: {episode_name}")
     
     # Try to find similar names
-    cursor.execute("SELECT filename FROM nerdcast_episodes WHERE filename LIKE 'empreendedor_67%'")
+    cursor.execute("SELECT filename FROM podcast_episodes WHERE filename LIKE 'empreendedor_67%'")
     similar = cursor.fetchall()
     if similar:
         print(f"\nSimilar filenames found:")

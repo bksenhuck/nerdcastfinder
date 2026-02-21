@@ -32,15 +32,17 @@ from backend.pipelines.rebuild_index import rebuild_faiss_index
 class PodcastIngestionPipeline:
     """Orchestrates the entire ingestion pipeline"""
   
-    def __init__(self, podcast_name: str = None):
+    def __init__(self, podcast_name: str = None, resume_from: str = None):
         """
         Initialize the ingestion pipeline
         
         Args:
             podcast_name: Name of the podcast to ingest (e.g., 'nerdcast'). 
                          If None, will try to ingest from base podcasts dir.
+            resume_from: Episode filename to resume from (e.g., 'lá_do_bunker_150')
         """
         self.podcast_name = podcast_name
+        self.resume_from = resume_from
         
         if podcast_name:
             # Check if podcast exists in config
@@ -82,11 +84,38 @@ class PodcastIngestionPipeline:
         
         logger.success(f"Found {len(audio_files)} audio files to process")
         
+        # Handle resume_from
+        start_idx = 0
+        if self.resume_from:
+            logger.info(
+                f"⏭️  Resuming from: {self.resume_from}"
+            )
+            for idx, audio_file in enumerate(audio_files):
+                file_base = audio_file.stem
+                if self.resume_from in file_base:
+                    start_idx = idx
+                    logger.success(
+                        f"Found episode at index {idx + 1}"
+                    )
+                    break
+            else:
+                logger.warning(
+                    f"Episode '{self.resume_from}' not found"
+                )
+        
         # Step 3: Process each podcast incrementally
         logger.section(f"[3/5] Processing podcasts (incremental)...")
         total_segments = 0
+        audio_files_to_process = audio_files[start_idx:]
+        skipped = len(audio_files) - len(audio_files_to_process)
         
-        for i, audio_file in enumerate(audio_files, 1):
+        if skipped > 0:
+            logger.info(f"⏭️  Skipped {skipped} episodes")
+        
+        for i, audio_file in enumerate(
+            audio_files_to_process,
+            start=start_idx + 1
+        ):
             try:
                 logger.info(f"[{i}/{len(audio_files)}] Processing {audio_file.name}")
                 
@@ -177,17 +206,25 @@ class PodcastIngestionPipeline:
         return stored_count
 
 
-def main(podcast_name: str = None):
+def main(
+    podcast_name: str = None,
+    resume_from: str = None
+):
     """Main entry point
     
     Args:
-        podcast_name: Name of the podcast to ingest (e.g., 'nerdcast'). If None, uses base dir.
+        podcast_name: Name of the podcast to ingest (e.g., 'nerdcast').
+                      If None, uses base dir.
+        resume_from: Episode filename to resume from.
         
     Returns:
         True if successful, False otherwise
     """
     try:
-        pipeline = PodcastIngestionPipeline(podcast_name)
+        pipeline = PodcastIngestionPipeline(
+            podcast_name,
+            resume_from=resume_from
+        )
         return pipeline.run()
     except ValueError as e:
         logger.error(str(e))
@@ -270,6 +307,7 @@ def list_podcasts():
     
     logger.info("Uso:")
     logger.info("  python -m backend.pipelines.ingest --podcast <ID>")
+    logger.info("  python -m backend.pipelines.ingest --podcast <ID> --resume-from <EPISODE>")
     logger.info("  python -m backend.pipelines.ingest --all")
 
 
@@ -300,6 +338,14 @@ if __name__ == "__main__":
         help='Ingest all downloaded podcasts'
     )
     
+    # Optional resume argument
+    parser.add_argument(
+        '--resume-from',
+        type=str,
+        metavar='EPISODE',
+        help='Resume ingestion from specific episode (e.g., --resume-from lá_do_bunker_150)'
+    )
+    
     args = parser.parse_args()
     
     # Handle --list
@@ -314,7 +360,10 @@ if __name__ == "__main__":
     
     # Handle --podcast
     if args.podcast:
-        success = main(podcast_name=args.podcast)
+        success = main(
+            podcast_name=args.podcast,
+            resume_from=args.resume_from
+        )
         sys.exit(0 if success else 1)
     
     # No arguments provided - show help

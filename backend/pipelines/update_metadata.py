@@ -51,7 +51,7 @@ def update_metadata():
     # Get episodes without summary or image_url
     cursor.execute("""
         SELECT id, title_original 
-        FROM nerdcast_episodes 
+        FROM podcast_episodes 
         WHERE summary IS NULL OR image_url IS NULL
     """)
     
@@ -65,7 +65,7 @@ def update_metadata():
         if title in feed_data:
             data = feed_data[title]
             cursor.execute("""
-                UPDATE nerdcast_episodes 
+                UPDATE podcast_episodes 
                 SET summary = ?, image_url = ?
                 WHERE id = ?
             """, (data['summary'], data['image_url'], ep_id))

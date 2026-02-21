@@ -8,7 +8,7 @@ conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 # Get first 3 episodes
-cursor.execute("SELECT filename, title_original, published_date, duration_seconds, file_size_mb, image_url FROM nerdcast_episodes LIMIT 3")
+cursor.execute("SELECT filename, title_original, published_date, duration_seconds, file_size_mb, image_url FROM podcast_episodes LIMIT 3")
 episodes = cursor.fetchall()
 
 for ep in episodes:

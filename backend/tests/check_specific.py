@@ -3,7 +3,7 @@ import sqlite3
 conn = sqlite3.connect('backend/data/nerdcasts.db')
 cursor = conn.cursor()
 
-cursor.execute("SELECT filename, title_original, published_date, duration_seconds, file_size_mb FROM nerdcast_episodes WHERE filename LIKE 'empreendedor_61%'")
+cursor.execute("SELECT filename, title_original, published_date, duration_seconds, file_size_mb FROM podcast_episodes WHERE filename LIKE 'empreendedor_61%'")
 result = cursor.fetchone()
 
 if result:

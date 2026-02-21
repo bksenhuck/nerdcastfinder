@@ -1,0 +1,61 @@
+# Nerdcast Finder - Complete Requirements
+# Install all dependencies with: pip install -r requirements.txt
+
+# ===== Build Dependencies =====
+setuptools>=65.0.0
+wheel
+
+# ===== PyTorch (Choose GPU or CPU) =====
+# IMPORTANT: Install PyTorch BEFORE other dependencies
+# 
+# For GPU (NVIDIA CUDA 12.1 - RECOMMENDED for faster transcription):
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+#
+# For GPU (NVIDIA CUDA 11.8):
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+#
+# For CPU only (slower transcription):
+#   pip install torch torchvision torchaudio
+#
+# After installing PyTorch, install the rest with: pip install -r requirements.txt
+#
+# Note: Whisper requires PyTorch. The lines below ensure correct versions
+# but PyTorch itself must be installed separately using the commands above.
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# ===== Backend Dependencies =====
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# Database
+sqlalchemy==2.0.25
+
+# AI/ML
+git+https://github.com/openai/whisper.git
+sentence-transformers==2.3.1
+
+# FAISS (Choose GPU or CPU based on your PyTorch installation)
+faiss-cpu==1.7.4
+# For GPU: pip install faiss-gpu==1.7.4 (requires CUDA)
+
+# Audio processing
+ffmpeg-python==0.2.0
+
+# Utilities
+numpy==1.24.3
+pydantic==2.5.3
+python-multipart==0.0.6
+feedparser==6.0.10
+
+# ===== Frontend Dependencies =====
+
+# Dash framework
+dash==2.14.2
+dash-bootstrap-components==1.5.0
+
+# HTTP requests
+requests==2.31.0

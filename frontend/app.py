@@ -26,7 +26,7 @@ app.layout = html.Div([
     # Store for theme state (dark/light)
     dcc.Store(id="theme-store", data="light", storage_type="local"),
     
-    # Main content container
+    # Main content container with margin-bottom for fixed footer
     dbc.Container(id="main-container", children=[
         # Header
         dbc.Row([
@@ -64,7 +64,7 @@ app.layout = html.Div([
                 dbc.InputGroup([
                     dbc.Input(
                         id="search-input",
-                        placeholder="Enter your search query...",
+                        placeholder="Busque por um tema, palavra-chave ou assunto...",
                         type="text",
                         className="form-control-lg"
                     ),
@@ -187,10 +187,13 @@ app.layout = html.Div([
         # Results
         dbc.Row([
             dbc.Col([
-                html.Div(id="results-container")
+                html.Div(
+                    id="results-container",
+                    style={"paddingBottom": "100px"}
+                )
             ], md=8, className="mx-auto")
         ])
-    ], fluid=True, className="py-4", style={"minHeight": "90vh"}),
+    ], fluid=True, className="py-4", style={"minHeight": "100vh"}),
     
     # Footer - fixado na parte inferior
     html.Footer(id="footer", children=[

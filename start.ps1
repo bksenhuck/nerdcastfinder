@@ -9,9 +9,19 @@ Write-Host ""
 # Get the script directory
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# Virtual environment
+$venvPath = Join-Path $scriptDir "venv\Scripts\Activate.ps1"
+
 # Backend and Frontend directories
 $backendDir = Join-Path $scriptDir "backend"
 $frontendDir = Join-Path $scriptDir "frontend"
+
+# Check if venv exists
+if (-not (Test-Path $venvPath)) {
+    Write-Host "Virtual environment not found: $venvPath" -ForegroundColor Red
+    Write-Host "Please run: python -m venv venv" -ForegroundColor Yellow
+    exit 1
+}
 
 # Check if directories exist
 if (-not (Test-Path $backendDir)) {
@@ -30,17 +40,17 @@ Write-Host "   Docs: http://localhost:8000/docs" -ForegroundColor Gray
 Write-Host ""
 
 # Start Backend in a new terminal
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$backendDir'; Write-Host '=== NERDCAST FINDER - BACKEND ===' -ForegroundColor Green; python -m app.main"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$scriptDir'; & '$venvPath'; cd '$backendDir'; Write-Host '=== NERDCAST FINDER - BACKEND ===' -ForegroundColor Green; python -m app.main"
 
 # Wait a bit before starting frontend
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 3
 
 Write-Host "Starting Frontend..." -ForegroundColor Cyan
 Write-Host "   Location: http://127.0.0.1:8050" -ForegroundColor Gray
 Write-Host ""
 
 # Start Frontend in a new terminal
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$frontendDir'; Write-Host '=== NERDCAST FINDER - FRONTEND ===' -ForegroundColor Green; python app.py"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$scriptDir'; & '$venvPath'; cd '$frontendDir'; Write-Host '=== NERDCAST FINDER - FRONTEND ===' -ForegroundColor Green; python app.py"
 
 Write-Host ""
 Write-Host "=" -NoNewline; Write-Host ("=" * 59)

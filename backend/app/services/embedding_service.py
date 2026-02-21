@@ -28,7 +28,8 @@ class EmbeddingService:
         """Load sentence-transformers model (lazy loading)"""
         if self.model is None:
             logger.info(f"Loading embedding model: {self.model_name}...")
-            self.model = SentenceTransformer(self.model_name)
+            # Force CPU to avoid RTX 5070 compatibility issues
+            self.model = SentenceTransformer(self.model_name, device='cpu')
             self.embedding_dim = (
                 self.model.get_sentence_embedding_dimension()
             )

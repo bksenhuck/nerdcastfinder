@@ -54,103 +54,161 @@ class PodcastIngestionPipeline:
         init_db()
         logger.success("Database initialized")
         
-        # Step 2: Transcribe podcasts
-        logger.section(f"[2/5] Transcribing podcasts from {self.podcasts_dir}...")
-        chunks = self.transcription_service.process_directory(self.podcasts_dir)
+        # Step 2: Find audio files
+        logger.section(f"[2/5] Scanning {self.podcasts_dir}...")
+        from app.utils.file_utils import find_audio_files
+        audio_files = find_audio_files(
+            Path(self.podcasts_dir),
+            settings.SUPPORTED_AUDIO_EXTENSIONS
+        )
         
-        if not chunks:
-            logger.error("No audio files found or processed. Exiting.")
+        if not audio_files:
+            logger.error("No audio files found. Exiting.")
             return
         
-        logger.success(f"Transcribed {len(chunks)} total chunks")
+        logger.success(f"Found {len(audio_files)} audio files to process")
         
-        # Step 3: Generate embeddings
-        logger.section("[3/5] Generating embeddings...")
-        chunk_texts = [chunk.chunk_text for chunk in chunks]
-        embeddings = self.embedding_service.generate_embeddings(chunk_texts)
-        logger.success(f"Generated {len(embeddings)} embeddings")
+        # Step 3: Process each podcast incrementally
+        logger.section(f"[3/5] Processing podcasts (incremental)...")
+        total_segments = 0
         
-        # Step 4: Store in database (with merge by episode)
-        logger.section("[4/5] Storing in database...")
+        for i, audio_file in enumerate(audio_files, 1):
+            try:
+                logger.info(f"[{i}/{len(audio_files)}] Processing {audio_file.name}")
+                
+                # Transcribe this file
+                chunks = self.transcription_service.process_audio_file(str(audio_file))
+                logger.success(f"  Transcribed: {len(chunks)} chunks")
+                
+                # Generate embeddings for this file
+                chunk_texts = [chunk.chunk_text for chunk in chunks]
+                embeddings = self.embedding_service.generate_embeddings(chunk_texts)
+                logger.success(f"  Generated: {len(embeddings)} embeddings")
+                
+                # Store in database with embeddings
+                episode_name = chunks[0].episode_name
+                segment_count = self._store_episode_to_db(episode_name, chunks, embeddings)
+                total_segments += segment_count
+                logger.success(f"  Stored: {segment_count} segments in DB")
+                
+            except Exception as e:
+                logger.error(f"Failed to process {audio_file.name}: {e}")
+                logger.warning("Continuing with next file...")
+                continue
+        
+        logger.success(f"Processed {len(audio_files)} files, {total_segments} total segments")
+        
+        # Step 4: Rebuild FAISS index from database
+        logger.section("[4/5] Rebuilding FAISS index from database...")
+        self._rebuild_faiss_from_db()
+        logger.success(f"FAISS index built and saved to {self.index_path}")
+        
+        logger.header("INGESTION COMPLETE!")
+        logger.info(f"Total segments indexed: {total_segments}")
+    
+    def _store_episode_to_db(self, episode_name: str, chunks: list, embeddings: np.ndarray) -> int:
+        """
+        Store episode chunks and embeddings in database (with merge strategy)
+        
+        Args:
+            episode_name: Name of the episode
+            chunks: List of TranscriptChunk objects
+            embeddings: numpy array of embeddings
+            
+        Returns:
+            Number of segments stored
+        """
         db = get_db_session()
         stored_count = 0
-        episodes_updated = set()
         
         try:
-            # Group chunks by episode for efficient processing
-            chunks_by_episode = {}
-            for i, chunk in enumerate(chunks):
-                if chunk.episode_name not in chunks_by_episode:
-                    chunks_by_episode[chunk.episode_name] = []
-                chunks_by_episode[chunk.episode_name].append((i, chunk))
+            # Delete all existing segments for this episode (merge strategy)
+            deleted_count = db.query(NerdcastSegment).filter(
+                NerdcastSegment.episode == episode_name
+            ).delete()
             
-            # Process each episode
-            for episode_name, episode_chunks in chunks_by_episode.items():
-                # Delete all existing segments for this episode (merge strategy)
-                deleted_count = db.query(NerdcastSegment).filter(
-                    NerdcastSegment.episode == episode_name
-                ).delete()
+            if deleted_count > 0:
+                logger.info(f"  Removed {deleted_count} old segments for '{episode_name}'")
+            
+            # Insert new segments with embeddings
+            for idx, chunk in enumerate(chunks):
+                # Generate global embedding_id (unique across all episodes)
+                # Use timestamp-based or hash-based ID to avoid collisions
+                embedding_id = hash(f"{episode_name}_{idx}") % (2**31)
                 
-                if deleted_count > 0:
-                    logger.info(f"  {episode_name}: Removed {deleted_count} old segments")
-                    episodes_updated.add(episode_name)
-                
-                # Insert new segments
-                for embedding_id, chunk in episode_chunks:
-                    segment = NerdcastSegment(
-                        episode=chunk.episode_name,
-                        content=chunk.chunk_text,
-                        embedding_id=embedding_id
-                    )
-                    db.add(segment)
-                    stored_count += 1
+                segment = NerdcastSegment(
+                    episode=episode_name,
+                    content=chunk.chunk_text,
+                    embedding_id=embedding_id
+                )
+                segment.set_embedding(embeddings[idx])
+                db.add(segment)
+                stored_count += 1
             
             db.commit()
-            logger.success(f"Database updated: {stored_count} segments stored")
-            if episodes_updated:
-                logger.info(f"Updated {len(episodes_updated)} episodes")
-        
+            
         except Exception as e:
             db.rollback()
-            logger.error(f"Database error: {e}")
+            logger.error(f"Database error for '{episode_name}': {e}")
             raise
         finally:
             db.close()
         
-        # Step 5: Build FAISS index
-        logger.section("[5/5] Building FAISS index...")
-        self._build_faiss_index(embeddings)
-        logger.success(f"FAISS index built and saved to {self.index_path}")
-        
-        logger.header("INGESTION COMPLETE!")
-        logger.info(f"Total segments indexed: {len(chunks)}")
+        return stored_count
     
-    def _build_faiss_index(self, embeddings: np.ndarray):
+    def _rebuild_faiss_from_db(self):
         """
-        Build and save FAISS index
-        
-        Args:
-            embeddings: Array of embeddings (n_vectors, dimension)
+        Rebuild FAISS index from all embeddings stored in database
         """
-        dimension = embeddings.shape[1]
+        db = get_db_session()
         
-        # Create FAISS index (L2 distance)
-        index = faiss.IndexFlatL2(dimension)
-        
-        # Add embeddings
-        embeddings_float32 = embeddings.astype('float32')
-        index.add(embeddings_float32)
-        
-        # Save to disk
-        faiss.write_index(index, str(self.index_path))
-        
-        print(f"  Index type: IndexFlatL2")
-        print(f"  Dimension: {dimension}")
-        print(f"  Total vectors: {index.ntotal}")
-
-        logger.info(f"  Index type: IndexFlatL2")
-        logger.info(f"  Dimension: {dimension}")
-        logger.info(f"  Total vectors: {index.ntotal}")
+        try:
+            # Load all segments ordered by embedding_id
+            segments = db.query(NerdcastSegment).order_by(NerdcastSegment.embedding_id).all()
+            
+            if not segments:
+                logger.warning("No segments found in database!")
+                return
+            
+            # Extract embeddings and embedding_ids
+            embeddings_list = []
+            embedding_ids = []
+            
+            for segment in segments:
+                emb = segment.get_embedding()
+                if emb is None:
+                    logger.warning(f"Segment {segment.id} has no embedding, skipping")
+                    continue
+                embeddings_list.append(emb)
+                embedding_ids.append(segment.embedding_id)
+            
+            embeddings = np.array(embeddings_list, dtype='float32')
+            
+            # Build FAISS index
+            dimension = embeddings.shape[1]
+            index = faiss.IndexFlatL2(dimension)
+            index.add(embeddings)
+            
+            # Ensure directory exists
+            self.faiss_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Save FAISS index
+            faiss.write_index(index, str(self.index_path))
+            
+            # Save mapping from FAISS position to embedding_id
+            mapping_path = self.faiss_dir / "embedding_id_mapping.npy"
+            np.save(str(mapping_path), np.array(embedding_ids, dtype='int32'))
+            
+            logger.info(f"  Index type: IndexFlatL2")
+            logger.info(f"  Dimension: {dimension}")
+            logger.info(f"  Total vectors: {index.ntotal}")
+            logger.info(f"  Mapping saved to: {mapping_path.name}")
+            
+        except Exception as e:
+            logger.error(f"Failed to rebuild FAISS index: {e}")
+            raise
+        finally:
+            db.close()
 
 
 def main():

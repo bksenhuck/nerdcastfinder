@@ -89,7 +89,7 @@ class Settings:
     # ===== API Settings =====
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
-    API_RELOAD: bool = True
+    API_RELOAD: bool = False  # Disabled to force clean restart
     API_TITLE: str = "Nerdcast Finder API"
     API_DESCRIPTION: str = "Semantic search API for podcast episodes"
     API_VERSION: str = "1.0.0"

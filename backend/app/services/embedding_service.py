@@ -7,7 +7,10 @@ from sentence_transformers import SentenceTransformer
 import torch
 
 from app.config.settings import settings
-from app.utils.logger import logger
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+from utils.logger import logger
 
 
 class EmbeddingService:

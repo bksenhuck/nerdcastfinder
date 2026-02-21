@@ -7,9 +7,10 @@ from pathlib import Path
 # Add backend to path
 backend_dir = Path(__file__).parent / "backend"
 sys.path.insert(0, str(backend_dir))
+sys.path.insert(0, str(Path(__file__).parent))
 
 from app.config.settings import settings
-from app.utils.logger import logger
+from utils.logger import logger
 import sqlite3
 
 def migrate():

@@ -18,11 +18,12 @@ from pathlib import Path
 # Add backend to path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from app.config.settings import settings
 from app.db.session import get_db_session
 from app.db.models import NerdcastSegment
-from app.utils.logger import logger
+from utils.logger import logger
 
 
 def rebuild_faiss_index():

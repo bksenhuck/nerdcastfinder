@@ -1,0 +1,107 @@
+/* Theme system using data attribute for maximum stability */
+
+/* Dark theme backgrounds */
+html[data-theme="dark"],
+html[data-theme="dark"] body {
+    background-color: #1a1a1a !important;
+    color: #f8f9fa !important;
+}
+
+/* Light theme backgrounds */
+html[data-theme="light"],
+html[data-theme="light"] body {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+
+/* Main containers - Dark */
+html[data-theme="dark"] #react-entry-point,
+html[data-theme="dark"] #page-wrapper,
+html[data-theme="dark"] #page-content,
+html[data-theme="dark"] .container-fluid {
+    background-color: #1a1a1a !important;
+    color: #f8f9fa !important;
+}
+
+/* Main containers - Light */
+html[data-theme="light"] #react-entry-point,
+html[data-theme="light"] #page-wrapper,
+html[data-theme="light"] #page-content,
+html[data-theme="light"] .container-fluid {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+
+/* Footer - Dark */
+html[data-theme="dark"] #footer,
+html[data-theme="dark"] footer {
+    background-color: #2d2d2d !important;
+    color: #f8f9fa !important;
+}
+
+/* Footer - Light */
+html[data-theme="light"] #footer,
+html[data-theme="light"] footer {
+    background-color: white !important;
+    color: #6c757d !important;
+}
+
+html[data-theme="dark"] #footer-hr,
+html[data-theme="dark"] hr {
+    border-color: #444444 !important;
+}
+
+/* Cards - Dark */
+html[data-theme="dark"] .card {
+    background-color: #2d2d2d !important;
+    border-color: #444444 !important;
+    color: #f8f9fa !important;
+}
+
+html[data-theme="dark"] .card-body {
+    background-color: #2d2d2d !important;
+    color: #f8f9fa !important;
+}
+
+html[data-theme="dark"] .card-header {
+    background-color: #3a3a3a !important;
+    border-bottom: 1px solid #444444 !important;
+    color: #f8f9fa !important;
+}
+
+/* Cards - Light */
+html[data-theme="light"] .card {
+    background-color: #ffffff !important;
+    border-color: #dee2e6 !important;
+    color: #212529 !important;
+}
+
+html[data-theme="light"] .card-body {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+
+html[data-theme="light"] .card-header {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    color: #212529 !important;
+}
+
+/* Links */
+html[data-theme="dark"] a {
+    color: #8ab4f8 !important;
+}
+
+html[data-theme="light"] a {
+    color: #0d6efd !important;
+}
+
+/* Disable all transitions */
+*,
+*::before,
+*::after {
+    transition: none !important;
+    animation-duration: 0s !important;
+}
+
+

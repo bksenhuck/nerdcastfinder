@@ -4,10 +4,11 @@ from pathlib import Path
 
 backend_dir = Path(__file__).parent / "backend"
 sys.path.insert(0, str(backend_dir))
+sys.path.insert(0, str(Path(__file__).parent))
 
 from app.db.session import get_db_session
 from app.db.models import NerdcastSegment
-from app.utils.logger import logger
+from utils.logger import logger
 
 db = get_db_session()
 

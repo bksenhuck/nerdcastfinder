@@ -10,7 +10,10 @@ from datetime import datetime
 from app.config.settings import settings
 from app.db.session import get_db_session
 from app.db.models import NerdcastEpisode
-from app.utils.logger import logger
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+from utils.logger import logger
 
 router = APIRouter()
 

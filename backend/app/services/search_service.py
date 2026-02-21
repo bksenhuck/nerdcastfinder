@@ -11,7 +11,10 @@ from app.db.session import get_db_session
 from app.db.models import NerdcastSegment, NerdcastEpisode
 from app.services.embedding_service import EmbeddingService
 from app.utils.text_utils import truncate_text
-from app.utils.logger import logger
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+from utils.logger import logger
 
 # Setup logging for uvicorn
 log = logging.getLogger("uvicorn.error")

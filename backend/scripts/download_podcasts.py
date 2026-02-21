@@ -33,9 +33,10 @@ from urllib3.util.retry import Retry
 _db_lock = threading.Lock()# Add backend to path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from app.config.settings import settings
-from app.utils.logger import logger
+from utils.logger import logger
 
 
 def create_session() -> requests.Session:

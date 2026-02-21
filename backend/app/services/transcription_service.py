@@ -1,24 +1,27 @@
 """
 Transcription service using Whisper
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+
 import os
-import shutil
 from typing import List
 from dataclasses import dataclass
 import whisper
 import torch
-from pathlib import Path
 
 from app.config.settings import settings
 from app.utils.text_utils import split_text_into_chunks
 from app.utils.file_utils import find_audio_files, get_episode_name
-from app.utils.logger import logger
+from utils.logger import logger
 
 # Ensure FFmpeg is in PATH (for Windows winget installation)
-if os.name == 'nt':  # Windows
-    ffmpeg_path = Path.home() / "AppData/Local/Microsoft/WinGet/Links"
-    if ffmpeg_path.exists() and str(ffmpeg_path) not in os.environ.get('PATH', ''):
-        os.environ['PATH'] = str(ffmpeg_path) + os.pathsep + os.environ.get('PATH', '')
+ffmpeg_path = Path.home() / "AppData/Local/Microsoft/WinGet/Links"
+if (os.name == 'nt' and ffmpeg_path.exists() and
+        str(ffmpeg_path) not in os.environ.get('PATH', '')):
+    os.environ['PATH'] = (str(ffmpeg_path) + os.pathsep +
+                         os.environ.get('PATH', ''))
 
 
 @dataclass

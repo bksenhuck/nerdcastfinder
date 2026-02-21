@@ -95,7 +95,10 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
-    from app.utils.logger import logger
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from utils.logger import logger
     
     logger.header("NERDCAST FINDER - BACKEND API")
     logger.info(f"Starting server on http://{settings.API_HOST}:{settings.API_PORT}")

@@ -6,6 +6,7 @@ A minimal search interface for finding podcast episodes using semantic search.
 import re
 import requests
 from dash import Dash, html, dcc, Input, Output, State
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
 # Configuration
@@ -197,16 +198,16 @@ app.layout = html.Div([
     
     # Footer - fixado na parte inferior
     html.Footer(id="footer", children=[
-        html.Hr(style={"margin": "0"}),
+        html.Hr(id="footer-hr", style={"margin": "0"}),
         html.P(
             "Powered by FastAPI, FAISS, and sentence-transformers",
-            className="text-center text-muted small py-3 mb-0"
+            id="footer-text",
+            className="text-center small py-3 mb-0"
         )
     ], style={
         "position": "fixed",
         "bottom": "0",
         "width": "100%",
-        "backgroundColor": "white",
         "zIndex": "1000"
     })
 ])
@@ -341,6 +342,23 @@ def update_subtitle_class(theme):
     if theme == "dark":
         return "text-center mb-4"
     return "text-center text-muted mb-4"
+
+
+@app.callback(
+    [Output("footer-hr", "style"),
+     Output("footer-text", "style")],
+    Input("theme-store", "data")
+)
+def update_footer_elements_style(theme):
+    """Update footer HR and text style based on theme"""
+    if theme == "dark":
+        hr_style = {"margin": "0", "borderColor": "#444444"}
+        text_style = {"color": "#f8f9fa"}
+    else:
+        hr_style = {"margin": "0"}
+        text_style = {"color": "#6c757d"}
+    
+    return hr_style, text_style
 
 
 @app.callback(

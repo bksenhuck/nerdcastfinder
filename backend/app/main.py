@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config.settings import settings
-from app.api import search
+from app.api import search, episodes
 
 # Setup logging
 log = logging.getLogger("uvicorn.error")
@@ -56,6 +56,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(search.router, prefix="/api", tags=["search"])
+app.include_router(episodes.router, prefix="/api", tags=["episodes"])
 
 
 @app.on_event("startup")

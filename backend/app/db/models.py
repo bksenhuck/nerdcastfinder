@@ -2,10 +2,36 @@
 Database models for Nerdcast Finder
 """
 import numpy as np
-from sqlalchemy import Column, Integer, String, Text, LargeBinary
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, Text, LargeBinary, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
+
+
+class NerdcastEpisode(Base):
+    """
+    Stores metadata about podcast episodes
+    """
+    __tablename__ = "nerdcast_episodes"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    filename = Column(String(255), nullable=False, unique=True, index=True)  # Chave: nome tratado
+    title_original = Column(String(500), nullable=False)  # Nome original do RSS
+    published_date = Column(DateTime, nullable=True)  # Data de publicação
+    duration_seconds = Column(Integer, nullable=True)  # Duração em segundos
+    file_size_mb = Column(Float, nullable=True)  # Tamanho do arquivo em MB
+    audio_url = Column(Text, nullable=True)  # URL do áudio original
+    status = Column(String(50), default="downloaded")  # downloaded, transcribed, indexed
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return (
+            f"<NerdcastEpisode(filename='{self.filename}', "
+            f"title='{self.title_original[:50]}', "
+            f"size={self.file_size_mb}MB)>"
+        )
 
 
 class NerdcastSegment(Base):

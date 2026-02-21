@@ -6,6 +6,7 @@ This script:
 2. Downloads all episode audio files
 3. Saves them to backend/data/podcasts/
 4. Skips already downloaded files (idempotent)
+5. Saves episode metadata (title, duration, date, size) to database
 
 Usage:
     python -m scripts.download_podcasts
@@ -18,6 +19,7 @@ import sys
 import re
 import time
 from pathlib import Path
+from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -104,16 +106,14 @@ def fetch_feed(feed_url: str) -> Optional[feedparser.FeedParserDict]:
     Returns:
         Parsed feed or None if error
     """
-    logger.info(f"Fetching RSS feed: {feed_url}")
-    
     try:
         feed = feedparser.parse(feed_url)
         
         if feed.bozo:
-            logger.warning("Feed has parsing issues, but continuing...")
+            logger.warning("⚠️  Feed com problemas de parsing")
         
         if not feed.entries:
-            logger.error("No episodes found in feed")
+            logger.error("❌ Nenhum episódio encontrado no feed")
             return None
         
         logger.success(f"Found {len(feed.entries)} episodes in feed")
@@ -124,7 +124,7 @@ def fetch_feed(feed_url: str) -> Optional[feedparser.FeedParserDict]:
         return None
 
 
-def extract_episode_info(entry: feedparser.FeedParserDict) -> Optional[Dict[str, str]]:
+def extract_episode_info(entry: feedparser.FeedParserDict) -> Optional[Dict]:
     """
     Extract episode information from feed entry
     
@@ -132,7 +132,7 @@ def extract_episode_info(entry: feedparser.FeedParserDict) -> Optional[Dict[str,
         entry: Feed entry
         
     Returns:
-        Dict with title and audio_url, or None if invalid
+        Dict with title, audio_url, duration, published_date, enclosure_length
     """
     try:
         title = entry.get('title', '').strip()
@@ -146,21 +146,49 @@ def extract_episode_info(entry: feedparser.FeedParserDict) -> Optional[Dict[str,
         
         # Find audio enclosure
         audio_url = None
+        enclosure_length = None  # Size in bytes
         for enclosure in enclosures:
             if 'audio' in enclosure.get('type', ''):
                 audio_url = enclosure.get('href', '')
+                enclosure_length = enclosure.get('length', '')
                 break
         
         if not audio_url:
             # Fallback: use first enclosure if no audio type found
             audio_url = enclosures[0].get('href', '')
+            enclosure_length = enclosures[0].get('length', '')
         
         if not audio_url:
             return None
         
+        # Extract duration (often in itunes:duration tag)
+        duration_seconds = None
+        if 'itunes_duration' in entry:
+            duration_str = entry.get('itunes_duration', '')
+            try:
+                # Handle format: "HH:MM:SS" or just seconds
+                if ':' in str(duration_str):
+                    parts = str(duration_str).split(':')
+                    duration_seconds = int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+                else:
+                    duration_seconds = int(duration_str)
+            except (ValueError, IndexError):
+                pass
+        
+        # Extract published date
+        published_date = None
+        if 'published_parsed' in entry and entry['published_parsed']:
+            try:
+                published_date = datetime(*entry['published_parsed'][:6])
+            except (TypeError, ValueError):
+                pass
+        
         return {
             'title': title,
-            'audio_url': audio_url
+            'audio_url': audio_url,
+            'duration_seconds': duration_seconds,
+            'published_date': published_date,
+            'enclosure_length': int(enclosure_length) if enclosure_length else None
         }
         
     except Exception as e:
@@ -168,16 +196,81 @@ def extract_episode_info(entry: feedparser.FeedParserDict) -> Optional[Dict[str,
         return None
 
 
+def save_episode_metadata(
+    filename: str,
+    title_original: str,
+    audio_url: str,
+    file_size_mb: float,
+    duration_seconds: int = None,
+    published_date = None
+) -> Tuple[bool, str]:
+    """
+    Save or update episode metadata to database
+    
+    Args:
+        filename: Normalized filename (unique key)
+        title_original: Original title from RSS
+        audio_url: URL of the audio file
+        file_size_mb: Size of downloaded file in MB
+        duration_seconds: Duration in seconds (optional)
+        published_date: Publication date (optional)
+        
+    Returns:
+        Tuple of (success: bool, message: str)
+    """
+    try:
+        from app.db.session import get_db_session
+        from app.db.models import NerdcastEpisode
+        
+        db = get_db_session()
+        
+        # Check if episode already exists
+        existing = db.query(NerdcastEpisode).filter(
+            NerdcastEpisode.filename == filename
+        ).first()
+        
+        if existing:
+            # Update ALL episode metadata
+            existing.title_original = title_original
+            existing.audio_url = audio_url
+            existing.file_size_mb = file_size_mb
+            existing.duration_seconds = duration_seconds
+            existing.published_date = published_date
+            existing.status = "downloaded"
+            db.commit()
+            db.close()
+            return True, "atualizado"
+        else:
+            # Create new episode record
+            episode = NerdcastEpisode(
+                filename=filename,
+                title_original=title_original,
+                audio_url=audio_url,
+                file_size_mb=file_size_mb,
+                duration_seconds=duration_seconds,
+                published_date=published_date,
+                status="downloaded"
+            )
+            db.add(episode)
+            db.commit()
+            db.close()
+            return True, "novo"
+        
+    except Exception as e:
+        logger.warning(f"⚠️  Erro ao salvar metadados: {type(e).__name__}")
+        return False, "erro"
+
+
 def download_episode(
-    episode: Dict[str, str],
+    episode: Dict,
     output_dir: Path,
     session: requests.Session
 ) -> Tuple[bool, str]:
     """
-    Download a single episode
+    Download a single episode and save metadata to database
     
     Args:
-        episode: Dict with title and audio_url
+        episode: Dict with title, audio_url, duration_seconds, published_date, enclosure_length
         output_dir: Directory to save the file
         session: Requests session
         
@@ -193,9 +286,7 @@ def download_episode(
     
     # Check if already exists
     if output_path.exists():
-        return True, f"Skipping (already exists): {title}"
-    
-    logger.info(f"Downloading: {title}")
+        return True, f"✓ Pulado (já existe): {title}"
     
     try:
         # Stream download
@@ -206,27 +297,25 @@ def download_episode(
         )
         response.raise_for_status()
         
-        # Get file size if available
-        total_size = int(response.headers.get('content-length', 0))
-        
-        # Download with progress
-        downloaded = 0
-        last_progress_shown = 0
+        # Download file
         with open(output_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=settings.DOWNLOAD_CHUNK_SIZE):
                 if chunk:
                     f.write(chunk)
-                    downloaded += len(chunk)
-                    
-                    # Show progress every 10%
-                    if total_size > 0:
-                        progress = (downloaded / total_size) * 100
-                        if progress - last_progress_shown >= 10:
-                            logger.info(f"  Progress: {progress:.1f}%")
-                            last_progress_shown = progress
         
         file_size_mb = output_path.stat().st_size / (1024 * 1024)
-        return True, f"Downloaded: {title} ({file_size_mb:.1f} MB)"
+        
+        # Save metadata to database
+        save_episode_metadata(
+            filename=filename,
+            title_original=title,
+            audio_url=audio_url,
+            file_size_mb=file_size_mb,
+            duration_seconds=episode.get('duration_seconds'),
+            published_date=episode.get('published_date')
+        )
+        
+        return True, f"✓ Download: {title} ({file_size_mb:.1f}MB) → DB salvando metadados"
         
     except requests.exceptions.Timeout:
         return False, f"Timeout downloading: {title}"
@@ -295,20 +384,18 @@ def main(limit: Optional[int] = None, max_workers: Optional[int] = None):
     """
     if max_workers is None:
         max_workers = settings.DOWNLOAD_MAX_CONCURRENT
-    logger.header("NERDCAST PODCAST DOWNLOADER")
+    logger.header("📥 NERDCAST PODCAST DOWNLOADER")
     
     # Ensure output directory exists
     output_dir = settings.get_podcasts_dir()
-    logger.info(f"Output directory: {output_dir}")
     
     # Fetch RSS feed
     feed = fetch_feed(settings.RSS_FEED_URL)
     if not feed:
-        logger.error("Failed to fetch feed. Exiting.")
+        logger.error("❌ Falha ao buscar feed")
         return 1
     
     # Extract episode information
-    logger.section("Extracting episode information...")
     episodes = []
     for entry in feed.entries:
         episode_info = extract_episode_info(entry)
@@ -316,19 +403,17 @@ def main(limit: Optional[int] = None, max_workers: Optional[int] = None):
             episodes.append(episode_info)
     
     if not episodes:
-        logger.error("No valid episodes found")
+        logger.error("❌ Nenhum episódio válido encontrado")
         return 1
     
-    logger.success(f"Found {len(episodes)} valid episodes")
+    logger.success(f"✓ {len(episodes)} episódios encontrados")
     
     # Apply limit if specified
     if limit and limit > 0:
         episodes = episodes[:limit]
-        logger.info(f"Limiting to first {limit} episodes")
     
     # Download episodes
-    logger.section(f"Downloading {len(episodes)} episodes...")
-    logger.info(f"Using {max_workers} concurrent downloads")
+    logger.section(f"Baixando {len(episodes)} episódios (workers: {max_workers})...")
     
     start_time = time.time()
     success_count, failed_count = download_episodes_parallel(
@@ -339,12 +424,11 @@ def main(limit: Optional[int] = None, max_workers: Optional[int] = None):
     elapsed_time = time.time() - start_time
     
     # Summary
-    logger.header("DOWNLOAD SUMMARY")
-    logger.info(f"Total episodes: {len(episodes)}")
-    logger.success(f"Successfully downloaded: {success_count}")
+    logger.section("📊 RESUMO")
+    logger.success(f"✓ Baixados: {success_count}/{len(episodes)}")
     if failed_count > 0:
-        logger.error(f"Failed: {failed_count}")
-    logger.info(f"Time elapsed: {elapsed_time:.1f} seconds")
+        logger.error(f"❌ Falhados: {failed_count}")
+    logger.info(f"⏱️  Tempo: {elapsed_time:.1f}s")
     
     return 0 if failed_count == 0 else 1
 

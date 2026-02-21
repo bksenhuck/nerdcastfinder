@@ -3,11 +3,19 @@ Nerdcast Finder - Frontend Dash Application
 
 A minimal search interface for finding podcast episodes using semantic search.
 """
+import sys
+from pathlib import Path
+
+# Add parent directory to path to import utils
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import re
 import requests
 from dash import Dash, html, dcc, Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
+
+from utils.logger import logger
 
 # Configuration
 BACKEND_URL = "http://localhost:8000/api/search"
@@ -119,10 +127,14 @@ def home_layout():
         dbc.Row([
             dbc.Col([
                 html.Div([
-                    html.H1(
-                        "🎙️ Nerdcast Finder",
-                        className="text-center my-4 d-inline-block",
-                        style={"width": "100%"}
+                    dcc.Link(
+                        html.H1(
+                            "🎙️ Nerdcast Finder",
+                            className="text-center my-4 d-inline-block",
+                            style={"width": "100%"}
+                        ),
+                        href="/",
+                        style={"textDecoration": "none", "color": "inherit"}
                     ),
                     html.Div([
                         dcc.Link(
@@ -282,7 +294,7 @@ def home_layout():
                             ], className="mb-4")
                         ], md=6)
                     ])
-                ], id="advanced-options", is_open=False)
+                ], id="advanced-options", is_open=False, className="mb-3")
             ], md=8, className="mx-auto")
         ]),
             
@@ -315,10 +327,14 @@ def about_layout():
         dbc.Row([
             dbc.Col([
                 html.Div([
-                    html.H1(
-                        "Sobre o Nerdcast Finder",
-                        className="text-center my-4 d-inline-block",
-                        style={"width": "100%"}
+                    dcc.Link(
+                        html.H1(
+                            "Sobre o Nerdcast Finder",
+                            className="text-center my-4 d-inline-block",
+                            style={"width": "100%"}
+                        ),
+                        href="/",
+                        style={"textDecoration": "none", "color": "inherit"}
                     ),
                     html.Div([
                         dcc.Link(
@@ -654,16 +670,14 @@ def search_podcasts(
     
     is_dark_mode = (theme == "dark")
     
-    print(f"\n{'='*60}")
-    print(f"🔍 FRONTEND SEARCH REQUEST")
-    print(f"{'='*60}")
-    print(f"Query: '{query}'")
-    print(f"Top K: {top_k}")
-    print(f"Similarity Threshold: {similarity_threshold}")
-    print(f"n_clicks: {n_clicks}, n_submit: {n_submit}")
+    logger.header("🔍 FRONTEND SEARCH REQUEST")
+    logger.info(f"Query: '{query}'")
+    logger.info(f"Top K: {top_k}")
+    logger.info(f"Similarity Threshold: {similarity_threshold}")
+    logger.info(f"n_clicks: {n_clicks}, n_submit: {n_submit}")
     
     if not query or query.strip() == "":
-        print("❌ Empty query, returning warning")
+        logger.warning("Empty query, returning warning")
         return html.Div([
             html.Div(
                 [
@@ -699,7 +713,7 @@ def search_podcasts(
     try:
         # Call backend API
         url = f"{BACKEND_URL}?q={query.strip()}&top_k={top_k}"
-        print(f"📡 Making request to: {url}")
+        logger.info(f"Making request to: {url}")
         
         response = requests.get(
             BACKEND_URL,
@@ -707,11 +721,11 @@ def search_podcasts(
             timeout=30
         )
         
-        print(f"📥 Response status: {response.status_code}")
-        print(f"📥 Response headers: {dict(response.headers)}")
+        logger.info(f"Response status: {response.status_code}")
+        logger.info(f"Response headers: {dict(response.headers)}")
         
         if response.status_code != 200:
-            print(f"❌ Error response: {response.text}")
+            logger.error(f"Error response: {response.text}")
             # Mensagem amigável para o usuário, detalhes nos logs
             return html.Div(
                 dbc.Alert(
@@ -722,11 +736,11 @@ def search_podcasts(
             ), ""
         
         results = response.json()
-        print(f"✓ Received {len(results)} results from backend")
+        logger.success(f"Received {len(results)} results from backend")
         
         # Check if backend returned any results
         if not results:
-            print("ℹ️  No results found from backend")
+            logger.info("No results found from backend")
             return html.Div([
                 html.Div(
                     dbc.Row([
@@ -792,13 +806,13 @@ def search_podcasts(
         filtered_results = [
             r for r in results if r['score'] >= similarity_threshold
         ]
-        print(
-            f"✓ {len(filtered_results)} results after "
+        logger.success(
+            f"{len(filtered_results)} results after "
             f"applying threshold {similarity_threshold}"
         )
         
         if not filtered_results:
-            print("ℹ️  No results found above similarity threshold")
+            logger.info("No results found above similarity threshold")
             return html.Div([
                 html.Div(
                     dbc.Row([
@@ -989,8 +1003,7 @@ def search_podcasts(
             })
             cards.append(card)
         
-        print(f"✓ Returning {len(cards)} result cards")
-        print(f"{'='*60}\n")
+        logger.success(f"Returning {len(cards)} result cards")
         
         # Build header with result count and threshold info
         header = html.Div([
@@ -1012,8 +1025,7 @@ def search_podcasts(
         ]), ""
     
     except requests.exceptions.ConnectionError as e:
-        print(f"❌ Connection Error: {e}")
-        print(f"{'='*60}\n")
+        logger.error(f"Connection Error: {e}")
         return html.Div(
             dbc.Alert(
                 "Cannot connect to backend. Make sure the API server is running on port 8000.",
@@ -1023,18 +1035,16 @@ def search_podcasts(
         ), ""
     
     except requests.exceptions.Timeout as e:
-        print(f"❌ Timeout Error: {e}")
-        print(f"{'='*60}\n")
+        logger.error(f"Timeout Error: {e}")
         return html.Div(
             dbc.Alert("Request timed out. Please try again.", color="warning"),
             className="mt-4"
         ), ""
     
     except Exception as e:
-        print(f"❌ Unexpected Error: {type(e).__name__}: {e}")
         import traceback
-        print(f"Traceback:\n{traceback.format_exc()}")
-        print(f"{'='*60}\n")
+        logger.error(f"Unexpected Error: {type(e).__name__}: {e}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
         # Mensagem amigável para o usuário, detalhes completos nos logs
         return html.Div(
             dbc.Alert(
@@ -1046,11 +1056,8 @@ def search_podcasts(
 
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("Starting Nerdcast Finder Frontend")
-    print("=" * 60)
-    print("URL: http://127.0.0.1:8050")
-    print("Make sure the backend API is running on http://localhost:8000")
-    print("=" * 60)
+    logger.header("Starting Nerdcast Finder Frontend")
+    logger.info("URL: http://127.0.0.1:8050")
+    logger.info("Make sure the backend API is running on http://localhost:8000")
     
     app.run(debug=True, host="127.0.0.1", port=8050)

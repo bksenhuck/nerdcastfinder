@@ -45,7 +45,7 @@ def get_available_filters():
     """Get available feeds and programs for filtering"""
     try:
         response = requests.get(
-            "http://localhost:8001/api/filters",
+            "http://localhost:8005/api/filters",
             timeout=5
         )
         if response.status_code == 200:
@@ -190,21 +190,33 @@ def home_layout():
             dbc.Col([
                 html.Div([
                     dcc.Link(
-                        html.H1(
-                            "🎙️ Podcast Finder",
-                            className="text-center my-4 d-inline-block",
-                            style={"width": "100%"}
-                        ),
+                        html.Div([
+                            html.Img(
+                                src="/assets/images/podcast_finder_logo.png",
+                                className="d-inline-block me-3",
+                                style={"height": "50px", "width": "auto", "verticalAlign": "middle"}
+                            ),
+                            html.H1(
+                                "Podcast Finder",
+                                className="d-inline-block",
+                                style={"verticalAlign": "middle", "marginBottom": "0"}
+                            )
+                        ], style={"textAlign": "center", "marginTop": "20px", "marginBottom": "20px"}),
                         href="/",
                         style={"textDecoration": "none", "color": "inherit"}
                     ),
                     html.Div([
+                        html.Img(
+                            src="/assets/images/podcast_finder_logo.png",
+                            className="d-inline-block me-2",
+                            style={"height": "30px", "width": "auto"}
+                        ),
                         dcc.Link(
                             "Sobre",
                             href="/about",
                             id="about-link",
                             className="me-3",
-                            style={"fontSize": "16px", "textDecoration": "none"}
+                            style={"fontSize": "16px", "textDecoration": "none", "verticalAlign": "middle"}
                         ),
                         dbc.Button(
                             html.I(className="bi bi-moon-fill"),
@@ -487,21 +499,33 @@ def about_layout():
             dbc.Col([
                 html.Div([
                     dcc.Link(
-                        html.H1(
-                            "Sobre o Podcast Finder",
-                            className="text-center my-4 d-inline-block",
-                            style={"width": "100%"}
-                        ),
+                        html.Div([
+                            html.Img(
+                                src="/assets/images/podcast_finder_logo.png",
+                                className="d-inline-block me-3",
+                                style={"height": "50px", "width": "auto", "verticalAlign": "middle"}
+                            ),
+                            html.H1(
+                                "Sobre o Podcast Finder",
+                                className="d-inline-block",
+                                style={"verticalAlign": "middle", "marginBottom": "0"}
+                            )
+                        ], style={"textAlign": "center", "marginTop": "20px", "marginBottom": "20px"}),
                         href="/",
                         style={"textDecoration": "none", "color": "inherit"}
                     ),
                     html.Div([
+                        html.Img(
+                            src="/assets/images/podcast_finder_logo.png",
+                            className="d-inline-block me-2",
+                            style={"height": "30px", "width": "auto"}
+                        ),
                         dcc.Link(
                             "← Voltar",
                             href="/",
                             id="back-link",
                             className="me-3",
-                            style={"fontSize": "16px", "textDecoration": "none"}
+                            style={"fontSize": "16px", "textDecoration": "none", "verticalAlign": "middle"}
                         ),
                         dbc.Button(
                             html.I(className="bi bi-moon-fill"),
@@ -629,54 +653,6 @@ app.layout = html.Div([
     
     # Store for theme state (dark/light) - persists to localStorage
     dcc.Store(id="theme-store", storage_type="local"),
-    
-    # Custom CSS for dark theme dropdowns
-    html.Style("""
-        /* Dark theme dropdown styles */
-        [data-theme="dark"] .VirtualizedSelectFocusedOption {
-            background-color: #1a1a1a !important;
-            color: #f8f9fa !important;
-        }
-        
-        [data-theme="dark"] .VirtualizedSelectOption {
-            background-color: #1a1a1a !important;
-            color: #f8f9fa !important;
-        }
-        
-        [data-theme="dark"] .Select-menu {
-            background-color: #1a1a1a !important;
-            border-color: #444444 !important;
-        }
-        
-        [data-theme="dark"] .Select-menu-outer {
-            background-color: #1a1a1a !important;
-            border-color: #444444 !important;
-        }
-        
-        [data-theme="dark"] .Select-input input {
-            background-color: #2d2d2d !important;
-            color: #f8f9fa !important;
-        }
-        
-        [data-theme="dark"] .Select-control {
-            background-color: #2d2d2d !important;
-            border-color: #444444 !important;
-            color: #f8f9fa !important;
-        }
-        
-        [data-theme="dark"] .Select-value {
-            color: #f8f9fa !important;
-        }
-        
-        /* Dash dropdown styles */
-        [data-theme="dark"] .dash-dropdown {
-            background-color: #2d2d2d !important;
-        }
-        
-        [data-theme="dark"] .Select-menu {
-            background-color: #1a1a1a !important;
-        }
-    """),
     
     # Page wrapper
     html.Div(id="page-wrapper", children=[
@@ -1248,7 +1224,7 @@ def search_podcasts(
         logger.error(f"Connection Error: {e}")
         return html.Div(
             dbc.Alert(
-                "Cannot connect to backend. Make sure the API server is running on port 8000.",
+                "Cannot connect to backend. Make sure the API server is running on port 8005.",
                 color="danger"
             ),
             className="mt-4"
@@ -1278,6 +1254,6 @@ def search_podcasts(
 if __name__ == "__main__":
     logger.header("Starting Podcast Finder Frontend")
     logger.info("URL: http://127.0.0.1:8050")
-    logger.info("Make sure the backend API is running on http://localhost:8000")
+    logger.info("Make sure the backend API is running on http://localhost:8005")
     
     app.run(debug=True, host="127.0.0.1", port=8050)

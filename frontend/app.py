@@ -51,7 +51,7 @@ app.layout = html.Div([
                     )
                 ], style={"position": "relative"}),
                 html.P(
-                    "Search podcast episodes using semantic search",
+                    "Busque episódios do Nerdcast por tema, assunto ou palavra-chave",
                     id="subtitle",
                     className="text-center text-muted mb-4"
                 )

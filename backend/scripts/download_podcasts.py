@@ -414,7 +414,7 @@ def download_episodes_parallel(
 
 def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
     """
-    Save all episode metadata to database in batch (sequentially)
+    Save all episode metadata to database in batches with progress feedback
     
     Args:
         metadata_list: List of metadata dicts from downloads
@@ -422,8 +422,10 @@ def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
     Returns:
         Tuple of (success_count, error_count)
     """
+    BATCH_SIZE = 100  # Commit a cada 100 episódios
     success_count = 0
     error_count = 0
+    total = len(metadata_list)
     
     try:
         from app.db.session import get_db_session, init_db
@@ -434,39 +436,59 @@ def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
         
         db = get_db_session()
         
-        for metadata in metadata_list:
+        # Process in batches
+        for batch_start in range(0, total, BATCH_SIZE):
+            batch_end = min(batch_start + BATCH_SIZE, total)
+            batch = metadata_list[batch_start:batch_end]
+            batch_success = 0
+            batch_errors = 0
+            
             try:
-                existing = db.query(NerdcastEpisode).filter(
-                    NerdcastEpisode.filename == metadata['filename']
-                ).first()
+                for metadata in batch:
+                    try:
+                        existing = db.query(NerdcastEpisode).filter(
+                            NerdcastEpisode.filename == metadata['filename']
+                        ).first()
+                        
+                        if existing:
+                            existing.title_original = metadata['title_original']
+                            existing.audio_url = metadata['audio_url']
+                            existing.file_size_mb = metadata['file_size_mb']
+                            existing.duration_seconds = metadata['duration_seconds']
+                            existing.published_date = metadata['published_date']
+                            existing.status = "downloaded"
+                            existing.downloaded_at = datetime.utcnow()  # Atualiza timestamp do download
+                        else:
+                            episode = NerdcastEpisode(
+                                filename=metadata['filename'],
+                                title_original=metadata['title_original'],
+                                audio_url=metadata['audio_url'],
+                                file_size_mb=metadata['file_size_mb'],
+                                duration_seconds=metadata['duration_seconds'],
+                                published_date=metadata['published_date'],
+                                status="downloaded",
+                                downloaded_at=datetime.utcnow()  # Timestamp do download
+                            )
+                            db.add(episode)
+                        
+                        batch_success += 1
+                    except Exception as e:
+                        logger.warning(f"⚠️  {metadata['filename']}: {type(e).__name__}: {str(e)}")
+                        batch_errors += 1
                 
-                if existing:
-                    existing.title_original = metadata['title_original']
-                    existing.audio_url = metadata['audio_url']
-                    existing.file_size_mb = metadata['file_size_mb']
-                    existing.duration_seconds = metadata['duration_seconds']
-                    existing.published_date = metadata['published_date']
-                    existing.status = "downloaded"
-                    existing.downloaded_at = datetime.utcnow()  # Atualiza timestamp do download
-                else:
-                    episode = NerdcastEpisode(
-                        filename=metadata['filename'],
-                        title_original=metadata['title_original'],
-                        audio_url=metadata['audio_url'],
-                        file_size_mb=metadata['file_size_mb'],
-                        duration_seconds=metadata['duration_seconds'],
-                        published_date=metadata['published_date'],
-                        status="downloaded",
-                        downloaded_at=datetime.utcnow()  # Timestamp do download
-                    )
-                    db.add(episode)
+                # Commit this batch
+                db.commit()
+                success_count += batch_success
+                error_count += batch_errors
                 
-                success_count += 1
+                # Show progress
+                logger.info(f"  ✓ {batch_end}/{total} processados ({batch_success} salvos, {batch_errors} erros)")
+                
             except Exception as e:
-                logger.warning(f"⚠️  {metadata['filename']}: {type(e).__name__}: {str(e)}")
-                error_count += 1
+                logger.error(f"❌ Erro no batch {batch_start}-{batch_end}: {type(e).__name__}: {str(e)}")
+                db.rollback()
+                error_count += len(batch) - batch_success
         
-        db.commit()
         db.close()
     
     except Exception as e:
@@ -474,7 +496,6 @@ def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
         if 'db' in locals():
             db.rollback()
             db.close()
-        error_count += len(metadata_list) - success_count
     
     return success_count, error_count
 

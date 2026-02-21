@@ -1,16 +1,14 @@
 """
 Migration script to add new columns to nerdcast_episodes table
+
+Usage:
+    python -m backend.pipelines.migrate_db
 """
-import sys
+import sqlite3
 from pathlib import Path
 
-# Add backend to path
-backend_dir = Path(__file__).parent / "backend"
-sys.path.insert(0, str(backend_dir))
-
-from app.config.settings import settings
-from app.utils.logger import logger
-import sqlite3
+from backend.app.core.config import settings
+from backend.app.core.logger import logger
 
 def migrate():
     """Add new columns to existing database"""

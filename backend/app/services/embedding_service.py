@@ -6,8 +6,8 @@ from typing import List
 from sentence_transformers import SentenceTransformer
 import torch
 
-from app.config.settings import settings
-from app.utils.logger import logger
+from backend.app.core.config import settings
+from backend.app.core.logger import logger
 
 
 class EmbeddingService:

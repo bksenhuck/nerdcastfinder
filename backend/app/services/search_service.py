@@ -6,12 +6,12 @@ import numpy as np
 import faiss
 from typing import List, Dict
 
-from app.config.settings import settings
-from app.db.session import get_db_session
-from app.db.models import NerdcastSegment, NerdcastEpisode
-from app.services.embedding_service import EmbeddingService
-from app.utils.text_utils import truncate_text
-from app.utils.logger import logger
+from backend.app.core.config import settings
+from backend.app.core.logger import logger
+from backend.app.db.session import get_db_session
+from backend.app.db.models import NerdcastSegment, NerdcastEpisode
+from backend.app.services.embedding_service import EmbeddingService
+from backend.app.utils.text_utils import truncate_text
 
 # Setup logging for uvicorn
 log = logging.getLogger("uvicorn.error")

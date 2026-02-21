@@ -1,19 +1,15 @@
 """
 Search API endpoint
 """
-import logging
 from fastapi import APIRouter, Query, HTTPException
 from typing import List
 from pydantic import BaseModel
 
-from app.config.settings import settings
-from app.services.search_service import SearchService
-from app.utils.logger import logger
+from backend.app.core.config import settings
+from backend.app.core.logger import logger
+from backend.app.services.search_service import SearchService
 
 router = APIRouter()
-
-# Setup logging for uvicorn
-log = logging.getLogger("uvicorn.error")
 
 
 class SearchResult(BaseModel):
@@ -40,10 +36,9 @@ class SearchServiceSingleton:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
-                    log.info("🔧 Initializing SearchService singleton...")
-                    logger.info("Initializing SearchService singleton...")
+                    logger.info("🔧 Initializing SearchService singleton...")
                     cls._instance = SearchService()
-                    log.info("✓ SearchService singleton initialized successfully")
+                    logger.success("SearchService singleton initialized successfully")
         return cls._instance
 
 
@@ -72,37 +67,20 @@ async def search(
     Returns:
         List of search results with episode name, excerpt, and similarity score
     """
-    # Force print to console
-    print("\n" + "=" * 60)
-    print("🔍 SEARCH ENDPOINT CALLED!")
-    print("=" * 60)
-    print(f"Query: '{q}'")
-    print(f"Top K: {top_k}")
-    print("=" * 60)
-    
-    log.info("=" * 60)
-    log.info(f"🔍 SEARCH REQUEST")
-    log.info("=" * 60)
-    log.info(f"Query: '{q}'")
-    log.info(f"Top K: {top_k}")
+    logger.header("🔍 SEARCH REQUEST")
+    logger.info(f"Query: '{q}'")
+    logger.info(f"Top K: {top_k}")
     
     try:
-        log.info("Getting search service...")
-        print("Getting search service...")
+        logger.info("Getting search service...")
         service = get_search_service()
         
-        log.info(f"Service retrieved. Index loaded: {service.index is not None}")
-        print(f"Service retrieved. Index loaded: {service.index is not None}")
+        logger.info(f"Service retrieved. Index loaded: {service.index is not None}")
         
-        log.info("Executing search...")
-        print("Executing search...")
+        logger.info("Executing search...")
         results = service.search(query=q, top_k=top_k)
         
-        log.info(f"✓ Search completed successfully")
-        log.info(f"✓ Found {len(results)} results")
-        log.info("=" * 60)
-        print(f"✓ Found {len(results)} results")
-        print("=" * 60 + "\n")
+        logger.success(f"Search completed successfully - Found {len(results)} results")
         
         return [
             SearchResult(
@@ -118,23 +96,10 @@ async def search(
             for result in results
         ]
     except Exception as e:
-        print("\n" + "=" * 60)
-        print("❌ SEARCH ERROR!")
-        print("=" * 60)
-        print(f"Error: {str(e)}")
-        print(f"Type: {type(e).__name__}")
         import traceback
-        traceback.print_exc()
-        print("=" * 60 + "\n")
-        
-        log.error("=" * 60)
-        log.error(f"✗ SEARCH FAILED")
-        log.error("=" * 60)
-        log.error(f"Error: {str(e)}")
-        log.error(f"Type: {type(e).__name__}")
-        import traceback
-        log.error(f"Traceback:\n{traceback.format_exc()}")
-        log.error("=" * 60)
+        logger.error(f"Search failed: {str(e)}")
+        logger.error(f"Type: {type(e).__name__}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
         
         # Mensagem amigável para o usuário, detalhes completos nos logs
         raise HTTPException(

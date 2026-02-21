@@ -3,11 +3,19 @@ Nerdcast Finder - Frontend Dash Application
 
 A minimal search interface for finding podcast episodes using semantic search.
 """
+import sys
+from pathlib import Path
+
+# Add parent directory to path to import utils
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import re
 import requests
 from dash import Dash, html, dcc, Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
+
+from utils.logger import logger
 
 # Configuration
 BACKEND_URL = "http://localhost:8000/api/search"
@@ -19,37 +27,137 @@ app = Dash(
         dbc.themes.BOOTSTRAP,
         dbc.icons.BOOTSTRAP
     ],
-    title="Nerdcast Finder"
+    title="Nerdcast Finder",
+    suppress_callback_exceptions=True
 )
 
-# Layout
-app.layout = html.Div([
-    # Store for theme state (dark/light)
-    dcc.Store(id="theme-store", data="light", storage_type="local"),
-    
-    # Main content container with margin-bottom for fixed footer
-    dbc.Container(id="main-container", children=[
+# Custom index with aggressive theme enforcement and logging
+app.index_string = '''
+<!DOCTYPE html>
+<html data-theme="light">
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        <script>
+            // Apply theme before CSS loads
+            (function() {
+                try {
+                    var stored = localStorage.getItem('theme-store');
+                    var theme = 'light';
+                    if (stored) {
+                        try {
+                            theme = JSON.parse(stored);
+                        } catch(e) {
+                            theme = stored === 'dark' ? 'dark' : 'light';
+                        }
+                    }
+                    document.documentElement.setAttribute('data-theme', theme);
+                } catch(e) {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            })();
+        </script>
+        {%css%}
+        <script>
+            // Continuous theme enforcement
+            (function() {
+                function getTheme() {
+                    try {
+                        var stored = localStorage.getItem('theme-store');
+                        if (!stored) return 'light';
+                        try {
+                            return JSON.parse(stored);
+                        } catch(e) {
+                            return stored === 'dark' ? 'dark' : 'light';
+                        }
+                    } catch(e) {
+                        return 'light';
+                    }
+                }
+                
+                function enforceTheme() {
+                    var correctTheme = getTheme();
+                    var currentAttr = document.documentElement.getAttribute('data-theme');
+                    if (currentAttr !== correctTheme) {
+                        document.documentElement.setAttribute('data-theme', correctTheme);
+                    }
+                }
+                
+                enforceTheme();
+                
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', enforceTheme);
+                }
+                
+                window.addEventListener('storage', function(e) {
+                    if (e.key === 'theme-store') {
+                        enforceTheme();
+                    }
+                });
+                
+                setInterval(enforceTheme, 200);
+                
+                var lastPathname = window.location.pathname;
+                setInterval(function() {
+                    if (window.location.pathname !== lastPathname) {
+                        lastPathname = window.location.pathname;
+                        enforceTheme();
+                    }
+                }, 50);
+            })();
+        </script>
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
+
+# Layouts functions for different pages
+def home_layout():
+    """Layout for the home/search page"""
+    return dbc.Container(children=[
         # Header
         dbc.Row([
             dbc.Col([
                 html.Div([
-                    html.H1(
-                        "🎙️ Nerdcast Finder",
-                        className="text-center my-4 d-inline-block",
-                        style={"width": "100%"}
+                    dcc.Link(
+                        html.H1(
+                            "🎙️ Nerdcast Finder",
+                            className="text-center my-4 d-inline-block",
+                            style={"width": "100%"}
+                        ),
+                        href="/",
+                        style={"textDecoration": "none", "color": "inherit"}
                     ),
-                    dbc.Button(
-                        html.I(className="bi bi-moon-fill"),
-                        id="theme-toggle",
-                        color="link",
-                        size="lg",
-                        style={
-                            "position": "absolute",
-                            "top": "20px",
-                            "right": "20px",
-                            "fontSize": "24px"
-                        }
-                    )
+                    html.Div([
+                        dcc.Link(
+                            "Sobre",
+                            href="/about",
+                            id="about-link",
+                            className="me-3",
+                            style={"fontSize": "16px", "textDecoration": "none"}
+                        ),
+                        dbc.Button(
+                            html.I(className="bi bi-moon-fill"),
+                            id="theme-toggle",
+                            color="link",
+                            size="lg",
+                            style={"fontSize": "24px"}
+                        )
+                    ], style={
+                        "position": "absolute",
+                        "top": "20px",
+                        "right": "20px",
+                        "display": "flex",
+                        "alignItems": "center"
+                    })
                 ], style={"position": "relative"}),
                 html.P(
                     "Busque episódios do Nerdcast por tema, assunto ou palavra-chave",
@@ -76,101 +184,117 @@ app.layout = html.Div([
                         className="btn-lg",
                         n_clicks=0
                     )
-                ], className="mb-3")
+                ], className="mb-3"),
+                # Advanced options toggle
+                html.Div([
+                    dbc.Button(
+                        [
+                            html.I(className="bi bi-gear me-2"),
+                            "Opções avançadas"
+                        ],
+                        id="toggle-advanced",
+                        color="link",
+                        size="sm",
+                        className="text-decoration-none",
+                        n_clicks=0
+                    )
+                ], className="text-center mb-2")
             ], md=8, className="mx-auto")
         ]),
             
-        # Search controls
+        # Advanced search controls (collapsible)
         dbc.Row([
             dbc.Col([
-                dbc.Row([
-                    # Number of results control
-                    dbc.Col([
-                        dbc.Card(id="top-k-card", children=[
-                            dbc.CardBody([
-                                html.Div([
-                                    html.Label(
-                                        "Número de resultados:",
-                                        id="top-k-label",
-                                        className="fw-bold d-inline"
-                                    ),
-                                    html.I(
-                                        className="bi bi-question-circle ms-2",
-                                        id="tooltip-top-k",
-                                        style={"cursor": "pointer"}
-                                    ),
-                                    dbc.Tooltip(
-                                        "Quanto maior, mais resultados serão "
-                                        "retornados pela busca.",
-                                        target="tooltip-top-k"
+                dbc.Collapse([
+                    dbc.Row([
+                        # Number of results control
+                        dbc.Col([
+                            dbc.Card(id="top-k-card", children=[
+                                dbc.CardBody([
+                                    html.Div([
+                                        html.Label(
+                                            "Número de resultados:",
+                                            id="top-k-label",
+                                            className="fw-bold d-inline"
+                                        ),
+                                        html.I(
+                                            className="bi bi-question-circle ms-2",
+                                            id="tooltip-top-k",
+                                            style={"cursor": "pointer"}
+                                        ),
+                                        dbc.Tooltip(
+                                            "Quanto maior, mais resultados serão "
+                                            "retornados pela busca.",
+                                            target="tooltip-top-k"
+                                        )
+                                    ]),
+                                    dcc.Slider(
+                                        id="top-k-slider",
+                                        min=1,
+                                        max=20,
+                                        step=1,
+                                        value=20,
+                                        marks={
+                                            1: "1",
+                                            5: "5",
+                                            10: "10",
+                                            15: "15",
+                                            20: "20"
+                                        },
+                                        tooltip={
+                                            "placement": "bottom",
+                                            "always_visible": True
+                                        }
                                     )
-                                ]),
-                                dcc.Slider(
-                                    id="top-k-slider",
-                                    min=1,
-                                    max=20,
-                                    step=1,
-                                    value=10,
-                                    marks={
-                                        1: "1",
-                                        5: "5",
-                                        10: "10",
-                                        15: "15",
-                                        20: "20"
-                                    },
-                                    tooltip={
-                                        "placement": "bottom",
-                                        "always_visible": True
-                                    }
-                                )
-                            ])
-                        ], className="mb-4")
-                    ], md=6),
+                                ])
+                            ], className="mb-4")
+                        ], md=6),
                     
-                    # Similarity threshold control
-                    dbc.Col([
-                        dbc.Card(id="similarity-card", children=[
-                            dbc.CardBody([
-                                html.Div([
-                                    html.Label(
-                                        "Similaridade mínima:",
-                                        id="similarity-label",
-                                        className="fw-bold d-inline"
-                                    ),
-                                    html.I(
-                                        className="bi bi-question-circle ms-2",
-                                        id="tooltip-similarity",
-                                        style={"cursor": "pointer"}
-                                    ),
-                                    dbc.Tooltip(
-                                        "Quanto maior, mais preciso e restrito "
-                                        "serão os resultados.",
-                                        target="tooltip-similarity"
+                        # Similarity threshold control
+                        dbc.Col([
+                            dbc.Card(id="similarity-card", children=[
+                                dbc.CardBody([
+                                    html.Div([
+                                        html.Label(
+                                            "Confiabilidade mínima:",
+                                            id="similarity-label",
+                                            className="fw-bold d-inline"
+                                        ),
+                                        html.I(
+                                            className="bi bi-question-circle ms-2",
+                                            id="tooltip-similarity",
+                                            style={"cursor": "pointer"}
+                                        ),
+                                        dbc.Tooltip(
+                                            "Quanto maior, mais preciso e restrito "
+                                            "serão os resultados.",
+                                            target="tooltip-similarity"
+                                        )
+                                    ]),
+                                    dcc.Slider(
+                                        id="similarity-threshold",
+                                        min=0,
+                                        max=1,
+                                        step=0.05,
+                                        value=0.5,
+                                        marks={
+                                            0.0: "0.0",
+                                            0.2: "0.2",
+                                            0.4: "0.4",
+                                            0.6: "0.6",
+                                            0.8: "0.8",
+                                            1.0: "1.0"
+                                        },
+                                        tooltip={
+                                            "placement": "bottom",
+                                            "always_visible": True
+                                        }
                                     )
-                                ]),
-                                dcc.Slider(
-                                    id="similarity-threshold",
-                                    min=0,
-                                    max=1,
-                                    step=0.05,
-                                    value=0.8,
-                                    marks={
-                                        0.0: "0.0",
-                                        0.2: "0.2",
-                                        0.4: "0.4",
-                                        0.6: "0.6",
-                                        0.8: "0.8",
-                                        1.0: "1.0"
-                                    },
-                                    tooltip={
-                                        "placement": "bottom",
-                                        "always_visible": True
-                                    }
-                                )
-                            ])
-                        ], className="mb-4")
-                    ], md=6)
-                ])
+                                ])
+                            ], className="mb-4")
+                        ], md=6)
+                    ])
+                ], id="advanced-options", is_open=False, className="mb-3")
             ], md=8, className="mx-auto")
         ]),
             
@@ -193,7 +317,168 @@ app.layout = html.Div([
                 )
             ], md=8, className="mx-auto")
         ])
-    ], fluid=True, className="py-4", style={"minHeight": "100vh"}),
+    ], fluid=True, className="py-4")
+
+
+def about_layout():
+    """Layout for the about page"""
+    return dbc.Container(children=[
+        # Header
+        dbc.Row([
+            dbc.Col([
+                html.Div([
+                    dcc.Link(
+                        html.H1(
+                            "Sobre o Nerdcast Finder",
+                            className="text-center my-4 d-inline-block",
+                            style={"width": "100%"}
+                        ),
+                        href="/",
+                        style={"textDecoration": "none", "color": "inherit"}
+                    ),
+                    html.Div([
+                        dcc.Link(
+                            "← Voltar",
+                            href="/",
+                            id="back-link",
+                            className="me-3",
+                            style={"fontSize": "16px", "textDecoration": "none"}
+                        ),
+                        dbc.Button(
+                            html.I(className="bi bi-moon-fill"),
+                            id="theme-toggle",
+                            color="link",
+                            size="lg",
+                            style={"fontSize": "24px"}
+                        )
+                    ], style={
+                        "position": "absolute",
+                        "top": "20px",
+                        "right": "20px",
+                        "display": "flex",
+                        "alignItems": "center"
+                    })
+                ], style={"position": "relative"})
+            ])
+        ]),
+        
+        # Content
+        dbc.Row([
+            dbc.Col([
+                # Disclaimer Section
+                dbc.Card(id="disclaimer-card", children=[
+                    dbc.CardHeader(id="disclaimer-header", children=html.H4("Aviso Legal e Direitos Autorais", className="mb-0")),
+                    dbc.CardBody([
+                        html.P([
+                            "Este projeto é uma ferramenta de busca semântica desenvolvida exclusivamente para fins ",
+                            html.Strong("educacionais, técnicos e de demonstração de habilidades profissionais"), 
+                            ". O desenvolvedor não possui, hospeda ou distribui qualquer conteúdo de áudio dos podcasts."
+                        ], className="mb-3"),
+                        html.P([
+                            html.Strong("Todos os direitos autorais pertencem aos seus respectivos proprietários."),
+                            " O conteúdo dos episódios do Nerdcast é de propriedade exclusiva do ",
+                            html.A("Jovem Nerd", href="https://jovemnerd.com.br", target="_blank", className="text-primary"),
+                            " e seus criadores."
+                        ], className="mb-3"),
+                        html.P([
+                            "Esta aplicação apenas indexa e busca transcrições geradas localmente para fins de ",
+                            "pesquisa e referência. Nenhum conteúdo de áudio é redistribuído ou disponibilizado ",
+                            "através desta ferramenta. Os usuários são responsáveis por respeitar os direitos ",
+                            "autorais e termos de uso do conteúdo original."
+                        ], className="mb-3"),
+                        html.P([
+                            "Para ouvir os episódios originais, por favor visite o site oficial: ",
+                            html.A("https://jovemnerd.com.br", href="https://jovemnerd.com.br", target="_blank", className="text-primary"),
+                            " ou suas plataformas de podcast preferidas."
+                        ], className="mb-0")
+                    ])
+                ], className="mb-4"),
+                
+                # Technical Section
+                dbc.Card(id="technical-card", children=[
+                    dbc.CardHeader(id="technical-header", children=html.H4("Como Funciona", className="mb-0")),
+                    dbc.CardBody([
+                        html.P([
+                            "O Nerdcast Finder é uma aplicação de ",
+                            html.Strong("busca semântica"), 
+                            " que permite encontrar episódios de podcast por significado e contexto, ",
+                            "não apenas por palavras-chave exatas."
+                        ], className="mb-3"),
+                        
+                        html.H5("Arquitetura e Tecnologias:", className="mt-4 mb-3"),
+                        html.Ul([
+                            html.Li([
+                                html.Strong("Backend (FastAPI):"), 
+                                " API REST construída com FastAPI, responsável por processar ",
+                                "as buscas e retornar resultados ranqueados por confiabilidade semântica."
+                            ]),
+                            html.Li([
+                                html.Strong("Banco de Dados (SQLite):"), 
+                                " Armazena metadados dos episódios (título, data de publicação, duração, ",
+                                "tamanho do arquivo, etc.) e segmentos transcritos do conteúdo de áudio."
+                            ]),
+                            html.Li([
+                                html.Strong("Coleta de Metadados (RSS Feed):"), 
+                                " Os metadados dos episódios são carregados automaticamente do feed RSS ",
+                                "oficial do Nerdcast, garantindo informações atualizadas sobre cada episódio."
+                            ]),
+                            html.Li([
+                                html.Strong("Transcrição (Whisper):"), 
+                                " Utiliza o modelo Whisper da OpenAI para converter áudio em texto, ",
+                                "permitindo a indexação do conteúdo falado dos episódios."
+                            ]),
+                            html.Li([
+                                html.Strong("Embeddings (Sentence-Transformers):"), 
+                                " Modelo all-mpnet-base-v2 (768 dimensões) converte texto em vetores ",
+                                "numéricos que capturam significado semântico."
+                            ]),
+                            html.Li([
+                                html.Strong("Busca Vetorial (FAISS):"), 
+                                " Facebook AI Similarity Search (IndexFlatL2) permite busca rápida ",
+                                "por confiabilidade de cosseno em milhares de vetores."
+                            ]),
+                            html.Li([
+                                html.Strong("Frontend (Dash + Bootstrap):"), 
+                                " Interface web responsiva com suporte a temas claro/escuro, ",
+                                "construída com Plotly Dash e Bootstrap components."
+                            ])
+                        ], className="mb-3"),
+                        
+                        html.H5("Fluxo de Funcionamento:", className="mt-4 mb-3"),
+                        html.Ol([
+                            html.Li("Os metadados dos episódios são extraídos do feed RSS oficial"),
+                            html.Li("O áudio do episódio é transcrito usando o modelo Whisper"),
+                            html.Li("A transcrição é segmentada em partes menores para indexação"),
+                            html.Li("Cada segmento é convertido em embedding vetorial (768 dims)"),
+                            html.Li("Os vetores são indexados no FAISS para busca eficiente"),
+                            html.Li("Quando você faz uma busca, sua query também é vetorizada"),
+                            html.Li("O FAISS compara seu vetor com todos os segmentos indexados"),
+                            html.Li("Resultados são ranqueados por confiabilidade semântica"),
+                            html.Li("A interface exibe os trechos mais relevantes com metadados")
+                        ], className="mb-3")
+                    ])
+                ], className="mb-4")
+            ], md=10, lg=8, className="mx-auto")
+        ])
+    ], fluid=True, className="py-4")
+
+
+# Main app layout with routing
+app.layout = html.Div([
+    # URL routing
+    dcc.Location(id="url", refresh=False),
+    
+    # Store for theme state (dark/light) - persists to localStorage
+    dcc.Store(id="theme-store", storage_type="local"),
+    
+    # Page wrapper
+    html.Div(id="page-wrapper", children=[
+        # Page content (will be populated by callback)
+        html.Div(id="page-content")
+    ], style={
+        "minHeight": "100vh",
+        "paddingBottom": "100px"
+    }),
     
     # Footer - fixado na parte inferior
     html.Footer(id="footer", children=[
@@ -263,16 +548,67 @@ def highlight_similar_words(text, query):
     return result
 
 
-# Dark mode callbacks
+# Page routing callback
 @app.callback(
+    Output("page-content", "children"),
+    Input("url", "pathname")
+)
+def display_page(pathname):
+    """Render the appropriate page based on the URL"""
+    if pathname == "/about":
+        return about_layout()
+    else:
+        return home_layout()
+
+
+# Theme toggle callback - clientside for instant response
+app.clientside_callback(
+    """
+    function(n_clicks, current_theme) {
+        // Only proceed if this is a real click
+        if (!n_clicks || n_clicks === 0 || typeof n_clicks !== 'number') {
+            return window.dash_clientside.no_update;
+        }
+        
+        if (!current_theme) current_theme = "light";
+        var newTheme = current_theme === "light" ? "dark" : "light";
+        
+        // Update localStorage synchronously
+        try {
+            localStorage.setItem('theme-store', JSON.stringify(newTheme));
+        } catch(e) {}
+        
+        // Apply to DOM
+        document.documentElement.setAttribute('data-theme', newTheme);
+        
+        return newTheme;
+    }
+    """,
     Output("theme-store", "data"),
     Input("theme-toggle", "n_clicks"),
     State("theme-store", "data"),
     prevent_initial_call=True
 )
-def toggle_theme(n_clicks, current_theme):
-    """Toggle between light and dark theme"""
-    return "dark" if current_theme == "light" else "light"
+
+
+# Advanced options toggle callback - clientside for instant response
+app.clientside_callback(
+    """
+    function(n_clicks, is_open) {
+        // Only proceed if this is a real click
+        if (!n_clicks || n_clicks === 0 || typeof n_clicks !== 'number') {
+            return window.dash_clientside.no_update;
+        }
+        
+        // Toggle the current state
+        return !is_open;
+    }
+    """,
+    Output("advanced-options", "is_open"),
+    Input("toggle-advanced", "n_clicks"),
+    State("advanced-options", "is_open"),
+    prevent_initial_call=True
+)
 
 
 @app.callback(
@@ -281,136 +617,11 @@ def toggle_theme(n_clicks, current_theme):
 )
 def update_theme_icon(theme):
     """Update theme toggle button icon"""
+    if not theme:
+        theme = "light"
     if theme == "dark":
         return html.I(className="bi bi-sun-fill")
     return html.I(className="bi bi-moon-fill")
-
-
-@app.callback(
-    Output("main-container", "style"),
-    Input("theme-store", "data")
-)
-def update_container_style(theme):
-    """Update main container style based on theme"""
-    if theme == "dark":
-        return {
-            "minHeight": "100vh",
-            "backgroundColor": "#1a1a1a",
-            "color": "#f8f9fa"
-        }
-    return {
-        "minHeight": "100vh",
-        "backgroundColor": "#ffffff",
-        "color": "#212529"
-    }
-
-
-@app.callback(
-    Output("footer", "style"),
-    Input("theme-store", "data")
-)
-def update_footer_style(theme):
-    """Update footer style based on theme"""
-    base_style = {
-        "position": "fixed",
-        "bottom": "0",
-        "width": "100%",
-        "zIndex": "1000"
-    }
-    
-    if theme == "dark":
-        base_style.update({
-            "backgroundColor": "#2d2d2d",
-            "color": "#f8f9fa"
-        })
-    else:
-        base_style.update({
-            "backgroundColor": "white",
-            "color": "#6c757d"
-        })
-    
-    return base_style
-
-
-@app.callback(
-    Output("subtitle", "className"),
-    Input("theme-store", "data")
-)
-def update_subtitle_class(theme):
-    """Update subtitle className based on theme"""
-    if theme == "dark":
-        return "text-center mb-4"
-    return "text-center text-muted mb-4"
-
-
-@app.callback(
-    [Output("footer-hr", "style"),
-     Output("footer-text", "style")],
-    Input("theme-store", "data")
-)
-def update_footer_elements_style(theme):
-    """Update footer HR and text style based on theme"""
-    if theme == "dark":
-        hr_style = {"margin": "0", "borderColor": "#444444"}
-        text_style = {"color": "#f8f9fa"}
-    else:
-        hr_style = {"margin": "0"}
-        text_style = {"color": "#6c757d"}
-    
-    return hr_style, text_style
-
-
-@app.callback(
-    [Output("top-k-card", "style"),
-     Output("similarity-card", "style")],
-    Input("theme-store", "data")
-)
-def update_control_cards_style(theme):
-    """Update control cards style based on theme"""
-    if theme == "dark":
-        card_style = {
-            "backgroundColor": "#2d2d2d",
-            "borderColor": "#444444",
-            "color": "#f8f9fa"
-        }
-    else:
-        card_style = {
-            "backgroundColor": "#ffffff",
-            "borderColor": "#dee2e6",
-            "color": "#212529"
-        }
-    return card_style, card_style
-
-
-@app.callback(
-    [Output("top-k-label", "style"),
-     Output("similarity-label", "style")],
-    Input("theme-store", "data")
-)
-def update_control_labels_style(theme):
-    """Update control labels style based on theme"""
-    if theme == "dark":
-        label_style = {"color": "#f8f9fa"}
-    else:
-        label_style = {"color": "#212529"}
-    return label_style, label_style
-
-
-@app.callback(
-    Output("results-container", "style"),
-    Input("theme-store", "data")
-)
-def update_results_container_style(theme):
-    """Update results container style based on theme"""
-    if theme == "dark":
-        return {
-            "paddingBottom": "100px",
-            "backgroundColor": "#1a1a1a"
-        }
-    return {
-        "paddingBottom": "100px",
-        "backgroundColor": "#ffffff"
-    }
 
 
 @app.callback(
@@ -459,16 +670,14 @@ def search_podcasts(
     
     is_dark_mode = (theme == "dark")
     
-    print(f"\n{'='*60}")
-    print(f"🔍 FRONTEND SEARCH REQUEST")
-    print(f"{'='*60}")
-    print(f"Query: '{query}'")
-    print(f"Top K: {top_k}")
-    print(f"Similarity Threshold: {similarity_threshold}")
-    print(f"n_clicks: {n_clicks}, n_submit: {n_submit}")
+    logger.header("🔍 FRONTEND SEARCH REQUEST")
+    logger.info(f"Query: '{query}'")
+    logger.info(f"Top K: {top_k}")
+    logger.info(f"Similarity Threshold: {similarity_threshold}")
+    logger.info(f"n_clicks: {n_clicks}, n_submit: {n_submit}")
     
     if not query or query.strip() == "":
-        print("❌ Empty query, returning warning")
+        logger.warning("Empty query, returning warning")
         return html.Div([
             html.Div(
                 [
@@ -504,7 +713,7 @@ def search_podcasts(
     try:
         # Call backend API
         url = f"{BACKEND_URL}?q={query.strip()}&top_k={top_k}"
-        print(f"📡 Making request to: {url}")
+        logger.info(f"Making request to: {url}")
         
         response = requests.get(
             BACKEND_URL,
@@ -512,11 +721,11 @@ def search_podcasts(
             timeout=30
         )
         
-        print(f"📥 Response status: {response.status_code}")
-        print(f"📥 Response headers: {dict(response.headers)}")
+        logger.info(f"Response status: {response.status_code}")
+        logger.info(f"Response headers: {dict(response.headers)}")
         
         if response.status_code != 200:
-            print(f"❌ Error response: {response.text}")
+            logger.error(f"Error response: {response.text}")
             # Mensagem amigável para o usuário, detalhes nos logs
             return html.Div(
                 dbc.Alert(
@@ -527,11 +736,11 @@ def search_podcasts(
             ), ""
         
         results = response.json()
-        print(f"✓ Received {len(results)} results from backend")
+        logger.success(f"Received {len(results)} results from backend")
         
         # Check if backend returned any results
         if not results:
-            print("ℹ️  No results found from backend")
+            logger.info("No results found from backend")
             return html.Div([
                 html.Div(
                     dbc.Row([
@@ -577,7 +786,7 @@ def search_podcasts(
                                     style={"color": card_text}
                                 ),
                                 html.Li(
-                                    "Reduza a similaridade",
+                                    "Reduza a confiabilidade",
                                     className="small",
                                     style={"color": card_text}
                                 )
@@ -597,13 +806,13 @@ def search_podcasts(
         filtered_results = [
             r for r in results if r['score'] >= similarity_threshold
         ]
-        print(
-            f"✓ {len(filtered_results)} results after "
+        logger.success(
+            f"{len(filtered_results)} results after "
             f"applying threshold {similarity_threshold}"
         )
         
         if not filtered_results:
-            print("ℹ️  No results found above similarity threshold")
+            logger.info("No results found above similarity threshold")
             return html.Div([
                 html.Div(
                     dbc.Row([
@@ -618,7 +827,7 @@ def search_podcasts(
                                 }
                             ),
                             html.H5(
-                                "Resultados com baixa similaridade",
+                                "Resultados com baixa confiabilidade",
                                 className="text-center mb-2",
                                 style={"color": card_text}
                             ),
@@ -639,7 +848,7 @@ def search_podcasts(
                             ),
                             html.Ul([
                                 html.Li(
-                                    f"Similaridade: {similarity_threshold:.0%}",
+                                    f"Confiabilidade: {similarity_threshold:.0%}",
                                     className="small",
                                     style={"color": card_text}
                                 ),
@@ -771,7 +980,10 @@ def search_podcasts(
                             # Similarity badge at top
                             html.Div([
                                 dbc.Badge(
-                                    f"{score:.2%}",
+                                    [
+                                        html.Div("Confiabilidade", className="small", style={"fontSize": "0.7rem"}),
+                                        html.Div(f"{score:.2%}", style={"fontSize": "1.1rem", "fontWeight": "bold"})
+                                    ],
                                     color="primary",
                                     className="mb-3",
                                     style={"fontSize": "1rem", "padding": "0.5rem 1rem"}
@@ -791,8 +1003,7 @@ def search_podcasts(
             })
             cards.append(card)
         
-        print(f"✓ Returning {len(cards)} result cards")
-        print(f"{'='*60}\n")
+        logger.success(f"Returning {len(cards)} result cards")
         
         # Build header with result count and threshold info
         header = html.Div([
@@ -802,7 +1013,7 @@ def search_podcasts(
                 style={"color": card_text}
             ),
             html.P(
-                f"Similaridade mínima: {similarity_threshold:.2f}",
+                f"Confiabilidade mínima: {similarity_threshold:.2f}",
                 className="mb-2",
                 style={"color": card_text}
             )
@@ -814,8 +1025,7 @@ def search_podcasts(
         ]), ""
     
     except requests.exceptions.ConnectionError as e:
-        print(f"❌ Connection Error: {e}")
-        print(f"{'='*60}\n")
+        logger.error(f"Connection Error: {e}")
         return html.Div(
             dbc.Alert(
                 "Cannot connect to backend. Make sure the API server is running on port 8000.",
@@ -825,18 +1035,16 @@ def search_podcasts(
         ), ""
     
     except requests.exceptions.Timeout as e:
-        print(f"❌ Timeout Error: {e}")
-        print(f"{'='*60}\n")
+        logger.error(f"Timeout Error: {e}")
         return html.Div(
             dbc.Alert("Request timed out. Please try again.", color="warning"),
             className="mt-4"
         ), ""
     
     except Exception as e:
-        print(f"❌ Unexpected Error: {type(e).__name__}: {e}")
         import traceback
-        print(f"Traceback:\n{traceback.format_exc()}")
-        print(f"{'='*60}\n")
+        logger.error(f"Unexpected Error: {type(e).__name__}: {e}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
         # Mensagem amigável para o usuário, detalhes completos nos logs
         return html.Div(
             dbc.Alert(
@@ -848,11 +1056,8 @@ def search_podcasts(
 
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("Starting Nerdcast Finder Frontend")
-    print("=" * 60)
-    print("URL: http://127.0.0.1:8050")
-    print("Make sure the backend API is running on http://localhost:8000")
-    print("=" * 60)
+    logger.header("Starting Nerdcast Finder Frontend")
+    logger.info("URL: http://127.0.0.1:8050")
+    logger.info("Make sure the backend API is running on http://localhost:8000")
     
     app.run(debug=True, host="127.0.0.1", port=8050)

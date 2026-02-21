@@ -1,13 +1,9 @@
 """Check embedding dimensions in database"""
-import sys
 from pathlib import Path
 
-backend_dir = Path(__file__).parent / "backend"
-sys.path.insert(0, str(backend_dir))
-
-from app.db.session import get_db_session
-from app.db.models import NerdcastSegment
-from app.utils.logger import logger
+from backend.app.core.logger import logger
+from backend.app.db.session import get_db_session
+from backend.app.db.models import NerdcastSegment
 
 db = get_db_session()
 

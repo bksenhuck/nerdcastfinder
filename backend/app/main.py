@@ -6,8 +6,8 @@ import time
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config.settings import settings
-from app.api import search, episodes
+from backend.app.core.config import settings
+from backend.app.api import search, episodes
 
 # Setup logging
 log = logging.getLogger("uvicorn.error")
@@ -67,7 +67,7 @@ async def startup_event():
     log.info("=" * 60)
     
     # Pre-initialize search service to load FAISS index
-    from app.api.search import get_search_service
+    from backend.app.api.search import get_search_service
     try:
         log.info("🔧 Pre-loading SearchService...")
         get_search_service()
@@ -95,14 +95,14 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
-    from app.utils.logger import logger
+    from backend.app.core.logger import logger
     
     logger.header("NERDCAST FINDER - BACKEND API")
     logger.info(f"Starting server on http://{settings.API_HOST}:{settings.API_PORT}")
     logger.info(f"Documentation: http://{settings.API_HOST}:{settings.API_PORT}/docs")
     
     uvicorn.run(
-        "app.main:app",
+        "backend.app.main:app",
         host=settings.API_HOST,
         port=settings.API_PORT,
         reload=settings.API_RELOAD

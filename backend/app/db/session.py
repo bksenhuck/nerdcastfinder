@@ -5,8 +5,8 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 
-from app.config.settings import settings
-from app.db.models import Base
+from backend.app.core.config import settings
+from backend.app.db.models import Base
 
 # Get database URL from settings
 DATABASE_URL = settings.get_database_url()

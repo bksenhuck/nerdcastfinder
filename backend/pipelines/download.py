@@ -30,12 +30,10 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 # Thread lock for database writes (SQLite doesn't like concurrent writes)
-_db_lock = threading.Lock()# Add backend to path
-backend_dir = Path(__file__).parent.parent
-sys.path.insert(0, str(backend_dir))
+_db_lock = threading.Lock()
 
-from app.config.settings import settings
-from app.utils.logger import logger
+from backend.app.core.config import settings
+from backend.app.core.logger import logger
 
 
 def create_session() -> requests.Session:
@@ -236,8 +234,8 @@ def save_episode_metadata(
         try:
             # Use lock to serialize database writes
             with _db_lock:
-                from app.db.session import get_db_session
-                from app.db.models import NerdcastEpisode
+                from backend.app.db.session import get_db_session
+                from backend.app.db.models import NerdcastEpisode
                 
                 db = get_db_session()
                 
@@ -442,8 +440,8 @@ def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
     total = len(metadata_list)
     
     try:
-        from app.db.session import get_db_session, init_db
-        from app.db.models import NerdcastEpisode
+        from backend.app.db.session import get_db_session, init_db
+        from backend.app.db.models import NerdcastEpisode
         
         # Ensure database and tables exist
         init_db()

@@ -18,6 +18,7 @@ Options:
 import sys
 import re
 import time
+import threading
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
@@ -28,7 +29,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# Add backend to path
+# Thread lock for database writes (SQLite doesn't like concurrent writes)
+_db_lock = threading.Lock()# Add backend to path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
@@ -202,10 +204,11 @@ def save_episode_metadata(
     audio_url: str,
     file_size_mb: float,
     duration_seconds: int = None,
-    published_date = None
+    published_date = None,
+    max_retries: int = 5
 ) -> Tuple[bool, str]:
     """
-    Save or update episode metadata to database
+    Save or update episode metadata to database with retry logic for SQLite locks
     
     Args:
         filename: Normalized filename (unique key)
@@ -214,68 +217,83 @@ def save_episode_metadata(
         file_size_mb: Size of downloaded file in MB
         duration_seconds: Duration in seconds (optional)
         published_date: Publication date (optional)
+        max_retries: Max retry attempts (default: 5)
         
     Returns:
         Tuple of (success: bool, message: str)
     """
-    try:
-        from app.db.session import get_db_session
-        from app.db.models import NerdcastEpisode
+    for attempt in range(max_retries):
+        try:
+            # Use lock to serialize database writes
+            with _db_lock:
+                from app.db.session import get_db_session
+                from app.db.models import NerdcastEpisode
+                
+                db = get_db_session()
+                
+                # Check if episode already exists
+                existing = db.query(NerdcastEpisode).filter(
+                    NerdcastEpisode.filename == filename
+                ).first()
+                
+                if existing:
+                    # Update ALL episode metadata
+                    existing.title_original = title_original
+                    existing.audio_url = audio_url
+                    existing.file_size_mb = file_size_mb
+                    existing.duration_seconds = duration_seconds
+                    existing.published_date = published_date
+                    existing.status = "downloaded"
+                    db.commit()
+                    db.close()
+                    return True, "atualizado"
+                else:
+                    # Create new episode record
+                    episode = NerdcastEpisode(
+                        filename=filename,
+                        title_original=title_original,
+                        audio_url=audio_url,
+                        file_size_mb=file_size_mb,
+                        duration_seconds=duration_seconds,
+                        published_date=published_date,
+                        status="downloaded"
+                    )
+                    db.add(episode)
+                    db.commit()
+                    db.close()
+                    return True, "novo"
         
-        db = get_db_session()
-        
-        # Check if episode already exists
-        existing = db.query(NerdcastEpisode).filter(
-            NerdcastEpisode.filename == filename
-        ).first()
-        
-        if existing:
-            # Update ALL episode metadata
-            existing.title_original = title_original
-            existing.audio_url = audio_url
-            existing.file_size_mb = file_size_mb
-            existing.duration_seconds = duration_seconds
-            existing.published_date = published_date
-            existing.status = "downloaded"
-            db.commit()
-            db.close()
-            return True, "atualizado"
-        else:
-            # Create new episode record
-            episode = NerdcastEpisode(
-                filename=filename,
-                title_original=title_original,
-                audio_url=audio_url,
-                file_size_mb=file_size_mb,
-                duration_seconds=duration_seconds,
-                published_date=published_date,
-                status="downloaded"
-            )
-            db.add(episode)
-            db.commit()
-            db.close()
-            return True, "novo"
-        
-    except Exception as e:
-        logger.warning(f"⚠️  Erro ao salvar metadados: {type(e).__name__}")
-        return False, "erro"
+        except Exception as e:
+            if 'db' in locals():
+                db.close()
+            
+            # Retry on operational errors (database locks)
+            if attempt < max_retries - 1:
+                wait_time = 0.2 * (2 ** attempt)  # Exponential backoff: 0.2s, 0.4s, 0.8s, 1.6s, 3.2s
+                time.sleep(wait_time)
+                continue
+            else:
+                logger.warning(f"⚠️  DB fail ({attempt+1} tries): {type(e).__name__}")
+                return False, "erro"
+    
+    return False, "erro"
 
 
 def download_episode(
     episode: Dict,
     output_dir: Path,
     session: requests.Session
-) -> Tuple[bool, str]:
+) -> Tuple[bool, str, Dict]:
     """
-    Download a single episode and save metadata to database
+    Download a single episode (don't save metadata yet - avoid DB locks)
     
     Args:
-        episode: Dict with title, audio_url, duration_seconds, published_date, enclosure_length
+        episode: Dict with title, audio_url, duration_seconds, published_date
         output_dir: Directory to save the file
         session: Requests session
         
     Returns:
-        Tuple of (success, message)
+        Tuple of (success: bool, message: str, metadata: dict or None)
     """
     title = episode['title']
     audio_url = episode['audio_url']
@@ -284,9 +302,20 @@ def download_episode(
     filename = normalize_filename(title)
     output_path = output_dir / f"{filename}.mp3"
     
+    # Prepare metadata (always return it, even if file exists)
+    metadata_base = {
+        'filename': filename,
+        'title_original': title,
+        'audio_url': audio_url,
+        'duration_seconds': episode.get('duration_seconds'),
+        'published_date': episode.get('published_date')
+    }
+    
     # Check if already exists
     if output_path.exists():
-        return True, f"✓ Pulado (já existe): {title}"
+        file_size_mb = output_path.stat().st_size / (1024 * 1024)
+        metadata_base['file_size_mb'] = file_size_mb
+        return True, f"✓ Pulado (já existe): {title}", metadata_base
     
     try:
         # Stream download
@@ -305,24 +334,24 @@ def download_episode(
         
         file_size_mb = output_path.stat().st_size / (1024 * 1024)
         
-        # Save metadata to database
-        save_episode_metadata(
-            filename=filename,
-            title_original=title,
-            audio_url=audio_url,
-            file_size_mb=file_size_mb,
-            duration_seconds=episode.get('duration_seconds'),
-            published_date=episode.get('published_date')
-        )
+        # Collect metadata for later batch insert
+        metadata = {
+            'filename': filename,
+            'title_original': title,
+            'audio_url': audio_url,
+            'file_size_mb': file_size_mb,
+            'duration_seconds': episode.get('duration_seconds'),
+            'published_date': episode.get('published_date')
+        }
         
-        return True, f"✓ Download: {title} ({file_size_mb:.1f}MB) → DB salvando metadados"
+        return True, f"✓ Download: {title} ({file_size_mb:.1f}MB)", metadata
         
     except requests.exceptions.Timeout:
-        return False, f"Timeout downloading: {title}"
+        return False, f"❌ Timeout: {title}", None
     except requests.exceptions.RequestException as e:
-        return False, f"Error downloading {title}: {e}"
+        return False, f"❌ Erro: {title}", None
     except IOError as e:
-        return False, f"Error saving {title}: {e}"
+        return False, f"❌ Erro file: {title}", None
 
 
 def download_episodes_parallel(
@@ -331,7 +360,7 @@ def download_episodes_parallel(
     max_workers: int = None
 ) -> Tuple[int, int]:
     """
-    Download episodes in parallel
+    Download episodes in parallel, collect metadata, then save to DB sequentially
     
     Args:
         episodes: List of episode dicts
@@ -345,6 +374,7 @@ def download_episodes_parallel(
         max_workers = settings.DOWNLOAD_MAX_CONCURRENT
     success_count = 0
     failed_count = 0
+    all_metadata = []
     
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Create session for each worker
@@ -360,10 +390,12 @@ def download_episodes_parallel(
         for future in as_completed(future_to_episode):
             episode = future_to_episode[future]
             try:
-                success, message = future.result()
+                success, message, metadata = future.result()
                 if success:
                     logger.success(message)
                     success_count += 1
+                    if metadata:  # Collect metadata for batch insert
+                        all_metadata.append(metadata)
                 else:
                     logger.error(message)
                     failed_count += 1
@@ -371,7 +403,80 @@ def download_episodes_parallel(
                 logger.error(f"Unexpected error for {episode['title']}: {e}")
                 failed_count += 1
     
+    # Save all metadata to database sequentially (avoid concurrent DB writes)
+    if all_metadata:
+        logger.section(f"Salvando {len(all_metadata)} metadados no DB...")
+        db_success, db_error = save_all_episode_metadata(all_metadata)
+        logger.success(f"✓ {db_success} salvos | ⚠️  {db_error} erros")
+    
     return success_count, failed_count
+
+
+def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
+    """
+    Save all episode metadata to database in batch (sequentially)
+    
+    Args:
+        metadata_list: List of metadata dicts from downloads
+        
+    Returns:
+        Tuple of (success_count, error_count)
+    """
+    success_count = 0
+    error_count = 0
+    
+    try:
+        from app.db.session import get_db_session, init_db
+        from app.db.models import NerdcastEpisode
+        
+        # Ensure database and tables exist
+        init_db()
+        
+        db = get_db_session()
+        
+        for metadata in metadata_list:
+            try:
+                existing = db.query(NerdcastEpisode).filter(
+                    NerdcastEpisode.filename == metadata['filename']
+                ).first()
+                
+                if existing:
+                    existing.title_original = metadata['title_original']
+                    existing.audio_url = metadata['audio_url']
+                    existing.file_size_mb = metadata['file_size_mb']
+                    existing.duration_seconds = metadata['duration_seconds']
+                    existing.published_date = metadata['published_date']
+                    existing.status = "downloaded"
+                    existing.downloaded_at = datetime.utcnow()  # Atualiza timestamp do download
+                else:
+                    episode = NerdcastEpisode(
+                        filename=metadata['filename'],
+                        title_original=metadata['title_original'],
+                        audio_url=metadata['audio_url'],
+                        file_size_mb=metadata['file_size_mb'],
+                        duration_seconds=metadata['duration_seconds'],
+                        published_date=metadata['published_date'],
+                        status="downloaded",
+                        downloaded_at=datetime.utcnow()  # Timestamp do download
+                    )
+                    db.add(episode)
+                
+                success_count += 1
+            except Exception as e:
+                logger.warning(f"⚠️  {metadata['filename']}: {type(e).__name__}: {str(e)}")
+                error_count += 1
+        
+        db.commit()
+        db.close()
+    
+    except Exception as e:
+        logger.error(f"❌ Erro geral DB: {type(e).__name__}: {str(e)}")
+        if 'db' in locals():
+            db.rollback()
+            db.close()
+        error_count += len(metadata_list) - success_count
+    
+    return success_count, error_count
 
 
 def main(limit: Optional[int] = None, max_workers: Optional[int] = None):

@@ -23,6 +23,7 @@ class NerdcastEpisode(Base):
     file_size_mb = Column(Float, nullable=True)  # Tamanho do arquivo em MB
     audio_url = Column(Text, nullable=True)  # URL do áudio original
     status = Column(String(50), default="downloaded")  # downloaded, transcribed, indexed
+    downloaded_at = Column(DateTime, nullable=True)  # Última vez que o arquivo foi baixado
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

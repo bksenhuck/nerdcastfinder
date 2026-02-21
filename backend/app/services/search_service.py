@@ -9,7 +9,7 @@ from typing import List, Dict
 from backend.app.core.config import settings
 from backend.app.core.logger import logger
 from backend.app.db.session import get_db_session
-from backend.app.db.models import NerdcastSegment, NerdcastEpisode
+from backend.app.db.models import PodcastSegment, PodcastEpisode
 from backend.app.services.embedding_service import EmbeddingService
 from backend.app.utils.text_utils import truncate_text
 
@@ -83,13 +83,21 @@ class SearchService:
             logger.info("Command: python -m backend.scripts.ingest_podcasts")
             self.index = None
     
-    def search(self, query: str, top_k: int = None) -> List[Dict]:
+    def search(
+        self,
+        query: str,
+        top_k: int = None,
+        podcast_source: str = None,
+        program_name: str = None
+    ) -> List[Dict]:
         """
         Search for similar segments
         
         Args:
             query: Search query string
             top_k: Number of results to return (default: from settings)
+            podcast_source: Optional filter by podcast source/feed
+            program_name: Optional filter by program name
             
         Returns:
             List of dicts with keys: episode, excerpt, score
@@ -122,19 +130,28 @@ class SearchService:
                 embedding_id = int(self.embedding_id_mapping[faiss_idx])
                 
                 # Get segment from database by embedding_id
-                segment = db.query(NerdcastSegment).filter(
-                    NerdcastSegment.embedding_id == embedding_id
+                segment = db.query(PodcastSegment).filter(
+                    PodcastSegment.embedding_id == embedding_id
                 ).first()
                 
                 if segment:
+                    # Get episode metadata (image_url, title_original) from PodcastEpisode table
+                    episode_metadata = db.query(PodcastEpisode).filter(
+                        PodcastEpisode.filename == segment.episode
+                    ).first()
+                    
+                    # Apply filters if provided
+                    if podcast_source and episode_metadata:
+                        if episode_metadata.podcast_source != podcast_source:
+                            continue
+                    
+                    if program_name and episode_metadata:
+                        if episode_metadata.program_name != program_name:
+                            continue
+                    
                     # Convert distance to similarity score (lower distance = higher similarity)
                     # L2 distance to similarity: use inverse
                     similarity_score = 1 / (1 + float(distance))
-                    
-                    # Get episode metadata (image_url, title_original) from NerdcastEpisode table
-                    episode_metadata = db.query(NerdcastEpisode).filter(
-                        NerdcastEpisode.filename == segment.episode
-                    ).first()
                     
                     # Use metadata if available, otherwise use segment episode name
                     title = episode_metadata.title_original if episode_metadata else segment.episode

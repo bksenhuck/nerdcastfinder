@@ -55,6 +55,14 @@ async def search(
         description="Number of results to return",
         ge=1,
         le=settings.MAX_TOP_K
+    ),
+    feed: str = Query(
+        None,
+        description="Filter by feed/podcast source (optional)"
+    ),
+    program: str = Query(
+        None,
+        description="Filter by program name (optional)"
     )
 ):
     """
@@ -63,6 +71,8 @@ async def search(
     Args:
         q: Search query string
         top_k: Number of results to return (default: 10)
+        feed: Optional filter by podcast source/feed
+        program: Optional filter by program name
     
     Returns:
         List of search results with episode name, excerpt, and similarity score
@@ -70,6 +80,8 @@ async def search(
     logger.header("🔍 SEARCH REQUEST")
     logger.info(f"Query: '{q}'")
     logger.info(f"Top K: {top_k}")
+    logger.info(f"Feed filter: {feed if feed else 'None'}")
+    logger.info(f"Program filter: {program if program else 'None'}")
     
     try:
         logger.info("Getting search service...")
@@ -78,7 +90,12 @@ async def search(
         logger.info(f"Service retrieved. Index loaded: {service.index is not None}")
         
         logger.info("Executing search...")
-        results = service.search(query=q, top_k=top_k)
+        results = service.search(
+            query=q,
+            top_k=top_k,
+            podcast_source=feed,
+            program_name=program
+        )
         
         logger.success(f"Search completed successfully - Found {len(results)} results")
         

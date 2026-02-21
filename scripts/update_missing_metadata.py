@@ -50,10 +50,20 @@ def update_metadata():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
+    # Check if table has been migrated to new name
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    tables = [row[0] for row in cursor.fetchall()]
+    
+    # Use new table name if it exists, otherwise use old name
+    table_name = 'podcast_episodes' if 'podcast_episodes' in tables else 'nerdcast_episodes'
+    
+    if table_name == 'nerdcast_episodes':
+        logger.warning("⚠️  Usando tabela antiga 'nerdcast_episodes'")
+    
     # Get episodes without summary or image_url
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT id, title_original 
-        FROM nerdcast_episodes 
+        FROM {table_name}
         WHERE summary IS NULL OR image_url IS NULL
     """)
     
@@ -66,8 +76,8 @@ def update_metadata():
     for ep_id, title in episodes_to_update:
         if title in feed_data:
             data = feed_data[title]
-            cursor.execute("""
-                UPDATE nerdcast_episodes 
+            cursor.execute(f"""
+                UPDATE {table_name}
                 SET summary = ?, image_url = ?
                 WHERE id = ?
             """, (data['summary'], data['image_url'], ep_id))

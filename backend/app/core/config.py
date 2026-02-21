@@ -38,7 +38,21 @@ class Settings:
     SUPPORTED_AUDIO_EXTENSIONS: Set[str] = {".mp3", ".wav", ".m4a", ".flac", ".ogg"}
     
     # ===== Podcast Download Settings =====
-    RSS_FEED_URL: str = "https://jovemnerd.com.br/feed-nerdcast/"
+    # Dictionary of podcast name -> RSS feed URL
+    PODCASTS: dict = {
+        "nerdcast": {
+            "name": "Nerdcast",
+            "feed_url": "https://jovemnerd.com.br/feed-nerdcast/",
+            "description": "O podcast original que deu origem ao projeto"
+        },
+        # Adicione novos podcasts aqui:
+        # "pudimcast": {
+        #     "name": "Pudimcast",
+        #     "feed_url": "https://exemplo.com/feed-pudimcast/",
+        #     "description": "Outro podcast exemplo"
+        # },
+    }
+    
     DOWNLOAD_TIMEOUT: int = 300  # 5 minutes per episode
     DOWNLOAD_CHUNK_SIZE: int = 8192  # 8KB chunks for streaming
     DOWNLOAD_MAX_RETRIES: int = 3
@@ -59,11 +73,26 @@ class Settings:
         return data_dir
     
     @staticmethod
-    def get_podcasts_dir() -> Path:
-        """Get the podcasts directory"""
+    def get_podcasts_dir(podcast_name: str = None) -> Path:
+        """Get the podcasts directory
+        
+        Args:
+            podcast_name: Name of specific podcast (e.g., 'nerdcast'). If None, returns base podcasts dir.
+        
+        Returns:
+            Path to podcast directory
+        """
         podcasts_dir = Settings.get_data_dir() / "podcasts"
-        podcasts_dir.mkdir(parents=True, exist_ok=True)
-        return podcasts_dir
+        
+        if podcast_name:
+            # Create subdirectory for specific podcast
+            podcast_dir = podcasts_dir / podcast_name
+            podcast_dir.mkdir(parents=True, exist_ok=True)
+            return podcast_dir
+        else:
+            # Return base podcasts directory
+            podcasts_dir.mkdir(parents=True, exist_ok=True)
+            return podcasts_dir
     
     @staticmethod
     def get_faiss_dir() -> Path:

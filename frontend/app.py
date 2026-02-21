@@ -1,5 +1,5 @@
 """
-Nerdcast Finder - Frontend Dash Application
+Podcast Finder - Frontend Dash Application
 
 A minimal search interface for finding podcast episodes using semantic search.
 """
@@ -16,9 +16,65 @@ from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
 from utils.logger import logger
+from backend.app.db.session import get_db_session
+from backend.app.db.models import PodcastEpisode
 
 # Configuration
 BACKEND_URL = "http://localhost:8000/api/search"
+
+
+def get_podcast_stats():
+    """Get statistics about available podcasts"""
+    try:
+        db = get_db_session()
+        total_episodes = db.query(PodcastEpisode).count()
+        distinct_programs = (
+            db.query(PodcastEpisode.program_name).distinct().count()
+        )
+        distinct_feeds = (
+            db.query(PodcastEpisode.podcast_source).distinct().count()
+        )
+        db.close()
+        return total_episodes, distinct_programs, distinct_feeds
+    except Exception as e:
+        logger.error(f"Error getting podcast stats: {e}")
+        return 0, 0, 0
+
+
+def get_available_filters():
+    """Get available feeds and programs for filtering"""
+    try:
+        response = requests.get(
+            "http://localhost:8000/api/filters",
+            timeout=5
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return data.get("feeds", []), data.get("programs", [])
+        else:
+            logger.warning(f"Failed to get filters: {response.status_code}")
+            return [], []
+    except Exception as e:
+        logger.error(f"Error getting filters: {e}")
+        # Fallback to database
+        try:
+            db = get_db_session()
+            feeds = db.query(
+                PodcastEpisode.podcast_source
+            ).distinct().all()
+            feeds = sorted([f[0] for f in feeds if f[0] is not None])
+            
+            programs = db.query(
+                PodcastEpisode.program_name
+            ).distinct().all()
+            programs = sorted([p[0] for p in programs if p[0] is not None])
+            
+            db.close()
+            return feeds, programs
+        except Exception as db_e:
+            logger.error(f"Error getting filters from DB: {db_e}")
+            return [], []
+
 
 # Initialize Dash app with Bootstrap theme
 app = Dash(
@@ -27,7 +83,7 @@ app = Dash(
         dbc.themes.BOOTSTRAP,
         dbc.icons.BOOTSTRAP
     ],
-    title="Nerdcast Finder",
+    title="Podcast Finder",
     suppress_callback_exceptions=True
 )
 
@@ -122,6 +178,12 @@ app.index_string = '''
 # Layouts functions for different pages
 def home_layout():
     """Layout for the home/search page"""
+    # Get podcast statistics
+    total_episodes, total_programs, total_feeds = get_podcast_stats()
+    
+    # Get available filters
+    available_feeds, available_programs = get_available_filters()
+    
     return dbc.Container(children=[
         # Header
         dbc.Row([
@@ -129,7 +191,7 @@ def home_layout():
                 html.Div([
                     dcc.Link(
                         html.H1(
-                            "🎙️ Nerdcast Finder",
+                            "🎙️ Podcast Finder",
                             className="text-center my-4 d-inline-block",
                             style={"width": "100%"}
                         ),
@@ -160,9 +222,18 @@ def home_layout():
                     })
                 ], style={"position": "relative"}),
                 html.P(
-                    "Busque episódios do Nerdcast por tema, assunto ou palavra-chave",
+                    "Busque episódios de podcasts por tema, assunto ou palavra-chave",
                     id="subtitle",
-                    className="text-center text-muted mb-4"
+                    className="text-center mb-2",
+                    style={"opacity": "0.8"}
+                ),
+                html.P(
+                    f"{total_episodes} episódios de {total_programs} "
+                    f"{'programa' if total_programs == 1 else 'programas'} "
+                    f"em {total_feeds} {'feed' if total_feeds == 1 else 'feeds'}",
+                    id="stats-subtitle",
+                    className="text-center mb-4",
+                    style={"fontSize": "0.9rem", "opacity": "0.6"}
                 )
             ])
         ]),
@@ -189,8 +260,8 @@ def home_layout():
                 html.Div([
                     dbc.Button(
                         [
-                            html.I(className="bi bi-gear me-2"),
-                            "Opções avançadas"
+                            html.I(className="bi bi-sliders me-2"),
+                            "Filtros e Opções Avançadas"
                         ],
                         id="toggle-advanced",
                         color="link",
@@ -206,94 +277,182 @@ def home_layout():
         dbc.Row([
             dbc.Col([
                 dbc.Collapse([
-                    dbc.Row([
-                        # Number of results control
-                        dbc.Col([
-                            dbc.Card(id="top-k-card", children=[
-                                dbc.CardBody([
-                                    html.Div([
+                    dbc.Card([
+                        dbc.CardBody([
+                            # Filters section
+                            html.Div([
+                                html.H6([
+                                    html.I(className="bi bi-filter me-2"),
+                                    "Filtros"
+                                ], className="mb-3"),
+                                dbc.Row([
+                                    dbc.Col([
                                         html.Label(
-                                            "Número de resultados:",
-                                            id="top-k-label",
-                                            className="fw-bold d-inline"
+                                            [
+                                                html.I(
+                                                    className="bi bi-rss me-2"
+                                                ),
+                                                "Feed:"
+                                            ],
+                                            className="fw-bold mb-2",
+                                            style={"fontSize": "0.9rem"}
                                         ),
-                                        html.I(
-                                            className="bi bi-question-circle ms-2",
-                                            id="tooltip-top-k",
-                                            style={"cursor": "pointer"}
-                                        ),
-                                        dbc.Tooltip(
-                                            "Quanto maior, mais resultados serão "
-                                            "retornados pela busca.",
-                                            target="tooltip-top-k"
+                                        dcc.Dropdown(
+                                            id="feed-filter",
+                                            options=[
+                                                {
+                                                    "label": "🌐 Todos",
+                                                    "value": ""
+                                                }
+                                            ] + [
+                                                {
+                                                    "label": feed,
+                                                    "value": feed
+                                                }
+                                                for feed in available_feeds
+                                            ],
+                                            value="",
+                                            placeholder="Todos os feeds",
+                                            clearable=True
                                         )
-                                    ]),
-                                    dcc.Slider(
-                                        id="top-k-slider",
-                                        min=1,
-                                        max=20,
-                                        step=1,
-                                        value=20,
-                                        marks={
-                                            1: "1",
-                                            5: "5",
-                                            10: "10",
-                                            15: "15",
-                                            20: "20"
-                                        },
-                                        tooltip={
-                                            "placement": "bottom",
-                                            "always_visible": True
-                                        }
-                                    )
-                                ])
-                            ], className="mb-4")
-                        ], md=6),
-                    
-                        # Similarity threshold control
-                        dbc.Col([
-                            dbc.Card(id="similarity-card", children=[
-                                dbc.CardBody([
-                                    html.Div([
+                                    ], md=6, className="mb-3"),
+                                    dbc.Col([
                                         html.Label(
-                                            "Confiabilidade mínima:",
-                                            id="similarity-label",
-                                            className="fw-bold d-inline"
+                                            [
+                                                html.I(
+                                                    className="bi bi-mic me-2"
+                                                ),
+                                                "Programa:"
+                                            ],
+                                            className="fw-bold mb-2",
+                                            style={"fontSize": "0.9rem"}
                                         ),
-                                        html.I(
-                                            className="bi bi-question-circle ms-2",
-                                            id="tooltip-similarity",
-                                            style={"cursor": "pointer"}
-                                        ),
-                                        dbc.Tooltip(
-                                            "Quanto maior, mais preciso e restrito "
-                                            "serão os resultados.",
-                                            target="tooltip-similarity"
+                                        dcc.Dropdown(
+                                            id="program-filter",
+                                            options=[
+                                                {
+                                                    "label": "🎙️ Todos",
+                                                    "value": ""
+                                                }
+                                            ] + [
+                                                {
+                                                    "label": prog,
+                                                    "value": prog
+                                                }
+                                                for prog in available_programs
+                                            ],
+                                            value="",
+                                            placeholder="Todos os programas",
+                                            clearable=True
                                         )
-                                    ]),
-                                    dcc.Slider(
-                                        id="similarity-threshold",
-                                        min=0,
-                                        max=1,
-                                        step=0.05,
-                                        value=0.5,
-                                        marks={
-                                            0.0: "0.0",
-                                            0.2: "0.2",
-                                            0.4: "0.4",
-                                            0.6: "0.6",
-                                            0.8: "0.8",
-                                            1.0: "1.0"
-                                        },
-                                        tooltip={
-                                            "placement": "bottom",
-                                            "always_visible": True
-                                        }
-                                    )
+                                    ], md=6, className="mb-3")
                                 ])
-                            ], className="mb-4")
-                        ], md=6)
-                    ])
+                            ], className="mb-4 pb-3",
+                               style={"borderBottom": "1px solid #dee2e6"}),
+                            
+                            # Search parameters section
+                            html.Div([
+                                html.H6([
+                                    html.I(className="bi bi-gear me-2"),
+                                    "Parâmetros de Busca"
+                                ], className="mb-3"),
+                                dbc.Row([
+                                    # Number of results control
+                                    dbc.Col([
+                                        html.Div([
+                                            html.Label(
+                                                "Número de resultados:",
+                                                id="top-k-label",
+                                                className="fw-bold d-inline",
+                                                style={"fontSize": "0.9rem"}
+                                            ),
+                                            html.I(
+                                                className=(
+                                                    "bi bi-question-circle "
+                                                    "ms-2"
+                                                ),
+                                                id="tooltip-top-k",
+                                                style={
+                                                    "cursor": "pointer",
+                                                    "fontSize": "0.85rem"
+                                                }
+                                            ),
+                                            dbc.Tooltip(
+                                                "Quantidade máxima de "
+                                                "episódios retornados",
+                                                target="tooltip-top-k"
+                                            )
+                                        ]),
+                                        dcc.Slider(
+                                            id="top-k-slider",
+                                            min=1,
+                                            max=20,
+                                            step=1,
+                                            value=20,
+                                            marks={
+                                                1: "1",
+                                                5: "5",
+                                                10: "10",
+                                                15: "15",
+                                                20: "20"
+                                            },
+                                            tooltip={
+                                                "placement": "bottom",
+                                                "always_visible": True
+                                            }
+                                        )
+                                    ], md=6, className="mb-3"),
+                                    
+                                    # Similarity threshold control
+                                    dbc.Col([
+                                        html.Div([
+                                            html.Label(
+                                                "Confiabilidade mínima:",
+                                                id="similarity-label",
+                                                className="fw-bold d-inline",
+                                                style={"fontSize": "0.9rem"}
+                                            ),
+                                            html.I(
+                                                className=(
+                                                    "bi bi-question-circle "
+                                                    "ms-2"
+                                                ),
+                                                id="tooltip-similarity",
+                                                style={
+                                                    "cursor": "pointer",
+                                                    "fontSize": "0.85rem"
+                                                }
+                                            ),
+                                            dbc.Tooltip(
+                                                "Quanto maior, mais preciso e "
+                                                "restrito (menos resultados)",
+                                                target="tooltip-similarity"
+                                            )
+                                        ]),
+                                        dcc.Slider(
+                                            id="similarity-threshold",
+                                            min=0,
+                                            max=1,
+                                            step=0.05,
+                                            value=0.5,
+                                            marks={
+                                                0.0: "0.0",
+                                                0.2: "0.2",
+                                                0.4: "0.4",
+                                                0.6: "0.6",
+                                                0.8: "0.8",
+                                                1.0: "1.0"
+                                            },
+                                            tooltip={
+                                                "placement": "bottom",
+                                                "always_visible": True
+                                            }
+                                        )
+                                    ], md=6, className="mb-3")
+                                ])
+                            ])
+                        ])
+                    ], id="advanced-card")
                 ], id="advanced-options", is_open=False, className="mb-3")
             ], md=8, className="mx-auto")
         ]),
@@ -329,7 +488,7 @@ def about_layout():
                 html.Div([
                     dcc.Link(
                         html.H1(
-                            "Sobre o Nerdcast Finder",
+                            "Sobre o Podcast Finder",
                             className="text-center my-4 d-inline-block",
                             style={"width": "100%"}
                         ),
@@ -399,7 +558,7 @@ def about_layout():
                     dbc.CardHeader(id="technical-header", children=html.H4("Como Funciona", className="mb-0")),
                     dbc.CardBody([
                         html.P([
-                            "O Nerdcast Finder é uma aplicação de ",
+                            "O Podcast Finder é uma aplicação de ",
                             html.Strong("busca semântica"), 
                             " que permite encontrar episódios de podcast por significado e contexto, ",
                             "não apenas por palavras-chave exatas."
@@ -632,11 +791,14 @@ def update_theme_icon(theme):
     [State("search-input", "value"),
      State("top-k-slider", "value"),
      State("similarity-threshold", "value"),
+     State("feed-filter", "value"),
+     State("program-filter", "value"),
      State("theme-store", "data")],
     prevent_initial_call=True
 )
 def search_podcasts(
-    n_clicks, n_submit, query, top_k, similarity_threshold, theme
+    n_clicks, n_submit, query, top_k, similarity_threshold,
+    feed_filter, program_filter, theme
 ):
     """
     Handle search button click or Enter key press
@@ -674,6 +836,8 @@ def search_podcasts(
     logger.info(f"Query: '{query}'")
     logger.info(f"Top K: {top_k}")
     logger.info(f"Similarity Threshold: {similarity_threshold}")
+    logger.info(f"Feed filter: {feed_filter if feed_filter else 'None'}")
+    logger.info(f"Program filter: {program_filter if program_filter else 'None'}")
     logger.info(f"n_clicks: {n_clicks}, n_submit: {n_submit}")
     
     if not query or query.strip() == "":
@@ -712,12 +876,20 @@ def search_podcasts(
     
     try:
         # Call backend API
-        url = f"{BACKEND_URL}?q={query.strip()}&top_k={top_k}"
-        logger.info(f"Making request to: {url}")
+        params = {"q": query.strip(), "top_k": top_k}
+        
+        # Add optional filters
+        if feed_filter:
+            params["feed"] = feed_filter
+        if program_filter:
+            params["program"] = program_filter
+        
+        logger.info(f"Making request to: {BACKEND_URL}")
+        logger.info(f"Parameters: {params}")
         
         response = requests.get(
             BACKEND_URL,
-            params={"q": query.strip(), "top_k": top_k},
+            params=params,
             timeout=30
         )
         
@@ -1056,7 +1228,7 @@ def search_podcasts(
 
 
 if __name__ == "__main__":
-    logger.header("Starting Nerdcast Finder Frontend")
+    logger.header("Starting Podcast Finder Frontend")
     logger.info("URL: http://127.0.0.1:8050")
     logger.info("Make sure the backend API is running on http://localhost:8000")
     

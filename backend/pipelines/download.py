@@ -1,18 +1,24 @@
 """
-Download Nerdcast podcast episodes from RSS feed
+Download podcast episodes from RSS feeds
 
 This script:
-1. Fetches the Nerdcast RSS feed
+1. Fetches podcast RSS feeds
 2. Downloads all episode audio files
-3. Saves them to backend/data/podcasts/
+3. Saves them to backend/data/podcasts/<podcast_name>/
 4. Skips already downloaded files (idempotent)
 5. Saves episode metadata (title, duration, date, size) to database
 
 Usage:
-    python -m scripts.download_podcasts
+    python -m backend.pipelines.download --list
+    python -m backend.pipelines.download --podcast nerdcast
+    python -m backend.pipelines.download --podcast nerdcast --limit 10
+    python -m backend.pipelines.download --all
     
 Options:
-    --limit N : Download only the first N episodes
+    --list : Show available podcasts
+    --podcast NAME : Download specific podcast by name
+    --all : Download all configured podcasts
+    --limit N : Download only the first N episodes per podcast
     --max-workers N : Number of concurrent downloads (default: 2)
 """
 import sys
@@ -29,11 +35,12 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# Thread lock for database writes (SQLite doesn't like concurrent writes)
-_db_lock = threading.Lock()
-
 from backend.app.core.config import settings
 from backend.app.core.logger import logger
+from backend.app.utils.program_utils import extract_program_from_title, normalize_program_name
+
+# Thread lock for database writes (SQLite doesn't like concurrent writes)
+_db_lock = threading.Lock()
 
 
 def create_session() -> requests.Session:
@@ -191,6 +198,9 @@ def extract_episode_info(entry: feedparser.FeedParserDict) -> Optional[Dict]:
         if 'image' in entry and isinstance(entry['image'], dict):
             image_url = entry['image'].get('href', '')
         
+        # Extract program name from title
+        program_name = extract_program_from_title(title)
+        
         return {
             'title': title,
             'audio_url': audio_url,
@@ -198,7 +208,8 @@ def extract_episode_info(entry: feedparser.FeedParserDict) -> Optional[Dict]:
             'published_date': published_date,
             'enclosure_length': int(enclosure_length) if enclosure_length else None,
             'summary': summary,
-            'image_url': image_url
+            'image_url': image_url,
+            'program_name': program_name
         }
         
     except Exception as e:
@@ -207,24 +218,28 @@ def extract_episode_info(entry: feedparser.FeedParserDict) -> Optional[Dict]:
 
 
 def save_episode_metadata(
+    podcast_name: str,
     filename: str,
     title_original: str,
     audio_url: str,
     file_size_mb: float,
     duration_seconds: int = None,
     published_date = None,
+    program_name: str = None,
     max_retries: int = 5
 ) -> Tuple[bool, str]:
     """
     Save or update episode metadata to database with retry logic for SQLite locks
     
     Args:
+        podcast_name: Podcast/feed source name
         filename: Normalized filename (unique key)
         title_original: Original title from RSS
         audio_url: URL of the audio file
         file_size_mb: Size of downloaded file in MB
         duration_seconds: Duration in seconds (optional)
         published_date: Publication date (optional)
+        program_name: Program name within feed (optional)
         max_retries: Max retry attempts (default: 5)
         
     Returns:
@@ -235,17 +250,19 @@ def save_episode_metadata(
             # Use lock to serialize database writes
             with _db_lock:
                 from backend.app.db.session import get_db_session
-                from backend.app.db.models import NerdcastEpisode
+                from backend.app.db.models import PodcastEpisode
                 
                 db = get_db_session()
                 
                 # Check if episode already exists
-                existing = db.query(NerdcastEpisode).filter(
-                    NerdcastEpisode.filename == filename
+                existing = db.query(PodcastEpisode).filter(
+                    PodcastEpisode.filename == filename
                 ).first()
                 
                 if existing:
-                    # Update ALL episode metadata
+                    # Update ALLepisode metadata
+                    existing.podcast_source = podcast_name
+                    existing.program_name = normalize_program_name(program_name, podcast_name)
                     existing.title_original = title_original
                     existing.audio_url = audio_url
                     existing.file_size_mb = file_size_mb
@@ -257,7 +274,9 @@ def save_episode_metadata(
                     return True, "atualizado"
                 else:
                     # Create new episode record
-                    episode = NerdcastEpisode(
+                    episode = PodcastEpisode(
+                        podcast_source=podcast_name,
+                        program_name=normalize_program_name(program_name, podcast_name),
                         filename=filename,
                         title_original=title_original,
                         audio_url=audio_url,
@@ -441,7 +460,7 @@ def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
     
     try:
         from backend.app.db.session import get_db_session, init_db
-        from backend.app.db.models import NerdcastEpisode
+        from backend.app.db.models import PodcastEpisode
         
         # Ensure database and tables exist
         init_db()
@@ -458,11 +477,17 @@ def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
             try:
                 for metadata in batch:
                     try:
-                        existing = db.query(NerdcastEpisode).filter(
-                            NerdcastEpisode.filename == metadata['filename']
+                        existing = db.query(PodcastEpisode).filter(
+                            PodcastEpisode.filename == metadata['filename']
                         ).first()
                         
+                        # Get or extract program name
+                        program_name = metadata.get('program_name')
+                        normalized_program = normalize_program_name(program_name, podcast_name)
+                        
                         if existing:
+                            existing.podcast_source = podcast_name
+                            existing.program_name = normalized_program
                             existing.title_original = metadata['title_original']
                             existing.summary = metadata.get('summary')
                             existing.image_url = metadata.get('image_url')
@@ -473,7 +498,9 @@ def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
                             existing.status = "downloaded"
                             existing.downloaded_at = datetime.utcnow()  # Atualiza timestamp do download
                         else:
-                            episode = NerdcastEpisode(
+                            episode = PodcastEpisode(
+                                podcast_source=podcast_name,
+                                program_name=normalized_program,
                                 filename=metadata['filename'],
                                 title_original=metadata['title_original'],
                                 summary=metadata.get('summary'),
@@ -516,23 +543,35 @@ def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
     return success_count, error_count
 
 
-def main(limit: Optional[int] = None, max_workers: Optional[int] = None):
+def main(limit: Optional[int] = None, max_workers: Optional[int] = None, podcast_name: Optional[str] = None):
     """
-    Main entry point
+    Main entry point for downloading a specific podcast
     
     Args:
         limit: Limit number of episodes to download (None = all)
         max_workers: Number of concurrent downloads (None = from settings)
+        podcast_name: Name of the podcast to download (must exist in settings.PODCASTS)
     """
     if max_workers is None:
         max_workers = settings.DOWNLOAD_MAX_CONCURRENT
-    logger.header("📥 NERDCAST PODCAST DOWNLOADER")
     
-    # Ensure output directory exists
-    output_dir = settings.get_podcasts_dir()
+    # Get podcast configuration
+    if podcast_name not in settings.PODCASTS:
+        logger.error(f"❌ Podcast '{podcast_name}' não encontrado")
+        logger.info("Use --list para ver podcasts disponíveis")
+        return 1
+    
+    podcast_config = settings.PODCASTS[podcast_name]
+    podcast_display_name = podcast_config["name"]
+    feed_url = podcast_config["feed_url"]
+    
+    logger.header(f"📥 DOWNLOAD: {podcast_display_name}")
+    
+    # Ensure output directory exists for this specific podcast
+    output_dir = settings.get_podcasts_dir(podcast_name)
     
     # Fetch RSS feed
-    feed = fetch_feed(settings.RSS_FEED_URL)
+    feed = fetch_feed(feed_url)
     if not feed:
         logger.error("❌ Falha ao buscar feed")
         return 1
@@ -575,17 +614,107 @@ def main(limit: Optional[int] = None, max_workers: Optional[int] = None):
     return 0 if failed_count == 0 else 1
 
 
+def download_all_podcasts(limit: Optional[int] = None, max_workers: Optional[int] = None):
+    """
+    Download all configured podcasts
+    
+    Args:
+        limit: Limit number of episodes per podcast (None = all)
+        max_workers: Number of concurrent downloads (None = from settings)
+        
+    Returns:
+        0 if all succeeded, 1 if any failed
+    """
+    logger.header("📥 DOWNLOAD ALL PODCASTS")
+    
+    podcasts = settings.PODCASTS
+    total_podcasts = len(podcasts)
+    failed_podcasts = []
+    
+    for idx, (podcast_id, podcast_config) in enumerate(podcasts.items(), 1):
+        podcast_name = podcast_config["name"]
+        logger.section(f"[{idx}/{total_podcasts}] {podcast_name}")
+        
+        exit_code = main(limit=limit, max_workers=max_workers, podcast_name=podcast_id)
+        
+        if exit_code != 0:
+            failed_podcasts.append(podcast_name)
+        
+        # Pequena pausa entre podcasts
+        if idx < total_podcasts:
+            import time
+            time.sleep(2)
+    
+    # Summary
+    logger.header("📊 RESUMO GERAL")
+    logger.success(f"✓ Processados: {total_podcasts} podcasts")
+    
+    if failed_podcasts:
+        logger.error(f"❌ Falharam: {len(failed_podcasts)}")
+        for name in failed_podcasts:
+            logger.error(f"  - {name}")
+        return 1
+    else:
+        logger.success("✓ Todos os podcasts baixados com sucesso!")
+        return 0
+
+
+def list_podcasts():
+    """List all available podcasts"""
+    logger.header("📻 PODCASTS DISPONÍVEIS")
+    
+    podcasts = settings.PODCASTS
+    
+    if not podcasts:
+        logger.warning("Nenhum podcast configurado")
+        return
+    
+    logger.info(f"Total: {len(podcasts)} podcast(s) configurado(s)\n")
+    
+    for podcast_id, config in podcasts.items():
+        logger.info(f"🎙️  {config['name']}")
+        logger.info(f"   ID: {podcast_id}")
+        logger.info(f"   Feed: {config['feed_url']}")
+        if 'description' in config:
+            logger.info(f"   Descrição: {config['description']}")
+        logger.info("")  # Blank line
+    
+    logger.info("Uso:")
+    logger.info("  python -m backend.pipelines.download --podcast <ID>")
+    logger.info("  python -m backend.pipelines.download --all")
+
+
 if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(
-        description="Download Nerdcast podcast episodes"
+        description="Download podcast episodes from RSS feeds"
     )
+    
+    # Mutually exclusive group for podcast selection
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        '--list',
+        action='store_true',
+        help='List all available podcasts'
+    )
+    group.add_argument(
+        '--podcast',
+        type=str,
+        metavar='NAME',
+        help='Download specific podcast by name'
+    )
+    group.add_argument(
+        '--all',
+        action='store_true',
+        help='Download all configured podcasts'
+    )
+    
     parser.add_argument(
         '--limit',
         type=int,
         default=None,
-        help='Limit number of episodes to download'
+        help='Limit number of episodes to download per podcast'
     )
     parser.add_argument(
         '--max-workers',
@@ -596,5 +725,22 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    exit_code = main(limit=args.limit, max_workers=args.max_workers)
-    sys.exit(exit_code)
+    # Handle --list
+    if args.list:
+        list_podcasts()
+        sys.exit(0)
+    
+    # Handle --all
+    if args.all:
+        exit_code = download_all_podcasts(limit=args.limit, max_workers=args.max_workers)
+        sys.exit(exit_code)
+    
+    # Handle --podcast
+    if args.podcast:
+        exit_code = main(limit=args.limit, max_workers=args.max_workers, podcast_name=args.podcast)
+        sys.exit(exit_code)
+    
+    # No arguments provided - show help
+    parser.print_help()
+    logger.info("\nDica: Use --list para ver podcasts disponíveis")
+    sys.exit(1)

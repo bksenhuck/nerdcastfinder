@@ -3,13 +3,22 @@ import sqlite3
 conn = sqlite3.connect('backend/data/nerdcasts.db')
 cursor = conn.cursor()
 
+# Check if table has been migrated to new name
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+tables = [row[0] for row in cursor.fetchall()]
+
+episodes_table = 'podcast_episodes' if 'podcast_episodes' in tables else 'nerdcast_episodes'
+segments_table = 'podcast_segments' if 'podcast_segments' in tables else 'nerdcast_segments'
+
+print(f"Using tables: {episodes_table}, {segments_table}")
+
 # Get a segment filename
-cursor.execute("SELECT episode FROM nerdcast_segments LIMIT 1")
+cursor.execute(f"SELECT episode FROM {segments_table} LIMIT 1")
 segment_episode = cursor.fetchone()[0]
 print(f"Segment episode: {segment_episode}")
 
-# Check if this episode exists in nerdcast_episodes
-cursor.execute("SELECT filename, title_original, published_date, duration_seconds, file_size_mb FROM nerdcast_episodes WHERE filename = ?", (segment_episode,))
+# Check if this episode exists in episodes table
+cursor.execute(f"SELECT filename, title_original, published_date, duration_seconds, file_size_mb FROM {episodes_table} WHERE filename = ?", (segment_episode,))
 result = cursor.fetchone()
 
 if result:
@@ -22,10 +31,10 @@ if result:
 else:
     print(f"\nNo metadata found for {segment_episode}")
     
-    # Check what filenames exist in nerdcast_episodes
-    cursor.execute("SELECT filename FROM nerdcast_episodes LIMIT 5")
+    # Check what filenames exist in episodes table
+    cursor.execute(f"SELECT filename FROM {episodes_table} LIMIT 5")
     episodes = cursor.fetchall()
-    print(f"\nSample filenames in nerdcast_episodes:")
+    print(f"\nSample filenames in {episodes_table}:")
     for ep in episodes:
         print(f"  - {ep[0]}")
 

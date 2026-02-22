@@ -8,6 +8,7 @@ from typing import List, Dict
 
 from backend.app.core.config import settings
 from backend.app.core.logger import logger
+from backend.app.core.cache import search_cache
 from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastSegment, PodcastEpisode
 from backend.app.services.embedding_service import EmbeddingService
@@ -92,7 +93,7 @@ class SearchService:
         min_confidence: float = None
     ) -> List[Dict]:
         """
-        Search for similar segments
+        Search for similar segments with caching support.
         
         Args:
             query: Search query string
@@ -104,6 +105,18 @@ class SearchService:
         Returns:
             List of dicts with keys: episode, excerpt, score
         """
+        # Check cache before processing
+        cached_result = search_cache.get(
+            query=query,
+            top_k=top_k,
+            podcast_source=podcast_source,
+            program_name=program_name,
+            min_confidence=min_confidence
+        )
+        
+        if cached_result is not None:
+            return cached_result
+        
         if self.index is None:
             raise RuntimeError("FAISS index not loaded. Run ingestion first.")
         
@@ -178,5 +191,15 @@ class SearchService:
         # Apply confidence threshold filter if specified
         if min_confidence is not None:
             results = [r for r in results if r["score"] >= min_confidence]
+        
+        # Cache the result before returning
+        search_cache.set(
+            query=query,
+            result=results,
+            top_k=top_k,
+            podcast_source=podcast_source,
+            program_name=program_name,
+            min_confidence=min_confidence
+        )
         
         return results

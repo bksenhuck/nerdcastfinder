@@ -2,11 +2,12 @@
 Search API endpoint
 """
 from fastapi import APIRouter, Query, HTTPException
-from typing import List
+from typing import List, Dict, Any
 from pydantic import BaseModel
 
 from backend.app.core.config import settings
 from backend.app.core.logger import logger
+from backend.app.core.cache import search_cache
 from backend.app.services.search_service import SearchService
 
 router = APIRouter()
@@ -130,5 +131,72 @@ async def search(
         raise HTTPException(
             status_code=500, 
             detail="Infelizmente aconteceu um erro ao processar sua busca. Por favor, tente novamente em alguns instantes."
+        )
+
+
+@router.get("/cache/stats")
+async def get_cache_stats() -> Dict[str, Any]:
+    """
+    Get cache statistics.
+    
+    Returns:
+        Cache stats including hit rate, total entries, TTL, etc.
+    """
+    logger.header("📊 CACHE STATS REQUEST")
+    
+    try:
+        stats = search_cache.get_stats()
+        logger.info(f"Cache stats: {stats}")
+        logger.success("Cache stats retrieved successfully")
+        return stats
+    except Exception as e:
+        logger.error(f"Failed to get cache stats: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao recuperar estatísticas de cache"
+        )
+
+
+@router.post("/cache/clear")
+async def clear_cache() -> Dict[str, str]:
+    """
+    Clear all cache entries.
+    
+    Returns:
+        Confirmation message
+    """
+    logger.header("🗑️  CACHE CLEAR REQUEST")
+    
+    try:
+        search_cache.clear()
+        logger.success("Cache cleared successfully")
+        return {"message": "Cache limpo com sucesso", "status": "success"}
+    except Exception as e:
+        logger.error(f"Failed to clear cache: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao limpar cache"
+        )
+
+
+@router.post("/cache/reset-stats")
+async def reset_cache_stats() -> Dict[str, str]:
+    """
+    Reset cache statistics (hit/miss counts).
+    
+    Returns:
+        Confirmation message
+    """
+    logger.header("🔄 CACHE STATS RESET REQUEST")
+    
+    try:
+        search_cache.reset_stats()
+        logger.success("Cache stats reset successfully")
+        return {"message": "Estatísticas de cache resetadas", "status": "success"}
+    except Exception as e:
+        logger.error(f"Failed to reset cache stats: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao resetar estatísticas de cache"
         )
 

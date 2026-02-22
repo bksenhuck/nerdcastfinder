@@ -88,7 +88,8 @@ class SearchService:
         query: str,
         top_k: int = None,
         podcast_source: str = None,
-        program_name: str = None
+        program_name: str = None,
+        min_confidence: float = None
     ) -> List[Dict]:
         """
         Search for similar segments
@@ -98,6 +99,7 @@ class SearchService:
             top_k: Number of results to return (default: from settings)
             podcast_source: Optional filter by podcast source/feed
             program_name: Optional filter by program name
+            min_confidence: Optional minimum confidence threshold (0-1). If None, returns top K results. If set, returns only results above threshold.
             
         Returns:
             List of dicts with keys: episode, excerpt, score
@@ -172,5 +174,9 @@ class SearchService:
                     })
         finally:
             db.close()
+        
+        # Apply confidence threshold filter if specified
+        if min_confidence is not None:
+            results = [r for r in results if r["score"] >= min_confidence]
         
         return results

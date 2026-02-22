@@ -63,6 +63,12 @@ async def search(
     program: str = Query(
         None,
         description="Filter by program name (optional)"
+    ),
+    min_confidence: float = Query(
+        None,
+        description="Minimum confidence score (0-1). If not specified, returns top K results. If specified, returns only results above threshold.",
+        ge=0.0,
+        le=1.0
     )
 ):
     """
@@ -82,6 +88,7 @@ async def search(
     logger.info(f"Top K: {top_k}")
     logger.info(f"Feed filter: {feed if feed else 'None'}")
     logger.info(f"Program filter: {program if program else 'None'}")
+    logger.info(f"Min Confidence: {min_confidence if min_confidence is not None else 'None (returns top K)'}")
     
     try:
         logger.info("Getting search service...")
@@ -94,7 +101,8 @@ async def search(
             query=q,
             top_k=top_k,
             podcast_source=feed,
-            program_name=program
+            program_name=program,
+            min_confidence=min_confidence
         )
         
         logger.success(f"Search completed successfully - Found {len(results)} results")

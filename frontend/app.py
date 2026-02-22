@@ -206,17 +206,12 @@ def home_layout():
                         style={"textDecoration": "none", "color": "inherit"}
                     ),
                     html.Div([
-                        html.Img(
-                            src="/assets/images/podcast_finder_logo.png",
-                            className="d-inline-block me-2",
-                            style={"height": "30px", "width": "auto"}
-                        ),
                         dcc.Link(
                             "Sobre",
                             href="/about",
                             id="about-link",
                             className="me-3",
-                            style={"fontSize": "16px", "textDecoration": "none", "verticalAlign": "middle"}
+                            style={"fontSize": "16px", "textDecoration": "none"}
                         ),
                         dbc.Button(
                             html.I(className="bi bi-moon-fill"),
@@ -515,17 +510,12 @@ def about_layout():
                         style={"textDecoration": "none", "color": "inherit"}
                     ),
                     html.Div([
-                        html.Img(
-                            src="/assets/images/podcast_finder_logo.png",
-                            className="d-inline-block me-2",
-                            style={"height": "30px", "width": "auto"}
-                        ),
                         dcc.Link(
                             "← Voltar",
                             href="/",
                             id="back-link",
                             className="me-3",
-                            style={"fontSize": "16px", "textDecoration": "none", "verticalAlign": "middle"}
+                            style={"fontSize": "16px", "textDecoration": "none"}
                         ),
                         dbc.Button(
                             html.I(className="bi bi-moon-fill"),
@@ -908,6 +898,11 @@ def search_podcasts(
         if program_filter:
             params["program"] = program_filter
         
+        # Add minimum confidence threshold if set
+        # similarity_threshold is in range 0.0-1.0, pass it directly as min_confidence
+        if similarity_threshold and similarity_threshold > 0:
+            params["min_confidence"] = round(similarity_threshold, 2)
+        
         logger.info(f"Making request to: {BACKEND_URL}")
         logger.info(f"Parameters: {params}")
         
@@ -998,13 +993,12 @@ def search_podcasts(
                 )
             ], className="mt-4"), ""
         
-        # Filter results by similarity threshold
-        filtered_results = [
-            r for r in results if r['score'] >= similarity_threshold
-        ]
+        # Note: Filtering by similarity_threshold is now done by the backend
+        # when min_confidence parameter is provided
+        filtered_results = results  # Use all results from backend (already filtered if threshold was set)
+        
         logger.success(
-            f"{len(filtered_results)} results after "
-            f"applying threshold {similarity_threshold}"
+            f"{len(filtered_results)} results after backend filtering"
         )
         
         if not filtered_results:

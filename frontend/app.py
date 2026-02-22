@@ -27,18 +27,39 @@ def get_podcast_stats():
     """Get statistics about available podcasts"""
     try:
         db = get_db_session()
-        total_episodes = db.query(PodcastEpisode).count()
+        
+        # Episódios com metadata (downloaded)
+        total_episodes_downloaded = db.query(PodcastEpisode).count()
+        
+        # Episódios processados (com chunks/embeddings)
+        from sqlalchemy import func
+        total_episodes_processed = db.query(
+            func.count(func.distinct(PodcastSegment.episode))
+        ).scalar() or 0
+        
+        # Programas e feeds (baseado no que foi processado)
         distinct_programs = (
-            db.query(PodcastEpisode.program_name).distinct().count()
+            db.query(PodcastEpisode.program_name)
+            .filter(PodcastEpisode.filename.in_(
+                db.query(PodcastSegment.episode).distinct()
+            ))
+            .distinct()
+            .count()
         )
         distinct_feeds = (
-            db.query(PodcastEpisode.podcast_source).distinct().count()
+            db.query(PodcastEpisode.podcast_source)
+            .filter(PodcastEpisode.filename.in_(
+                db.query(PodcastSegment.episode).distinct()
+            ))
+            .distinct()
+            .count()
         )
+        
         db.close()
-        return total_episodes, distinct_programs, distinct_feeds
+        return total_episodes_downloaded, total_episodes_processed, distinct_programs, distinct_feeds
     except Exception as e:
         logger.error(f"Error getting podcast stats: {e}")
-        return 0, 0, 0
+        return 0, 0, 0, 0
 
 
 def get_available_filters():
@@ -179,7 +200,8 @@ app.index_string = '''
 def home_layout():
     """Layout for the home/search page"""
     # Get podcast statistics
-    total_episodes, total_programs, total_feeds = get_podcast_stats()
+    total_downloaded, total_processed, total_programs, total_feeds = get_podcast_stats()
+    episodes_pending = total_downloaded - total_processed
     
     # Get available filters
     available_feeds, available_programs = get_available_filters()
@@ -235,12 +257,18 @@ def home_layout():
                     style={"opacity": "0.8"}
                 ),
                 html.P(
-                    f"{total_episodes} episódios de {total_programs} "
-                    f"{'programa' if total_programs == 1 else 'programas'} "
-                    f"em {total_feeds} {'feed' if total_feeds == 1 else 'feeds'}",
+                    f"📊 {total_processed} episódios prontos para busca • "
+                    f"{episodes_pending} {'episódio' if episodes_pending == 1 else 'episódios'} em processamento",
                     id="stats-subtitle",
+                    className="text-center mb-2",
+                    style={"fontSize": "0.85rem", "opacity": "0.7"}
+                ),
+                html.P(
+                    f"{total_programs} {'programa' if total_programs == 1 else 'programas'} • "
+                    f"{total_feeds} {'feed' if total_feeds == 1 else 'feeds'}",
+                    id="programs-subtitle",
                     className="text-center mb-4",
-                    style={"fontSize": "0.9rem", "opacity": "0.6"}
+                    style={"fontSize": "0.85rem", "opacity": "0.6"}
                 )
             ])
         ]),

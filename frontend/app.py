@@ -17,7 +17,7 @@ import dash_bootstrap_components as dbc
 
 from utils.logger import logger
 from backend.app.db.session import get_db_session
-from backend.app.db.models import PodcastEpisode
+from backend.app.db.models import PodcastEpisode, PodcastSegment
 
 # Configuration
 BACKEND_URL = "http://localhost:8001/api/search"

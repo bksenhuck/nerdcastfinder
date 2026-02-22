@@ -251,19 +251,19 @@ def home_layout():
                     })
                 ], style={"position": "relative"}),
                 html.P(
-                    "Busque episódios de podcasts por tema, assunto ou palavra-chave",
-                    id="subtitle",
-                    className="text-center mb-2",
-                    style={"opacity": "0.8"}
-                ),
-                html.P(
-                    f"📊 {total_processed} episódios prontos para busca • "
-                    f"{episodes_pending} {'episódio' if episodes_pending == 1 else 'episódios'} em processamento",
-                    id="stats-subtitle",
-                    className="text-center mb-2",
-                    style={"fontSize": "0.85rem", "opacity": "0.7"}
-                ),
-                html.P(
+                f"{total_processed if total_processed > 0 else '-'} episódios prontos para busca • "
+                f"{episodes_pending if episodes_pending > 0 else '-'} {'episódio' if episodes_pending == 1 else 'episódios'} em processamento",
+                id="stats-subtitle",
+                className="text-center mb-2",
+                style={"fontSize": "0.85rem", "opacity": "0.7"}
+            ),
+            html.P(
+                f"{total_programs if total_programs > 0 else '-'} {'programa' if total_programs == 1 else 'programas'} • "
+                f"{total_feeds if total_feeds > 0 else '-'} {'feed' if total_feeds == 1 else 'feeds'}",
+                id="programs-subtitle",
+                className="text-center mb-4",
+                style={"fontSize": "0.85rem", "opacity": "0.6"}
+            )
                     f"{total_programs} {'programa' if total_programs == 1 else 'programas'} • "
                     f"{total_feeds} {'feed' if total_feeds == 1 else 'feeds'}",
                     id="programs-subtitle",

@@ -258,18 +258,12 @@ def home_layout():
                 style={"fontSize": "0.85rem", "opacity": "0.7"}
             ),
             html.P(
-                f"{total_programs if total_programs > 0 else '-'} {'programa' if total_programs == 1 else 'programas'} • "
-                f"{total_feeds if total_feeds > 0 else '-'} {'feed' if total_feeds == 1 else 'feeds'}",
+                f"{total_programs} {'programa' if total_programs == 1 else 'programas'} • "
+                f"{total_feeds} {'feed' if total_feeds == 1 else 'feeds'}",
                 id="programs-subtitle",
                 className="text-center mb-4",
                 style={"fontSize": "0.85rem", "opacity": "0.6"}
             )
-                    f"{total_programs} {'programa' if total_programs == 1 else 'programas'} • "
-                    f"{total_feeds} {'feed' if total_feeds == 1 else 'feeds'}",
-                    id="programs-subtitle",
-                    className="text-center mb-4",
-                    style={"fontSize": "0.85rem", "opacity": "0.6"}
-                )
             ])
         ]),
         

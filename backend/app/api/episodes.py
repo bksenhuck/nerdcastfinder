@@ -10,7 +10,7 @@ from datetime import datetime
 from backend.app.core.config import settings
 from backend.app.core.logger import logger
 from backend.app.db.session import get_db_session
-from backend.app.db.models import NerdcastEpisode
+from backend.app.db.models import PodcastEpisode
 
 router = APIRouter()
 
@@ -31,7 +31,7 @@ class EpisodeMetadata(BaseModel):
         from_attributes = True
 
 
-@router.get("/api/episodes", response_model=List[EpisodeMetadata], tags=["episodes"])
+@router.get("/episodes", response_model=List[EpisodeMetadata], tags=["episodes"])
 def get_episodes(
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(100, ge=1, le=1000, description="Max results"),
@@ -52,10 +52,10 @@ def get_episodes(
         log.info("📺 FETCHING EPISODE METADATA")
         log.info("=" * 60)
         
-        query = db.query(NerdcastEpisode)
+        query = db.query(PodcastEpisode)
         
         if status:
-            query = query.filter(NerdcastEpisode.status == status)
+            query = query.filter(PodcastEpisode.status == status)
             log.info(f"Filter: status={status}")
         
         # Get total count
@@ -63,7 +63,7 @@ def get_episodes(
         
         # Apply pagination
         episodes = query.order_by(
-            NerdcastEpisode.published_date.desc()
+            PodcastEpisode.published_date.desc()
         ).offset(skip).limit(limit).all()
         
         log.info(f"✓ Found {len(episodes)} episodes (total: {total})")
@@ -80,7 +80,7 @@ def get_episodes(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/episodes/{filename}", response_model=EpisodeMetadata, tags=["episodes"])
+@router.get("/episodes/{filename}", response_model=EpisodeMetadata, tags=["episodes"])
 def get_episode_by_filename(filename: str):
     """
     Get episode metadata by normalized filename
@@ -120,7 +120,7 @@ def get_episode_by_filename(filename: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/episodes/stats/summary", tags=["episodes"])
+@router.get("/episodes/stats/summary", tags=["episodes"])
 def get_episodes_stats():
     """
     Get summary statistics about episodes
@@ -177,4 +177,42 @@ def get_episodes_stats():
     except Exception as e:
         log.error(f"Failed to get episode stats: {e}")
         logger.error(f"Failed to get episode stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class FiltersResponse(BaseModel):
+    """Available filters response model"""
+    feeds: List[str]
+    programs: List[str]
+
+
+@router.get("/filters", response_model=FiltersResponse, tags=["filters"])
+def get_filters():
+    """
+    Get available filters (feeds and programs)
+    
+    Returns:
+        Available podcast sources (feeds) and program names for filtering
+    """
+    try:
+        db = get_db_session()
+        
+        # Get distinct feeds (podcast_source)
+        feeds = db.query(PodcastEpisode.podcast_source).distinct().all()
+        feeds = sorted([f[0] for f in feeds if f[0] is not None])
+        
+        # Get distinct programs (program_name)
+        programs = db.query(PodcastEpisode.program_name).distinct().all()
+        programs = sorted([p[0] for p in programs if p[0] is not None])
+        
+        db.close()
+        
+        return {
+            "feeds": feeds,
+            "programs": programs
+        }
+    
+    except Exception as e:
+        log.error(f"Failed to get filters: {e}")
+        logger.error(f"Failed to get filters: {e}")
         raise HTTPException(status_code=500, detail=str(e))

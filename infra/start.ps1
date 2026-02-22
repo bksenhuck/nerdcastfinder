@@ -65,8 +65,8 @@ if (-not (Test-Path $frontendDir)) {
 }
 
 Write-Host "Starting Backend API..." -ForegroundColor Cyan
-Write-Host "   Location: http://localhost:8000" -ForegroundColor Gray
-Write-Host "   Docs: http://localhost:8000/docs" -ForegroundColor Gray
+Write-Host "   Location: http://localhost:8005" -ForegroundColor Gray
+Write-Host "   Docs: http://localhost:8005/docs" -ForegroundColor Gray
 Write-Host ""
 
 # Prepare activation command
@@ -79,7 +79,7 @@ if ($venvActivated) {
 }
 
 # Start Backend in a new terminal
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$projectRoot'; $activateCmd; Write-Host '=== NERDCAST FINDER - BACKEND ===' -ForegroundColor Green; python -m backend.app.main"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$projectRoot'; $activateCmd; Write-Host '=== NERDCAST FINDER - BACKEND ===' -ForegroundColor Green; python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8005 --reload"
 
 # Wait a bit before starting frontend
 Start-Sleep -Seconds 3
@@ -96,7 +96,7 @@ Write-Host "=" -NoNewline; Write-Host ("=" * 59)
 Write-Host "Both servers are starting in separate terminals" -ForegroundColor Green
 Write-Host "=" -NoNewline; Write-Host ("=" * 59)
 Write-Host ""
-Write-Host "Backend:  http://localhost:8000" -ForegroundColor White
+Write-Host "Backend:  http://localhost:8005" -ForegroundColor White
 Write-Host "Frontend: http://127.0.0.1:8050" -ForegroundColor White
 Write-Host ""
 Write-Host "Press Enter to close this window (servers will keep running)..." -ForegroundColor Yellow

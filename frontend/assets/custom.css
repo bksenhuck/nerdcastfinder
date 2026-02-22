@@ -1,0 +1,83 @@
+/* Dark theme dropdown styles for Dash components */
+[data-theme="dark"] .dash-table__cell {
+    background-color: #212529 !important;
+    color: #f8f9fa !important;
+}
+
+/* Dash Select/Dropdown customization */
+[data-theme="dark"] .Select-control {
+    background-color: #2d2d2d !important;
+    border-color: #444444 !important;
+    color: #f8f9fa !important;
+}
+
+[data-theme="dark"] .Select-value {
+    color: #f8f9fa !important;
+    background-color: #2d2d2d !important;
+}
+
+[data-theme="dark"] .Select-arrow-zone {
+    background-color: #2d2d2d !important;
+}
+
+[data-theme="dark"] .Select-arrow {
+    border-color: #f8f9fa transparent transparent !important;
+}
+
+[data-theme="dark"] .Select-menu-outer {
+    background-color: #1a1a1a !important;
+    border-color: #444444 !important;
+}
+
+[data-theme="dark"] .Select-menu {
+    background-color: #1a1a1a !important;
+    max-height: 200px !important;
+}
+
+[data-theme="dark"] .Select-option {
+    background-color: #1a1a1a !important;
+    color: #f8f9fa !important;
+    padding: 8px 10px !important;
+}
+
+[data-theme="dark"] .Select-option:hover {
+    background-color: #333333 !important;
+}
+
+[data-theme="dark"] .Select-option.is-selected {
+    background-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .Select-option.is-focused {
+    background-color: #333333 !important;
+}
+
+[data-theme="dark"] .Select-input input {
+    background-color: #2d2d2d !important;
+    color: #f8f9fa !important;
+}
+
+[data-theme="dark"] .Select-input input::placeholder {
+    color: #999999 !important;
+}
+
+/* Dash bootstrap dropdown styling for dark theme */
+[data-theme="dark"] .dropdown-menu {
+    background-color: #1a1a1a !important;
+    border-color: #444444 !important;
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: #f8f9fa !important;
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .dropdown-item.active {
+    background-color: #0d6efd !important;
+}

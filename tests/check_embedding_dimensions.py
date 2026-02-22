@@ -7,14 +7,14 @@ sys.path.insert(0, str(backend_dir))
 sys.path.insert(0, str(Path(__file__).parent))
 
 from app.db.session import get_db_session
-from app.db.models import NerdcastSegment
+from app.db.models import PodcastSegment
 from utils.logger import logger
 
 db = get_db_session()
 
 logger.section("Checking embedding dimensions in database")
 
-segments = db.query(NerdcastSegment).all()
+segments = db.query(PodcastSegment).all()
 logger.info(f"Total segments: {len(segments)}")
 
 dimension_counts = {}
@@ -42,7 +42,7 @@ if len(dimension_counts) > 1:
     logger.warning("\n⚠️  MIXED DIMENSIONS DETECTED!")
     logger.info("Database has embeddings from different models.")
     logger.info("Options:")
-    logger.info("  1. Delete all segments: python -c \"from backend.app.db.session import get_db_session; from backend.app.db.models import NerdcastSegment; db = get_db_session(); db.query(NerdcastSegment).delete(); db.commit(); db.close()\"")
+    logger.info("  1. Delete all segments: python -c \"from backend.app.db.session import get_db_session; from backend.app.db.models import PodcastSegment; db = get_db_session(); db.query(PodcastSegment).delete(); db.commit(); db.close()\"")
     logger.info("  2. Or delete only old dimension segments and keep the new ones")
 elif len(dimension_counts) == 1:
     dim = list(dimension_counts.keys())[0]

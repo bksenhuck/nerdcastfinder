@@ -1,5 +1,6 @@
 """
-Migration script to add new columns to nerdcast_episodes table
+Migration script to add new columns to podcast_episodes table
+(Legacy script - consider using backend/pipelines/migrate_to_multi_podcast.py instead)
 """
 import sys
 from pathlib import Path
@@ -23,8 +24,19 @@ def migrate():
     cursor = conn.cursor()
     
     try:
+        # Check if table has been migrated to new name
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+        
+        # Use new table name if it exists, otherwise use old name
+        table_name = 'podcast_episodes' if 'podcast_episodes' in tables else 'nerdcast_episodes'
+        
+        if table_name == 'nerdcast_episodes':
+            logger.warning("⚠️  Usando tabela antiga 'nerdcast_episodes'")
+            logger.info("   Considere executar: python -m backend.pipelines.migrate_to_multi_podcast")
+        
         # Check existing columns
-        cursor.execute("PRAGMA table_info(nerdcast_episodes)")
+        cursor.execute(f"PRAGMA table_info({table_name})")
         columns = [col[1] for col in cursor.fetchall()]
         
         migrations_done = []
@@ -33,8 +45,8 @@ def migrate():
         if 'downloaded_at' in columns:
             logger.info("✓ Coluna 'downloaded_at' já existe")
         else:
-            cursor.execute("""
-                ALTER TABLE nerdcast_episodes 
+            cursor.execute(f"""
+                ALTER TABLE {table_name}
                 ADD COLUMN downloaded_at DATETIME
             """)
             migrations_done.append("downloaded_at")
@@ -43,8 +55,8 @@ def migrate():
         if 'summary' in columns:
             logger.info("✓ Coluna 'summary' já existe")
         else:
-            cursor.execute("""
-                ALTER TABLE nerdcast_episodes 
+            cursor.execute(f"""
+                ALTER TABLE {table_name}
                 ADD COLUMN summary TEXT
             """)
             migrations_done.append("summary")
@@ -53,8 +65,8 @@ def migrate():
         if 'image_url' in columns:
             logger.info("✓ Coluna 'image_url' já existe")
         else:
-            cursor.execute("""
-                ALTER TABLE nerdcast_episodes 
+            cursor.execute(f"""
+                ALTER TABLE {table_name}
                 ADD COLUMN image_url TEXT
             """)
             migrations_done.append("image_url")

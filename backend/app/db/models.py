@@ -1,5 +1,5 @@
 """
-Database models for Nerdcast Finder
+Database models for Podcast Finder (multi-podcast support)
 """
 import numpy as np
 from datetime import datetime
@@ -9,13 +9,15 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class NerdcastEpisode(Base):
+class PodcastEpisode(Base):
     """
-    Stores metadata about podcast episodes
+    Stores metadata about podcast episodes from multiple podcasts
     """
-    __tablename__ = "nerdcast_episodes"
+    __tablename__ = "podcast_episodes"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    podcast_source = Column(String(100), nullable=False, index=True, default='nerdcast')  # Feed source (ex: "jovem_nerd")
+    program_name = Column(String(100), nullable=True, index=True)  # Program within feed (ex: "NerdCast", "NerdTech")
     filename = Column(String(255), nullable=False, unique=True, index=True)  # Chave: nome tratado
     title_original = Column(String(500), nullable=False)  # Nome original do RSS
     summary = Column(Text, nullable=True)  # Descrição do episódio
@@ -31,19 +33,22 @@ class NerdcastEpisode(Base):
     
     def __repr__(self):
         return (
-            f"<NerdcastEpisode(filename='{self.filename}', "
+            f"<PodcastEpisode(podcast_source='{self.podcast_source}', "
+            f"filename='{self.filename}', "
             f"title='{self.title_original[:50]}', "
             f"size={self.file_size_mb}MB)>"
         )
 
 
-class NerdcastSegment(Base):
+class PodcastSegment(Base):
     """
     Stores podcast episode segments with their text content and embeddings
+    Supports multiple podcasts via podcast_source field
     """
-    __tablename__ = "nerdcast_segments"
+    __tablename__ = "podcast_segments"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    podcast_source = Column(String(100), nullable=False, index=True, default='nerdcast')  # Identifica qual podcast
     episode = Column(String(500), nullable=False, index=True)
     content = Column(Text, nullable=False)
     embedding_id = Column(Integer, nullable=False, unique=True, index=True)
@@ -61,7 +66,14 @@ class NerdcastSegment(Base):
     
     def __repr__(self):
         return (
-            f"<NerdcastSegment(id={self.id}, "
+            f"<PodcastSegment(id={self.id}, "
+            f"podcast_source='{self.podcast_source}', "
             f"episode='{self.episode}', "
             f"embedding_id={self.embedding_id})>"
         )
+
+
+# Backward compatibility aliases
+# TODO: Remove these after all code has been updated to use new names
+NerdcastEpisode = PodcastEpisode
+NerdcastSegment = PodcastSegment

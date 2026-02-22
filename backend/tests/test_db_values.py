@@ -14,7 +14,7 @@ cursor.execute("""
         duration_seconds, 
         file_size_mb,
         image_url
-    FROM nerdcast_episodes 
+    FROM podcast_episodes 
     WHERE filename = ?
 """, (episode_name,))
 

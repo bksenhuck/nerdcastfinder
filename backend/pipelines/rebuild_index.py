@@ -10,6 +10,7 @@ stored in the SQLite database. Use this after:
 Usage:
     python -m backend.pipelines.rebuild_index
 """
+import sys
 import numpy as np
 import faiss
 from pathlib import Path
@@ -17,7 +18,7 @@ from pathlib import Path
 from backend.app.core.config import settings
 from backend.app.core.logger import logger
 from backend.app.db.session import get_db_session
-from backend.app.db.models import NerdcastSegment
+from backend.app.db.models import PodcastSegment
 
 
 def rebuild_faiss_index():
@@ -36,7 +37,7 @@ def rebuild_faiss_index():
     try:
         # Load all segments ordered by embedding_id
         logger.info("📊 Loading segments from database...")
-        segments = db.query(NerdcastSegment).order_by(NerdcastSegment.embedding_id).all()
+        segments = db.query(PodcastSegment).order_by(PodcastSegment.embedding_id).all()
         
         if not segments:
             logger.warning("⚠️  No segments found in database!")

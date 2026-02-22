@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from backend.app.db.session import get_db_session
-from backend.app.db.models import NerdcastEpisode
+from backend.app.db.models import PodcastEpisode
 
 db = get_db_session()
 

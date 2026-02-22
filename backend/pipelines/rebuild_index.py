@@ -16,7 +16,7 @@ import faiss
 from pathlib import Path
 
 from backend.app.core.config import settings
-from backend.app.core.logger import logger
+from backend.app.core.logger import logger, format_path
 from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastSegment
 
@@ -104,7 +104,7 @@ def rebuild_faiss_index():
         faiss_dir.mkdir(parents=True, exist_ok=True)
         
         # Save FAISS index
-        logger.info(f"💾 Saving index to {index_path}")
+        logger.info(f"💾 Saving index to {format_path(index_path)}")
         faiss.write_index(index, str(index_path))
         
         # Save mapping from FAISS position to embedding_id
@@ -116,7 +116,7 @@ def rebuild_faiss_index():
         logger.info(f"  📐 Dimension: {dimension}")
         logger.info(f"  📊 Total vectors: {index.ntotal}")
         logger.info(f"  🗺️  Mapping: {mapping_path.name}")
-        logger.info(f"  📂 Location: {index_path}")
+        logger.info(f"  📂 Location: {format_path(index_path)}")
         
         return index_path, index.ntotal
         
@@ -136,7 +136,7 @@ def main():
         
         if index_path:
             logger.header("✓ REBUILD COMPLETE!")
-            logger.info(f"Index saved: {index_path}")
+            logger.info(f"Index saved: {format_path(index_path)}")
             logger.info(f"Total vectors: {total}")
         else:
             logger.error("❌ Rebuild failed - no segments found")

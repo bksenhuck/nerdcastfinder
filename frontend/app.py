@@ -15,7 +15,7 @@ from dash import Dash, html, dcc, Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
-from utils.logger import logger
+from backend.app.core.logger import logger
 from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastEpisode, PodcastSegment
 
@@ -285,6 +285,14 @@ def home_layout():
                         n_clicks=0
                     )
                 ], className="mb-3"),
+                # Informational alert about current search behavior
+                dbc.Alert(
+                    "A pesquisa atual trará até 20 resultados com as maiores confiabilidades. Você pode usar os filtros e as Opções Avançadas abaixo para refinar a busca.",
+                    color="info",
+                    id="search-info-alert",
+                    className="text-center mb-2",
+                    style={"fontSize": "0.95rem"}
+                ),
                 # Advanced options toggle
                 html.Div([
                     dbc.Button(
@@ -486,7 +494,7 @@ def home_layout():
             ], md=8, className="mx-auto")
         ]),
             
-        # Loading spinner
+        # Loading spinner (add spacing so it doesn't overlap advanced controls)
         dbc.Row([
             dbc.Col([
                 dcc.Loading(
@@ -495,7 +503,7 @@ def home_layout():
                     children=html.Div(id="loading-output")
                 )
             ], md=8, className="mx-auto")
-        ]),
+        ], style={"marginTop": "1.25rem"}),
             
         # Results
         dbc.Row([

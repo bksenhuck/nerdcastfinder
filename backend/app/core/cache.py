@@ -2,14 +2,13 @@
 Simple in-memory cache with TTL support for search results.
 Thread-safe implementation using standard library only.
 """
-import logging
 import time
 import threading
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
 from hashlib import md5
 
-logger = logging.getLogger("uvicorn.error")
+from backend.app.core.logger import logger
 
 
 @dataclass

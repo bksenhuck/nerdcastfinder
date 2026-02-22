@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from app.db.session import get_db_session
 from app.db.models import PodcastSegment
-from utils.logger import logger
+from backend.app.core.logger import logger
 
 db = get_db_session()
 

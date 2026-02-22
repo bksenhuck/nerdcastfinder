@@ -45,12 +45,11 @@ class Settings:
             "feed_url": "https://jovemnerd.com.br/feed-nerdcast/",
             "description": "O podcast original que deu origem ao projeto"
         },
-        # Adicione novos podcasts aqui:
-        # "pudimcast": {
-        #     "name": "Pudimcast",
-        #     "feed_url": "https://exemplo.com/feed-pudimcast/",
-        #     "description": "Outro podcast exemplo"
-        # },
+        "pelada_na_net": {
+            "name": "Pelada na Net",
+            "feed_url": "https://www.omnycontent.com/d/playlist/f7f86f6a-2fbd-4ac7-ab53-b01900e5d187/2f120fb0-f8eb-43ca-8e9d-b08a00f7ee41/f56245dd-a097-4ef9-b675-b08a00f7ee7e/podcast.rss",
+            "description": "Pelada na Net"
+        },
     }
     
     DOWNLOAD_TIMEOUT: int = 300  # 5 minutes per episode

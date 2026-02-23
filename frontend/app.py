@@ -889,6 +889,7 @@ def search_podcasts(
         info_border = "#dee2e6"
     
     is_dark_mode = (theme == "dark")
+    muted_color = "#adb5bd" if is_dark_mode else "#6c757d"
     
     logger.header("🔍 FRONTEND SEARCH REQUEST")
     logger.info(f"Query: '{query}'")
@@ -1116,6 +1117,7 @@ def search_podcasts(
             score = result['score']
             title = result.get('title', result['episode'])
             image_url = result.get('image_url')
+            author = result.get('author') or result.get('program_name') or result.get('podcast_source') or None
             
             # Highlight similar words in excerpt
             highlighted_text = highlight_similar_words(
@@ -1137,7 +1139,7 @@ def search_podcasts(
             else:
                 # Placeholder for episodes without image
                 image_component = html.Div([
-                    html.I(className="bi bi-mic-fill", style={"fontSize": "60px", "color": "#6c757d"}),
+                    html.I(className="bi bi-mic-fill", style={"fontSize": "60px", "color": muted_color}),
                 ], style={
                     "width": "150px",
                     "height": "150px",
@@ -1162,11 +1164,18 @@ def search_podcasts(
                     date_obj = datetime.fromisoformat(published_date.replace('Z', '+00:00'))
                     formatted_date = date_obj.strftime('%d/%m/%Y')
                     metadata_items.append(html.Div([
-                        html.I(className="bi bi-calendar3 me-2", style={"color": "#6c757d"}),
+                        html.I(className="bi bi-calendar3 me-2", style={"color": muted_color}),
                         html.Span(formatted_date, style={"fontSize": "0.85rem"})
                     ], className="mb-2"))
                 except:
                     pass
+
+            # Author/program name (show above date) - insert with fallback
+            display_author = author if author else "Autor desconhecido"
+            metadata_items.insert(0, html.Div([
+                html.I(className="bi bi-person-circle me-2", style={"color": muted_color}),
+                html.Span(display_author, style={"fontSize": "0.85rem", "fontWeight": "600"})
+            ], className="mb-2"))
             
             if duration_seconds:
                 # Convert seconds to MM:SS or HH:MM:SS
@@ -1178,16 +1187,19 @@ def search_podcasts(
                 else:
                     duration_str = f"{minutes}m {seconds}s"
                 metadata_items.append(html.Div([
-                    html.I(className="bi bi-clock me-2", style={"color": "#6c757d"}),
+                    html.I(className="bi bi-clock me-2", style={"color": muted_color}),
                     html.Span(duration_str, style={"fontSize": "0.85rem"})
                 ], className="mb-2"))
             
             if file_size_mb:
                 metadata_items.append(html.Div([
-                    html.I(className="bi bi-hdd me-2", style={"color": "#6c757d"}),
+                    html.I(className="bi bi-hdd me-2", style={"color": muted_color}),
                     html.Span(f"{file_size_mb:.1f} MB", style={"fontSize": "0.85rem"})
                 ], className="mb-2"))
             
+            # Determine if this is the top (first) result to highlight
+            is_top_result = (i == 1)
+
             # Build card with 3-column layout
             card = dbc.Card([
                 dbc.CardBody([
@@ -1212,6 +1224,7 @@ def search_podcasts(
                         ], className="flex-grow-1"),
                         
                         # Metadata column (smaller, right side)
+                        # Visible left border; highlighted for top result
                         dbc.Col([
                             # Similarity badge at top
                             html.Div([
@@ -1230,12 +1243,16 @@ def search_podcasts(
                                 metadata_items,
                                 style={"color": card_text}
                             )
-                        ], width=2, className="d-flex flex-column align-items-center border-start", style={"borderColor": info_border + "!important"})
+                        ], width=2, className="d-flex flex-column align-items-center",
+                        style={"borderLeft": f"1px solid {info_border}", "paddingLeft": "12px"}
+                        )
                     ], className="g-3")
                 ], style={"padding": "1rem"})
-            ], className="mb-3", style={
+            ], className=("mb-3 " + ("first-result" if is_top_result else "")), style={
                 "backgroundColor": card_bg,
-                "borderColor": info_border
+                "border": ("4px solid #66b2ff" if is_top_result and is_dark_mode else ("4px solid #0d6efd" if is_top_result else f"1px solid {info_border}")),
+                # If top result, add a subtle box shadow as fallback
+                **({"boxShadow": "0 6px 18px rgba(13,110,253,0.12)"} if is_top_result else {})
             })
             cards.append(card)
         

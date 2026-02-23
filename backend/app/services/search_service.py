@@ -184,6 +184,7 @@ class SearchService:
                     results.append({
                         "episode": segment.episode,  # Keep filename for backwards compatibility
                         "title": title,
+                        "author": episode_metadata.program_name if episode_metadata and getattr(episode_metadata, 'program_name', None) else (episode_metadata.podcast_source if episode_metadata else None),
                         "image_url": image_url,
                         "published_date": published_date.isoformat() if published_date else None,
                         "duration_seconds": duration_seconds,

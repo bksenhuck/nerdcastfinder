@@ -14,13 +14,11 @@ from backend.app.api import search, episodes
 
 from backend.app.core.logger import logger
 
-# Dash integration
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "frontend"))
-import app as dash_app_module
+# Dash integration (import frontend.app explicitly to avoid module name conflict)
+import importlib
+dash_app_module = importlib.import_module("frontend.app")
 
-# Increase default python logging level (configurable via LOG_LEVEL env var)
+app.mount("/", WSGIMiddleware(dash_app_module.app.server))
 logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO))
 
 app = FastAPI(

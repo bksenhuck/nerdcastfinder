@@ -1312,5 +1312,4 @@ if __name__ == "__main__":
     logger.header("Starting Podcast Finder Frontend")
     logger.info("URL: http://127.0.0.1:8050")
     logger.info("Make sure the backend API is running on http://localhost:8005")
-    
     app.run(debug=True, host="127.0.0.1", port=8050)

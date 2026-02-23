@@ -5,12 +5,20 @@ import logging
 import time
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import FileResponse
+from fastapi.middleware.wsgi import WSGIMiddleware
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.core.config import settings
 from backend.app.api import search, episodes
+
 from backend.app.core.logger import logger
+
+# Dash integration
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "frontend"))
+import app as dash_app_module
 
 # Increase default python logging level (configurable via LOG_LEVEL env var)
 logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO))
@@ -20,6 +28,9 @@ app = FastAPI(
     description=settings.API_DESCRIPTION,
     version=settings.API_VERSION
 )
+
+# Mount Dash app at root
+app.mount("/", WSGIMiddleware(dash_app_module.app.server))
 
 # Request logging middleware
 @app.middleware("http")

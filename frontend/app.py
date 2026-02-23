@@ -15,12 +15,13 @@ from dash import Dash, html, dcc, Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
+import os
 from backend.app.core.logger import logger
 from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastEpisode, PodcastSegment
 
 # Configuration
-BACKEND_URL = "http://localhost:8001/api/search"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 
 def get_podcast_stats():
@@ -577,26 +578,19 @@ def about_layout():
                     dbc.CardHeader(id="disclaimer-header", children=html.H4("Aviso Legal e Direitos Autorais", className="mb-0")),
                     dbc.CardBody([
                         html.P([
-                            "Este projeto é uma ferramenta de busca semântica desenvolvida exclusivamente para fins ",
-                            html.Strong("educacionais, técnicos e de demonstração de habilidades profissionais"), 
-                            ". O desenvolvedor não possui, hospeda ou distribui qualquer conteúdo de áudio dos podcasts."
+                            "Este projeto é uma ferramenta de busca semântica criada para fins ",
+                            html.Strong("educacionais, técnicos e de demonstração"),
+                            ". O desenvolvedor não possui, hospeda ou redistribui conteúdos de áudio de terceiros."
                         ], className="mb-3"),
                         html.P([
                             html.Strong("Todos os direitos autorais pertencem aos seus respectivos proprietários."),
-                            " O conteúdo dos episódios do Nerdcast é de propriedade exclusiva do ",
-                            html.A("Jovem Nerd", href="https://jovemnerd.com.br", target="_blank", className="text-primary"),
-                            " e seus criadores."
+                            " Esta aplicação não reivindica propriedade sobre o material indexado e respeita os direitos dos criadores e distribuidores originais."
                         ], className="mb-3"),
                         html.P([
-                            "Esta aplicação apenas indexa e busca transcrições geradas localmente para fins de ",
-                            "pesquisa e referência. Nenhum conteúdo de áudio é redistribuído ou disponibilizado ",
-                            "através desta ferramenta. Os usuários são responsáveis por respeitar os direitos ",
-                            "autorais e termos de uso do conteúdo original."
+                            "A aplicação apenas indexa e permite busca sobre transcrições e metadados gerados localmente para fins de pesquisa e referência. Nenhum arquivo de áudio completo é disponibilizado ou redistribuído por esta ferramenta. Os usuários devem respeitar os direitos autorais e os termos de uso do conteúdo original."
                         ], className="mb-3"),
                         html.P([
-                            "Para ouvir os episódios originais, por favor visite o site oficial: ",
-                            html.A("https://jovemnerd.com.br", href="https://jovemnerd.com.br", target="_blank", className="text-primary"),
-                            " ou suas plataformas de podcast preferidas."
+                            "Para acessar os episódios originais, por favor visite o site oficial do respectivo podcast ou use as plataformas de distribuição onde os episódios são publicados."
                         ], className="mb-0")
                     ])
                 ], className="mb-4"),
@@ -663,6 +657,22 @@ def about_layout():
                             html.Li("Resultados são ranqueados por confiabilidade semântica"),
                             html.Li("A interface exibe os trechos mais relevantes com metadados")
                         ], className="mb-3")
+                    ])
+                ], className="mb-4")
+                ,
+                # Nova seção adicionada: Próximos passos
+                dbc.Card(id="next-steps-card", children=[
+                    dbc.CardHeader(children=html.H4("Próximos passos", className="mb-0")),
+                    dbc.CardBody([
+                        html.Ul([
+                            html.Li("Abstração da camada de busca para suportar múltiplos backends (ex: interface VectorStore)"),
+                            html.Li("Suporte opcional a banco vetorial dedicado para escalabilidade (ex: pgvector ou Qdrant)"),
+                            html.Li("Implementação de cache de consultas para reduzir latência e custo computacional"),
+                            html.Li("Automação da ingestão de novos episódios (ex: processamento via RSS)"),
+                            html.Li("Adição de observabilidade básica (logs estruturados e métricas de busca)"),
+                            html.Li("Containerização do ambiente com Docker para facilitar deploy e reprodução"),
+                            html.Li("Experimentos futuros com geração de respostas resumidas (RAG)")
+                        ], className="mb-0")
                     ])
                 ], className="mb-4")
             ], md=10, lg=8, className="mx-auto")
@@ -937,11 +947,13 @@ def search_podcasts(
         if similarity_threshold and similarity_threshold > 0:
             params["min_confidence"] = round(similarity_threshold, 2)
         
-        logger.info(f"Making request to: {BACKEND_URL}")
+        # Build full search URL from BACKEND_URL (allows BACKEND_URL to be a base URL)
+        search_url = f"{BACKEND_URL.rstrip('/')}/api/search"
+        logger.info(f"Making request to: {search_url}")
         logger.info(f"Parameters: {params}")
-        
+
         response = requests.get(
-            BACKEND_URL,
+            search_url,
             params=params,
             timeout=30
         )

@@ -103,6 +103,15 @@ class Settings:
     @staticmethod
     def get_faiss_index_path() -> Path:
         """Get the FAISS index file path"""
+        # Allow overriding the FAISS index file via environment variable for deploys
+        env_path = os.getenv("FAISS_INDEX_PATH")
+        if env_path:
+            p = Path(env_path)
+            # If a directory was provided, use the default filename inside it
+            if p.is_dir():
+                return p / "nerdcast.index"
+            return p
+
         return Settings.get_faiss_dir() / "nerdcast.index"
     
     @staticmethod

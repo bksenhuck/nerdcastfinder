@@ -8,13 +8,13 @@ import sqlite3
 from pathlib import Path
 
 from backend.app.core.config import settings
-from backend.app.core.logger import logger
+from backend.app.core.logger import logger, format_path
 
 def migrate():
     """Add new columns to existing database"""
     db_path = settings.get_database_path()
     
-    logger.section(f"Migrando database: {db_path}")
+    logger.section(f"Migrando database: {format_path(db_path)}")
     
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()

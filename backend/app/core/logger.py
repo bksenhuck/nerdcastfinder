@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Optional
 from pathlib import Path
 from typing import Union
+from backend.app.utils.path_utils import format_path
 
 
 class Logger:
@@ -84,27 +85,6 @@ class Logger:
 logger = Logger()
 
 
-def format_path(path: Union[str, Path]) -> str:
-	"""Return a safe, short representation of `path` for logging.
-
-	- If `path` is inside the current working directory, returns a relative
-	  path (safer to log).
-	- Otherwise returns only the filename to avoid exposing absolute paths.
-	"""
-	try:
-		p = Path(path)
-	except Exception:
-		return str(path)
-
-	try:
-		p_res = p.resolve()
-	except Exception:
-		return str(p)
-
-	try:
-		rel = p_res.relative_to(Path.cwd().resolve())
-		return str(rel)
-	except Exception:
-		return p_res.name
+# Re-exported from backend.app.utils.path_utils.format_path
 
 __all__ = ["logger", "Logger", "format_path"]

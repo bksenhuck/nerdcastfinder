@@ -90,7 +90,7 @@ def migrate_database(db_path: Path, dry_run: bool = False):
     logger.info("=" * 70)
     
     if not db_path.exists():
-        logger.error(f"Banco de dados não encontrado: {db_path}")
+        logger.error(f"Banco de dados não encontrado: {format_path(db_path)}")
         return False
     
     # Cria backup

@@ -38,10 +38,8 @@ class SearchService:
         logger.info("=" * 60)
         logger.info(f"Index path: {format_path(index_path)}")
         logger.info(f"Index exists: {index_path.exists()}")
-        
+
         logger.section("Loading FAISS Index...")
-        logger.info(f"Index path: {index_path}")
-        logger.info(f"Index exists: {index_path.exists()}")
         
         if index_path.exists():
             try:
@@ -55,8 +53,6 @@ class SearchService:
                 mapping_path = settings.get_faiss_dir() / "embedding_id_mapping.npy"
                 logger.info(f"Mapping path: {format_path(mapping_path)}")
                 logger.info(f"Mapping exists: {mapping_path.exists()}")
-                logger.info(f"Mapping path: {mapping_path}")
-                logger.info(f"Mapping exists: {mapping_path.exists()}")
                 
                 if mapping_path.exists():
                     self.embedding_id_mapping = np.load(str(mapping_path))
@@ -65,17 +61,17 @@ class SearchService:
                     logger.success(f"✓ Embedding ID mapping loaded successfully")
                     logger.info(f"  Total mappings: {len(self.embedding_id_mapping)}")
                 else:
-                    logger.error(f"✗ Mapping file not found at {mapping_path}")
+                    logger.error(f"✗ Mapping file not found at {format_path(mapping_path)}")
                     logger.warning("Search may not work correctly. Re-run ingestion script.")
                     self.index = None
             except Exception as e:
                 logger.error(f"✗ Failed to load FAISS index: {e}")
                 self.index = None
         else:
-            logger.error(f"✗ FAISS index not found at {index_path}")
+            logger.error(f"✗ FAISS index not found at {format_path(index_path)}")
             logger.warning("⚠️  Run the ingestion script first to build the index")
             logger.info("Command: python -m backend.scripts.ingest_podcasts")
-            logger.error(f"✗ FAISS index not found at {index_path}")
+            logger.error(f"✗ FAISS index not found at {format_path(index_path)}")
             logger.warning("⚠️  Run the ingestion script first to build the index")
             logger.info("Command: python -m backend.scripts.ingest_podcasts")
             self.index = None
@@ -101,6 +97,9 @@ class SearchService:
         Returns:
             List of dicts with keys: episode, excerpt, score
         """
+        # Ensure top_k has a concrete value before cache lookup
+        top_k = top_k or settings.DEFAULT_TOP_K
+
         # Check cache before processing
         cached_result = search_cache.get(
             query=query,
@@ -122,6 +121,8 @@ class SearchService:
             )
 
             return cached_result
+        else:
+            logger.info(f"[CACHE] MISS - query='{query}', top_k={top_k}, min_confidence={min_confidence}")
         
         if self.index is None:
             raise RuntimeError("FAISS index not loaded. Run ingestion first.")
@@ -207,5 +208,6 @@ class SearchService:
             program_name=program_name,
             min_confidence=min_confidence
         )
+        logger.info(f"[CACHE] SET - query='{query}', top_k={top_k}, min_confidence={min_confidence}, cached={len(results)}")
         
         return results

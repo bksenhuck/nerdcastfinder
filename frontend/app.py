@@ -116,6 +116,10 @@ app.index_string = '''
         {%metas%}
         <title>{%title%}</title>
         {%favicon%}
+        <!-- Preferred favicon (PNG) served from assets -->
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/podcast_finder_logo.png">
+        <!-- Fallback for browsers requesting /favicon.ico -->
+        <link rel="shortcut icon" href="/favicon.ico">
         <script>
             // Apply theme before CSS loads
             (function() {

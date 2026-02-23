@@ -1,61 +1,24 @@
-# Nerdcast Finder - Complete Requirements
-# Install all dependencies with: pip install -r requirements.txt
-
-# ===== Build Dependencies =====
+# ===== Build =====
 setuptools>=65.0.0
 wheel
 
-# ===== PyTorch (Choose GPU or CPU) =====
-# IMPORTANT: Install PyTorch BEFORE other dependencies
-# 
-# For GPU (NVIDIA RTX 50/40/30 series - CUDA 12.8 - RECOMMENDED):
-#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
-#
-# For GPU (Older NVIDIA GPUs - CUDA 12.1):
-#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-#
-# For CPU only (slower transcription):
-#   pip install torch torchvision torchaudio
-#
-# After installing PyTorch, install the rest with: pip install -r requirements.txt
-#
-# Note: RTX 5070 requires PyTorch 2.10+ with CUDA 12.8
-torch>=2.10.0
-torchvision>=0.25.0
-torchaudio>=2.10.0
-
-# ===== Backend Dependencies =====
-
-# Web Framework
+# ===== Backend =====
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
-
-# Database
 sqlalchemy==2.0.25
 
-# AI/ML
-git+https://github.com/openai/whisper.git
+# ===== Embeddings / Search =====
 sentence-transformers==2.3.1
-
-# FAISS (Choose GPU or CPU based on your PyTorch installation)
 faiss-cpu>=1.7.4
-# faiss-gpu>=1.7.4
-
-
-# Audio processing
-ffmpeg-python==0.2.0
-
-# Utilities
 numpy==1.24.3
+
+# ===== API utils =====
 pydantic==2.5.3
 python-multipart==0.0.6
-feedparser==6.0.10
 
-# ===== Frontend Dependencies =====
-
-# Dash framework
+# ===== Frontend =====
 dash==2.14.2
 dash-bootstrap-components==1.5.0
-
-# HTTP requests
 requests==2.31.0
+feedparser==6.0.10
+gunicorn==21.2.0

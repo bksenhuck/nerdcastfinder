@@ -22,19 +22,20 @@ sys.path.insert(0, str(project_root))
 
 from backend.app.core.config import settings
 from backend.app.utils.program_utils import extract_program_from_title, normalize_program_name
-from utils.logger import logger
+from backend.app.core.logger import logger
 
 
 def add_program_name_field(dry_run: bool = False):
     """Adiciona campo program_name e popula com base nos títulos"""
     db_path = settings.get_database_path()
     
+    from backend.app.core.logger import format_path
     logger.info("=" * 70)
     logger.info("MIGRAÇÃO: Adicionar campo program_name")
     logger.info("=" * 70)
     
     if not db_path.exists():
-        logger.error(f"Banco de dados não encontrado: {db_path}")
+        logger.error(f"Banco de dados não encontrado: {format_path(db_path)}")
         return False
     
     conn = sqlite3.connect(db_path)

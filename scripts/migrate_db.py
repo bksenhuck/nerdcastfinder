@@ -11,14 +11,15 @@ sys.path.insert(0, str(backend_dir))
 sys.path.insert(0, str(Path(__file__).parent))
 
 from app.config.settings import settings
-from utils.logger import logger
+from backend.app.core.logger import logger
 import sqlite3
 
 def migrate():
     """Add new columns to existing database"""
     db_path = settings.get_database_path()
     
-    logger.section(f"Migrando database: {db_path}")
+    from backend.app.core.logger import format_path
+    logger.section(f"Migrando database: {format_path(db_path)}")
     
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()

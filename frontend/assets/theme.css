@@ -7,6 +7,25 @@ html[data-theme="dark"] body {
     color: #f8f9fa !important;
 }
 
+/* Force all textual content to be light-colored in dark theme to avoid muted/gray text */
+html[data-theme="dark"] body,
+html[data-theme="dark"] body * {
+    color: #f8f9fa !important;
+}
+
+/* Ensure placeholders and form text are readable */
+html[data-theme="dark"] ::placeholder {
+    color: #cfcfcf !important;
+    opacity: 1 !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+    color: #f8f9fa !important;
+    background-color: transparent !important;
+}
+
 /* Light theme backgrounds */
 html[data-theme="light"],
 html[data-theme="light"] body {

@@ -7,14 +7,14 @@ import faiss
 from typing import List, Dict
 
 from backend.app.core.config import settings
-from backend.app.core.logger import logger
+from backend.app.core.logger import logger, format_path
+from backend.app.core.cache import search_cache
 from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastSegment, PodcastEpisode
 from backend.app.services.embedding_service import EmbeddingService
 from backend.app.utils.text_utils import truncate_text
 
-# Setup logging for uvicorn
-log = logging.getLogger("uvicorn.error")
+# Use centralized logger from backend.app.core.logger
 
 
 class SearchService:
@@ -33,52 +33,45 @@ class SearchService:
         """Load FAISS index and mapping from disk"""
         index_path = settings.get_faiss_index_path()
         
-        log.info("=" * 60)
-        log.info("Loading FAISS Index...")
-        log.info("=" * 60)
-        log.info(f"Index path: {index_path}")
-        log.info(f"Index exists: {index_path.exists()}")
-        
-        logger.section("Loading FAISS Index...")
-        logger.info(f"Index path: {index_path}")
+        logger.info("=" * 60)
+        logger.info("Loading FAISS Index...")
+        logger.info("=" * 60)
+        logger.info(f"Index path: {format_path(index_path)}")
         logger.info(f"Index exists: {index_path.exists()}")
+
+        logger.section("Loading FAISS Index...")
         
         if index_path.exists():
             try:
                 self.index = faiss.read_index(str(index_path))
-                log.info(f"✓ FAISS index loaded successfully")
-                log.info(f"  Total vectors: {self.index.ntotal}")
+                logger.info(f"✓ FAISS index loaded successfully")
+                logger.info(f"  Total vectors: {self.index.ntotal}")
                 logger.success(f"✓ FAISS index loaded successfully")
                 logger.info(f"  Total vectors: {self.index.ntotal}")
                 
                 # Load embedding_id mapping
                 mapping_path = settings.get_faiss_dir() / "embedding_id_mapping.npy"
-                log.info(f"Mapping path: {mapping_path}")
-                log.info(f"Mapping exists: {mapping_path.exists()}")
-                logger.info(f"Mapping path: {mapping_path}")
+                logger.info(f"Mapping path: {format_path(mapping_path)}")
                 logger.info(f"Mapping exists: {mapping_path.exists()}")
                 
                 if mapping_path.exists():
                     self.embedding_id_mapping = np.load(str(mapping_path))
-                    log.info(f"✓ Embedding ID mapping loaded successfully")
-                    log.info(f"  Total mappings: {len(self.embedding_id_mapping)}")
+                    logger.info(f"✓ Embedding ID mapping loaded successfully")
+                    logger.info(f"  Total mappings: {len(self.embedding_id_mapping)}")
                     logger.success(f"✓ Embedding ID mapping loaded successfully")
                     logger.info(f"  Total mappings: {len(self.embedding_id_mapping)}")
                 else:
-                    log.error(f"✗ Mapping file not found at {mapping_path}")
-                    log.warning("Search may not work correctly. Re-run ingestion script.")
-                    logger.error(f"✗ Mapping file not found at {mapping_path}")
+                    logger.error(f"✗ Mapping file not found at {format_path(mapping_path)}")
                     logger.warning("Search may not work correctly. Re-run ingestion script.")
                     self.index = None
             except Exception as e:
-                log.error(f"✗ Failed to load FAISS index: {e}")
                 logger.error(f"✗ Failed to load FAISS index: {e}")
                 self.index = None
         else:
-            log.error(f"✗ FAISS index not found at {index_path}")
-            log.warning("⚠️  Run the ingestion script first to build the index")
-            log.info("Command: python -m backend.scripts.ingest_podcasts")
-            logger.error(f"✗ FAISS index not found at {index_path}")
+            logger.error(f"✗ FAISS index not found at {format_path(index_path)}")
+            logger.warning("⚠️  Run the ingestion script first to build the index")
+            logger.info("Command: python -m backend.scripts.ingest_podcasts")
+            logger.error(f"✗ FAISS index not found at {format_path(index_path)}")
             logger.warning("⚠️  Run the ingestion script first to build the index")
             logger.info("Command: python -m backend.scripts.ingest_podcasts")
             self.index = None
@@ -92,7 +85,7 @@ class SearchService:
         min_confidence: float = None
     ) -> List[Dict]:
         """
-        Search for similar segments
+        Search for similar segments with caching support.
         
         Args:
             query: Search query string
@@ -104,6 +97,33 @@ class SearchService:
         Returns:
             List of dicts with keys: episode, excerpt, score
         """
+        # Ensure top_k has a concrete value before cache lookup
+        top_k = top_k or settings.DEFAULT_TOP_K
+
+        # Check cache before processing
+        cached_result = search_cache.get(
+            query=query,
+            top_k=top_k,
+            podcast_source=podcast_source,
+            program_name=program_name,
+            min_confidence=min_confidence
+        )
+        
+        if cached_result is not None:
+            # Log cache usage at INFO so it appears in backend logs
+            try:
+                result_count = len(cached_result) if hasattr(cached_result, '__len__') else 'unknown'
+            except Exception:
+                result_count = 'unknown'
+
+            logger.info(
+                f"[CACHE] USED - query='{query}', top_k={top_k}, min_confidence={min_confidence}, results={result_count}"
+            )
+
+            return cached_result
+        else:
+            logger.info(f"[CACHE] MISS - query='{query}', top_k={top_k}, min_confidence={min_confidence}")
+        
         if self.index is None:
             raise RuntimeError("FAISS index not loaded. Run ingestion first.")
         
@@ -178,5 +198,16 @@ class SearchService:
         # Apply confidence threshold filter if specified
         if min_confidence is not None:
             results = [r for r in results if r["score"] >= min_confidence]
+        
+        # Cache the result before returning
+        search_cache.set(
+            query=query,
+            result=results,
+            top_k=top_k,
+            podcast_source=podcast_source,
+            program_name=program_name,
+            min_confidence=min_confidence
+        )
+        logger.info(f"[CACHE] SET - query='{query}', top_k={top_k}, min_confidence={min_confidence}, cached={len(results)}")
         
         return results

@@ -15,9 +15,9 @@ from dash import Dash, html, dcc, Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
-from utils.logger import logger
+from backend.app.core.logger import logger
 from backend.app.db.session import get_db_session
-from backend.app.db.models import PodcastEpisode
+from backend.app.db.models import PodcastEpisode, PodcastSegment
 
 # Configuration
 BACKEND_URL = "http://localhost:8001/api/search"
@@ -116,6 +116,10 @@ app.index_string = '''
         {%metas%}
         <title>{%title%}</title>
         {%favicon%}
+        <!-- Preferred favicon (PNG) served from assets -->
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/podcast_finder_logo.png">
+        <!-- Fallback for browsers requesting /favicon.ico -->
+        <link rel="shortcut icon" href="/favicon.ico">
         <script>
             // Apply theme before CSS loads
             (function() {
@@ -251,25 +255,19 @@ def home_layout():
                     })
                 ], style={"position": "relative"}),
                 html.P(
-                    "Busque episódios de podcasts por tema, assunto ou palavra-chave",
-                    id="subtitle",
-                    className="text-center mb-2",
-                    style={"opacity": "0.8"}
-                ),
-                html.P(
-                    f"📊 {total_processed} episódios prontos para busca • "
-                    f"{episodes_pending} {'episódio' if episodes_pending == 1 else 'episódios'} em processamento",
-                    id="stats-subtitle",
-                    className="text-center mb-2",
-                    style={"fontSize": "0.85rem", "opacity": "0.7"}
-                ),
-                html.P(
-                    f"{total_programs} {'programa' if total_programs == 1 else 'programas'} • "
-                    f"{total_feeds} {'feed' if total_feeds == 1 else 'feeds'}",
-                    id="programs-subtitle",
-                    className="text-center mb-4",
-                    style={"fontSize": "0.85rem", "opacity": "0.6"}
-                )
+                f"{total_processed if total_processed > 0 else '-'} episódios prontos para busca • "
+                f"{episodes_pending if episodes_pending > 0 else '-'} {'episódio' if episodes_pending == 1 else 'episódios'} em processamento",
+                id="stats-subtitle",
+                className="text-center mb-2",
+                style={"fontSize": "0.85rem", "opacity": "0.7"}
+            ),
+            html.P(
+                f"{total_programs} {'programa' if total_programs == 1 else 'programas'} • "
+                f"{total_feeds} {'feed' if total_feeds == 1 else 'feeds'}",
+                id="programs-subtitle",
+                className="text-center mb-4",
+                style={"fontSize": "0.85rem", "opacity": "0.6"}
+            )
             ])
         ]),
         
@@ -291,6 +289,14 @@ def home_layout():
                         n_clicks=0
                     )
                 ], className="mb-3"),
+                # Informational alert about current search behavior
+                dbc.Alert(
+                    "A pesquisa atual trará até 20 resultados com as maiores confiabilidades. Você pode usar os filtros e as Opções Avançadas abaixo para refinar a busca.",
+                    color="info",
+                    id="search-info-alert",
+                    className="text-center mb-2",
+                    style={"fontSize": "0.95rem"}
+                ),
                 # Advanced options toggle
                 html.Div([
                     dbc.Button(
@@ -492,7 +498,7 @@ def home_layout():
             ], md=8, className="mx-auto")
         ]),
             
-        # Loading spinner
+        # Loading spinner (add spacing so it doesn't overlap advanced controls)
         dbc.Row([
             dbc.Col([
                 dcc.Loading(
@@ -501,7 +507,7 @@ def home_layout():
                     children=html.Div(id="loading-output")
                 )
             ], md=8, className="mx-auto")
-        ]),
+        ], style={"marginTop": "1.25rem"}),
             
         # Results
         dbc.Row([

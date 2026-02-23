@@ -33,7 +33,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from backend.app.core.config import settings
-from utils.logger import logger
+from backend.app.core.logger import logger
 
 
 def create_backup(db_path: Path) -> Path:
@@ -41,7 +41,8 @@ def create_backup(db_path: Path) -> Path:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_path = db_path.parent / f"{db_path.stem}_backup_{timestamp}{db_path.suffix}"
     
-    logger.info(f"Criando backup: {backup_path}")
+    from backend.app.core.logger import format_path
+    logger.info(f"Criando backup: {format_path(backup_path)}")
     shutil.copy2(db_path, backup_path)
     logger.info(f"✓ Backup criado com sucesso")
     
@@ -89,13 +90,13 @@ def migrate_database(db_path: Path, dry_run: bool = False):
     logger.info("=" * 70)
     
     if not db_path.exists():
-        logger.error(f"Banco de dados não encontrado: {db_path}")
+        logger.error(f"Banco de dados não encontrado: {format_path(db_path)}")
         return False
     
     # Cria backup
     if not dry_run:
         backup_path = create_backup(db_path)
-        logger.info(f"\n📦 Backup salvo em: {backup_path}")
+        logger.info(f"\n📦 Backup salvo em: {format_path(backup_path)}")
     
     # Conecta ao banco
     conn = sqlite3.connect(db_path)
@@ -209,7 +210,7 @@ def migrate_database(db_path: Path, dry_run: bool = False):
         logger.info(f"   - Podcasts em segmentos: {segment_sources}")
         
         logger.info("\n✅ MIGRAÇÃO CONCLUÍDA COM SUCESSO!")
-        logger.info(f"\n📦 Backup disponível em: {backup_path}")
+        logger.info(f"\n📦 Backup disponível em: {format_path(backup_path)}")
         logger.info("\n⚠️  PRÓXIMOS PASSOS:")
         logger.info("   1. Atualizar os modelos em backend/app/db/models.py")
         logger.info("   2. Atualizar imports em todos os arquivos que usam os modelos")
@@ -243,16 +244,16 @@ def rollback_migration(db_path: Path, backup_path: str = None):
         
         if not backups:
             logger.error("❌ Nenhum backup encontrado!")
-            logger.info(f"   Procurei por: {db_path.parent / backup_pattern}")
+            logger.info(f"   Procurei por: {format_path(db_path.parent / backup_pattern)}")
             return False
         
         backup = backups[0]
-        logger.info(f"📦 Backup mais recente encontrado: {backup}")
+        logger.info(f"📦 Backup mais recente encontrado: {format_path(backup)}")
     
     # Confirma com o usuário
     logger.warning(f"\n⚠️  ATENÇÃO: Isso irá SUBSTITUIR o banco atual:")
-    logger.info(f"   Origem: {backup}")
-    logger.info(f"   Destino: {db_path}")
+    logger.info(f"   Origem: {format_path(backup)}")
+    logger.info(f"   Destino: {format_path(db_path)}")
     
     response = input("\nDeseja continuar? (yes/no): ")
     if response.lower() not in ['yes', 'y', 'sim', 's']:
@@ -262,12 +263,12 @@ def rollback_migration(db_path: Path, backup_path: str = None):
     # Faz backup do estado atual antes de fazer rollback
     current_backup = db_path.parent / f"{db_path.stem}_before_rollback_{datetime.now().strftime('%Y%m%d_%H%M%S')}{db_path.suffix}"
     shutil.copy2(db_path, current_backup)
-    logger.info(f"\n📦 Backup do estado atual salvo em: {current_backup}")
+    logger.info(f"\n📦 Backup do estado atual salvo em: {format_path(current_backup)}")
     
     # Restaura o backup
     shutil.copy2(backup, db_path)
     logger.info(f"\n✅ Banco de dados restaurado com sucesso!")
-    logger.info(f"   O estado anterior foi salvo em: {current_backup}")
+    logger.info(f"   O estado anterior foi salvo em: {format_path(current_backup)}")
     
     return True
 

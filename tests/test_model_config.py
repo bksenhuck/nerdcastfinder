@@ -10,7 +10,7 @@ sys.path.insert(0, str(backend_dir))
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.config.settings import settings
-from utils.logger import logger
+from backend.app.core.logger import logger
 import torch
 
 def test_whisper_model():

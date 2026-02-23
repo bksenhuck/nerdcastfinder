@@ -1,7 +1,6 @@
 """
 Episodes API endpoints
 """
-import logging
 from fastapi import APIRouter, Query, HTTPException
 from typing import List, Optional
 from pydantic import BaseModel
@@ -13,9 +12,6 @@ from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastEpisode
 
 router = APIRouter()
-
-# Setup logging for uvicorn
-log = logging.getLogger("uvicorn.error")
 
 
 class EpisodeMetadata(BaseModel):
@@ -48,15 +44,15 @@ def get_episodes(
     try:
         db = get_db_session()
         
-        log.info("=" * 60)
-        log.info("📺 FETCHING EPISODE METADATA")
-        log.info("=" * 60)
+        logger.info("=" * 60)
+        logger.info("📺 FETCHING EPISODE METADATA")
+        logger.info("=" * 60)
         
         query = db.query(PodcastEpisode)
         
         if status:
             query = query.filter(PodcastEpisode.status == status)
-            log.info(f"Filter: status={status}")
+            logger.info(f"Filter: status={status}")
         
         # Get total count
         total = query.count()
@@ -66,16 +62,15 @@ def get_episodes(
             PodcastEpisode.published_date.desc()
         ).offset(skip).limit(limit).all()
         
-        log.info(f"✓ Found {len(episodes)} episodes (total: {total})")
-        log.info(f"  Skip: {skip}, Limit: {limit}")
-        log.info("=" * 60)
+        logger.info(f"✓ Found {len(episodes)} episodes (total: {total})")
+        logger.info(f"  Skip: {skip}, Limit: {limit}")
+        logger.info("=" * 60)
         
         db.close()
         
         return episodes
     
     except Exception as e:
-        log.error(f"Failed to fetch episodes: {e}")
         logger.error(f"Failed to fetch episodes: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -91,9 +86,9 @@ def get_episode_by_filename(filename: str):
     try:
         db = get_db_session()
         
-        log.info("=" * 60)
-        log.info(f"📺 FETCHING EPISODE: {filename}")
-        log.info("=" * 60)
+        logger.info("=" * 60)
+        logger.info(f"📺 FETCHING EPISODE: {filename}")
+        logger.info("=" * 60)
         
         episode = db.query(NerdcastEpisode).filter(
             NerdcastEpisode.filename == filename
@@ -102,20 +97,19 @@ def get_episode_by_filename(filename: str):
         db.close()
         
         if not episode:
-            log.error(f"Episode not found: {filename}")
+            logger.error(f"Episode not found: {filename}")
             raise HTTPException(status_code=404, detail="Episode not found")
         
-        log.info(f"✓ Found episode: {episode.title_original}")
-        log.info(f"  Size: {episode.file_size_mb}MB")
-        log.info(f"  Duration: {episode.duration_seconds}s")
-        log.info("=" * 60)
+        logger.info(f"✓ Found episode: {episode.title_original}")
+        logger.info(f"  Size: {episode.file_size_mb}MB")
+        logger.info(f"  Duration: {episode.duration_seconds}s")
+        logger.info("=" * 60)
         
         return episode
     
     except HTTPException:
         raise
     except Exception as e:
-        log.error(f"Failed to fetch episode {filename}: {e}")
         logger.error(f"Failed to fetch episode {filename}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -128,9 +122,9 @@ def get_episodes_stats():
     try:
         db = get_db_session()
         
-        log.info("=" * 60)
-        log.info("📊 EPISODE STATISTICS")
-        log.info("=" * 60)
+        logger.info("=" * 60)
+        logger.info("📊 EPISODE STATISTICS")
+        logger.info("=" * 60)
         
         total_episodes = db.query(NerdcastEpisode).count()
         downloaded = db.query(NerdcastEpisode).filter(
@@ -164,13 +158,13 @@ def get_episodes_stats():
             "total_duration_hours": round(total_duration_seconds / 3600, 2)
         }
         
-        log.info(f"✓ Total episodes: {total_episodes}")
-        log.info(f"  Downloaded: {downloaded}")
-        log.info(f"  Transcribed: {transcribed}")
-        log.info(f"  Indexed: {indexed}")
-        log.info(f"  Total size: {total_size_mb:.2f}MB")
-        log.info(f"  Total duration: {total_duration_seconds / 3600:.2f}h")
-        log.info("=" * 60)
+        logger.info(f"✓ Total episodes: {total_episodes}")
+        logger.info(f"  Downloaded: {downloaded}")
+        logger.info(f"  Transcribed: {transcribed}")
+        logger.info(f"  Indexed: {indexed}")
+        logger.info(f"  Total size: {total_size_mb:.2f}MB")
+        logger.info(f"  Total duration: {total_duration_seconds / 3600:.2f}h")
+        logger.info("=" * 60)
         
         return stats
     
@@ -213,6 +207,5 @@ def get_filters():
         }
     
     except Exception as e:
-        log.error(f"Failed to get filters: {e}")
         logger.error(f"Failed to get filters: {e}")
         raise HTTPException(status_code=500, detail=str(e))

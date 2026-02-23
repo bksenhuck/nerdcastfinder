@@ -21,7 +21,7 @@ import numpy as np
 from pathlib import Path
 
 from backend.app.core.config import settings
-from backend.app.core.logger import logger
+from backend.app.core.logger import logger, format_path
 from backend.app.services.transcription_service import TranscriptionService
 from backend.app.services.embedding_service import EmbeddingService
 from backend.app.db.session import init_db, get_db_session
@@ -70,7 +70,7 @@ class PodcastIngestionPipeline:
         logger.success("Database initialized")
         
         # Step 2: Find audio files
-        logger.section(f"[2/5] Scanning {self.podcasts_dir}...")
+        logger.section(f"[2/5] Scanning {format_path(self.podcasts_dir)}...")
         from backend.app.utils.file_utils import find_audio_files
         audio_files = find_audio_files(
             Path(self.podcasts_dir),
@@ -78,7 +78,7 @@ class PodcastIngestionPipeline:
         )
         
         if not audio_files:
-            logger.error(f"No audio files found in {self.podcasts_dir}")
+            logger.error(f"No audio files found in {format_path(self.podcasts_dir)}")
             logger.info("Please run download script first to download audio files")
             return False
         
@@ -286,7 +286,7 @@ def list_podcasts():
         return
     
     logger.info(f"Total: {len(podcasts)} podcast(s) configurado(s)\n")
-    
+
     for podcast_id, config in podcasts.items():
         podcast_dir = settings.get_podcasts_dir(podcast_id)
         
@@ -299,7 +299,7 @@ def list_podcasts():
         
         logger.info(f"🎙️  {config['name']}")
         logger.info(f"   ID: {podcast_id}")
-        logger.info(f"   Diretório: {podcast_dir}")
+        logger.info(f"   Diretório: {format_path(podcast_dir)}")
         logger.info(f"   Arquivos de áudio: {audio_count}")
         if 'description' in config:
             logger.info(f"   Descrição: {config['description']}")

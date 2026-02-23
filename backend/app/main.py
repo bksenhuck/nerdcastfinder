@@ -3,7 +3,9 @@ FastAPI main application entry point for Nerdcast Finder
 """
 import logging
 import time
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import FileResponse
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.core.config import settings
@@ -83,6 +85,25 @@ async def root():
         "message": "Nerdcast Finder API",
         "docs": "/docs"
     }
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    """Serve a favicon to avoid 500s when browsers request it.
+
+    Looks for `frontend/assets/images/podcast_finder_logo.png` relative to
+    the repository and returns it as a `FileResponse`. If the file is not
+    present, returns 204 No Content.
+    """
+    try:
+        # repo_root/backend/app/main.py -> go up three to repo root
+        repo_root = Path(__file__).resolve().parents[2]
+        candidate = repo_root / "frontend" / "assets" / "images" / "podcast_finder_logo.png"
+        if candidate.exists():
+            return FileResponse(str(candidate), media_type="image/png")
+    except Exception:
+        pass
+    return Response(status_code=204)
 
 
 @app.get("/health")

@@ -87,3 +87,17 @@ html[data-theme="dark"] #search-info-alert,
 html[data-theme="dark"] #search-info-alert * {
     color: #000000 !important;
 }
+
+/* Highlight the first search result */
+.card.first-result {
+    transition: box-shadow 200ms ease, transform 120ms ease;
+    border: 4px solid #0d6efd !important; /* default to bootstrap primary */
+    box-shadow: 0 6px 18px rgba(13,110,253,0.12) !important;
+    transform: translateY(-2px);
+}
+
+/* Dark theme override */
+html[data-theme="dark"] .card.first-result {
+    border: 4px solid #66b2ff !important;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.6) !important;
+}

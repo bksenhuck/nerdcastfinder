@@ -15,12 +15,13 @@ from dash import Dash, html, dcc, Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
+import os
 from backend.app.core.logger import logger
 from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastEpisode, PodcastSegment
 
 # Configuration
-BACKEND_URL = "http://localhost:8001/api/search"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 
 def get_podcast_stats():
@@ -946,11 +947,13 @@ def search_podcasts(
         if similarity_threshold and similarity_threshold > 0:
             params["min_confidence"] = round(similarity_threshold, 2)
         
-        logger.info(f"Making request to: {BACKEND_URL}")
+        # Build full search URL from BACKEND_URL (allows BACKEND_URL to be a base URL)
+        search_url = f"{BACKEND_URL.rstrip('/')}/api/search"
+        logger.info(f"Making request to: {search_url}")
         logger.info(f"Parameters: {params}")
-        
+
         response = requests.get(
-            BACKEND_URL,
+            search_url,
             params=params,
             timeout=30
         )

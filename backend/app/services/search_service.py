@@ -34,9 +34,8 @@ class SearchService:
         index_path = settings.get_faiss_index_path()
         
         logger.info("=" * 60)
-        logger.info("Loading FAISS Index...")
+        logger.info(f"Loading FAISS index from {format_path(index_path)}")
         logger.info("=" * 60)
-        logger.info(f"Index path: {format_path(index_path)}")
         logger.info(f"Index exists: {index_path.exists()}")
 
         logger.section("Loading FAISS Index...")
@@ -44,7 +43,7 @@ class SearchService:
         if index_path.exists():
             try:
                 self.index = faiss.read_index(str(index_path))
-                logger.info(f"✓ FAISS index loaded successfully")
+                logger.info("FAISS index loaded successfully")
                 logger.info(f"  Total vectors: {self.index.ntotal}")
                 logger.success(f"✓ FAISS index loaded successfully")
                 logger.info(f"  Total vectors: {self.index.ntotal}")

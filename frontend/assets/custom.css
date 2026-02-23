@@ -81,3 +81,9 @@
 [data-theme="dark"] .dropdown-item.active {
     background-color: #0d6efd !important;
 }
+
+/* Specific override: make the informational search alert text black in dark theme */
+html[data-theme="dark"] #search-info-alert,
+html[data-theme="dark"] #search-info-alert * {
+    color: #000000 !important;
+}

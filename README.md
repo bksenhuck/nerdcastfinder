@@ -163,6 +163,43 @@ nerdcastfinder/
 
 Place your podcast audio files (`.mp3`, `.wav`, `.m4a`, etc.) in:
 ```
+
+## Deploy no Render
+
+Resumo mínimo para rodar em modo runtime-only (consulta FAISS)
+
+- Tipo de serviço: **Web Service** (FastAPI uvicorn)
+- Build command (Render):
+
+```bash
+pip install --upgrade pip
+pip install -r requirements-prod.txt
+```
+
+- Start command (Render):
+
+```bash
+uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level info
+```
+
+- Variáveis de ambiente necessárias:
+   - `PORT` (fornecido pelo Render)
+   - `PYTHON_VERSION` (ex.: `3.11`)
+   - `FAISS_INDEX_PATH` (opcional) — path para `nerdcast.index` ou diretório que contenha `nerdcast.index`. Se não setado, usa `backend/data/faiss_index/nerdcast.index`.
+   - `BACKEND_URL` (se o frontend for deployado separadamente)
+   - `LOG_LEVEL` (opcional, ex.: `INFO`, `DEBUG`)
+   - `CORS_ALLOW_ORIGINS` (opcional, lista CSV de origens para produção)
+
+- Arquivos que precisam existir no runtime:
+   - `backend/data/faiss_index/nerdcast.index`  
+   - `backend/data/faiss_index/embedding_id_mapping.npy`  
+   - `backend/data/nerdcasts.db` (SQLite)
+
+- Observações importantes:
+   - O deploy é runtime-only: não execute pipelines de ingestão no ambiente de produção.
+   - Garanta que os arquivos acima sejam disponibilizados no filesystem (Persistent Disk no Render ou incluídos na imagem de build).
+   - `sentence-transformers` depende de `torch` em runtime — certifique-se de instalar as wheels compatíveis com a versão do Python/OS do Render.
+
 backend/data/podcasts/
 ```
 

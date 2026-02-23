@@ -137,10 +137,29 @@ class Settings:
     API_VERSION: str = "1.0.0"
     
     # ===== CORS Settings =====
-    CORS_ALLOW_ORIGINS: list = ["*"]  # Restrict in production
+    # Default CORS: permissive for local/dev. Can be overridden by env var
+    # Set CORS_ALLOW_ORIGINS as a comma-separated list in production
+    CORS_ALLOW_ORIGINS: list = ["*"]
     CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_METHODS: list = ["*"]
     CORS_ALLOW_HEADERS: list = ["*"]
+
+    # ===== Logging =====
+    # LOG_LEVEL can be 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+
+    @staticmethod
+    def get_cors_origins() -> list:
+        """Return CORS origins list, optionally read from env var CORS_ALLOW_ORIGINS
+
+        Env var format: comma-separated list, e.g. https://example.com,https://app.example.com
+        If not provided, returns `CORS_ALLOW_ORIGINS` default.
+        """
+        env = os.getenv("CORS_ALLOW_ORIGINS")
+        if env:
+            parts = [p.strip() for p in env.split(",") if p.strip()]
+            return parts or Settings.CORS_ALLOW_ORIGINS
+        return Settings.CORS_ALLOW_ORIGINS
 
 
 # Create a singleton instance

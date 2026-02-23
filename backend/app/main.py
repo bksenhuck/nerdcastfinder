@@ -10,8 +10,8 @@ from backend.app.core.config import settings
 from backend.app.api import search, episodes
 from backend.app.core.logger import logger
 
-# Increase default python logging level to INFO
-logging.basicConfig(level=logging.INFO)
+# Increase default python logging level (configurable via LOG_LEVEL env var)
+logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO))
 
 app = FastAPI(
     title=settings.API_TITLE,
@@ -48,7 +48,7 @@ async def log_requests(request: Request, call_next):
 # Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ALLOW_ORIGINS,
+    allow_origins=settings.get_cors_origins(),
     allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
     allow_methods=settings.CORS_ALLOW_METHODS,
     allow_headers=settings.CORS_ALLOW_HEADERS,
@@ -91,16 +91,19 @@ async def health():
 
 
 if __name__ == "__main__":
+    import os
     import uvicorn
 
     logger.header("NERDCAST FINDER - BACKEND API")
-    logger.info(f"Starting server on http://{settings.API_HOST}:{settings.API_PORT}")
-    logger.info(f"Documentation: http://{settings.API_HOST}:{settings.API_PORT}/docs")
+    # Respect PORT env var when running as script (Render provides $PORT)
+    port = int(os.environ.get("PORT", settings.API_PORT))
+    logger.info(f"Starting server on http://{settings.API_HOST}:{port}")
+    logger.info(f"Documentation: http://{settings.API_HOST}:{port}/docs")
 
     uvicorn.run(
         "backend.app.main:app",
         host=settings.API_HOST,
-        port=settings.API_PORT,
-        reload=settings.API_RELOAD,
-        log_level="info"
+        port=port,
+        reload=False,
+        log_level=settings.LOG_LEVEL.lower() if hasattr(settings, 'LOG_LEVEL') else "info"
     )

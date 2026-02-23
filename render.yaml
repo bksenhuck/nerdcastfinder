@@ -4,8 +4,8 @@ services:
     env: python
     plan: free
     buildCommand: "pip install --upgrade pip && pip install -r requirements-prod.txt"
-    # Use uvicorn directly to avoid WSGI/ASGI worker mismatches on some platforms
-    startCommand: "uvicorn app:app --host 0.0.0.0 --port $PORT --log-level info --workers 1"
+    # Use uvicorn via python -m to ensure the correct environment/module resolution
+    startCommand: "python -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --log-level info"
     envVars:
       - key: PYTHON_VERSION
         value: '3.11'

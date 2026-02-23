@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: nerdcastfinder-backend
+    env: python
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install -r requirements-prod.txt"
+    startCommand: "gunicorn -k uvicorn.workers.UvicornWorker app:app --bind 0.0.0.0:$PORT --workers 1 --log-level info"
+    envVars:
+      - key: PYTHON_VERSION
+        value: '3.11'
+      - key: FAISS_INDEX_PATH
+        value: ''
+      - key: BACKEND_URL
+        value: ''
+      - key: LOG_LEVEL
+        value: 'INFO'
+      - key: CORS_ALLOW_ORIGINS
+        value: ''

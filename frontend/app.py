@@ -21,7 +21,7 @@ from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastEpisode, PodcastSegment
 
 # Configuration
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8005")
 
 
 def get_podcast_stats():
@@ -476,7 +476,7 @@ def home_layout():
                                             min=0,
                                             max=1,
                                             step=0.05,
-                                            value=0.5,
+                                            value=0,
                                             marks={
                                                 0.0: "0.0",
                                                 0.2: "0.2",

@@ -17,6 +17,7 @@ class Logger:
 	RESET = "\033[0m"
 
 	COLORS = {
+		"DEBUG": "\033[90m",     # Cinza (debug)
 		"INFO": "\033[94m",      # Azul
 		"SUCCESS": "\033[92m",   # Verde
 		"WARNING": "\033[93m",   # Amarelo
@@ -38,6 +39,11 @@ class Logger:
 	@classmethod
 	def info(cls, message: str):
 		cls._log("INFO", message)
+
+	@classmethod
+	def debug(cls, message: str):
+		"""Debug-level logging for verbose internal messages"""
+		cls._log("DEBUG", message)
 
 	@classmethod
 	def success(cls, message: str):

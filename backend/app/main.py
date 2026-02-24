@@ -1,6 +1,8 @@
 """
 FastAPI main application entry point for Nerdcast Finder
 """
+from backend.app.core.logger import logger
+logger.header("[BOOT] Iniciando backend/main.py", width=60)
 import logging
 import time
 from fastapi import FastAPI, Request, Response
@@ -17,43 +19,47 @@ from backend.app.core.logger import logger
 # Dash integration (import frontend.app explicitly to avoid module name conflict)
 import importlib
 dash_app_module = importlib.import_module("frontend.app")
-
-app.mount("/", WSGIMiddleware(dash_app_module.app.server))
 logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO))
 
+
+logger.info("[BOOT] Criando FastAPI app...")
 app = FastAPI(
     title=settings.API_TITLE,
     description=settings.API_DESCRIPTION,
     version=settings.API_VERSION
 )
+logger.info("[BOOT] FastAPI app criado.")
 
-# Mount Dash app at root
-app.mount("/", WSGIMiddleware(dash_app_module.app.server))
+logger.info("[BOOT] Montando Dash app em /ui...")
+app.mount("/ui", WSGIMiddleware(dash_app_module.app.server))
+logger.info("[BOOT] Dash app montado em /ui.")
 
-# Request logging middleware
+
+# Middleware de log detalhado
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    logger.header("[MIDDLEWARE] Nova requisição HTTP", width=60)
+    logger.info(f"[MIDDLEWARE] Method: {request.method}")
+    logger.info(f"[MIDDLEWARE] URL: {request.url}")
+    logger.info(f"[MIDDLEWARE] Path: {request.url.path}")
+    logger.info(f"[MIDDLEWARE] Query: {request.url.query}")
     start_time = time.time()
-    logger.header("Incoming HTTP Request")
-    logger.info(f"Method: {request.method}")
-    logger.info(f"URL: {request.url}")
-    logger.info(f"Path: {request.url.path}")
-    logger.info(f"Query: {request.url.query}")
-    
     try:
+        logger.info("[MIDDLEWARE] Chamando próximo handler...")
         response = await call_next(request)
         process_time = time.time() - start_time
-        logger.info(f"✓ Response: {response.status_code}")
-        logger.info(f"⏱️  Duration: {process_time:.3f}s")
+        logger.info(f"[MIDDLEWARE] ✓ Response: {response.status_code}")
+        logger.info(f"[MIDDLEWARE] ⏱️  Duration: {process_time:.3f}s")
+        logger.info("[MIDDLEWARE] Fim da requisição.")
         logger.info("=" * 60)
         return response
     except Exception as e:
-        logger.error(f"❌ Exception in request processing:")
-        logger.error(f"Type: {type(e).__name__}")
-        logger.error(f"Message: {str(e)}")
+        logger.error(f"[MIDDLEWARE] ❌ Exception in request processing:")
+        logger.error(f"[MIDDLEWARE] Type: {type(e).__name__}")
+        logger.error(f"[MIDDLEWARE] Message: {str(e)}")
         import traceback
-        logger.error(f"Traceback:\n{traceback.format_exc()}")
-        logger.error("=" * 60)
+        logger.error(f"[MIDDLEWARE] Traceback:\n{traceback.format_exc()}")
+        logger.error("[MIDDLEWARE] =" * 60)
         raise
 
 # Enable CORS for frontend
@@ -65,9 +71,10 @@ app.add_middleware(
     allow_headers=settings.CORS_ALLOW_HEADERS,
 )
 
-# Include routers
+logger.info("[BOOT] Incluindo routers de API...")
 app.include_router(search.router, prefix="/api", tags=["search"])
 app.include_router(episodes.router, prefix="/api", tags=["episodes"])
+logger.info("[BOOT] Routers incluídos.")
 
 
 @app.on_event("startup")

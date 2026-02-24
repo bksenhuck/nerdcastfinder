@@ -72,6 +72,7 @@ async def search(
         le=1.0
     )
 ):
+    logger.info(f"[HANDLER] Parâmetros: q={q}, top_k={top_k}, feed={feed}, program={program}, min_confidence={min_confidence}")
     """
     Semantic search for podcast episodes
     

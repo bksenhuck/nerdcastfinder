@@ -6,7 +6,7 @@ logger.header("[BOOT] Iniciando backend/main.py", width=60)
 import logging
 import time
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.wsgi import WSGIMiddleware
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +29,9 @@ app = FastAPI(
 )
 logger.info("[BOOT] FastAPI app criado.")
 
+# Track whether UI was mounted so root can redirect to it when available.
+UI_MOUNTED = False
+
 # Try to import and mount the Dash frontend if Dash is available. On
 # environments where the frontend dependencies are not installed (e.g.
 # a backend-only deploy), avoid crashing the process and continue
@@ -40,6 +43,7 @@ try:
     if hasattr(dash_app_module, "app") and hasattr(dash_app_module.app, "server"):
         logger.info("[BOOT] Montando Dash app em /ui...")
         app.mount("/ui", WSGIMiddleware(dash_app_module.app.server))
+        UI_MOUNTED = True
         logger.info("[BOOT] Dash app montado em /ui.")
     else:
         logger.warning("[BOOT] Módulo frontend carregado mas não expõe 'app.server'; pulando montagem.")
@@ -112,6 +116,14 @@ async def startup_event():
 
 @app.get("/")
 async def root():
+    # If the UI was mounted, redirect the root to the mounted Dash app
+    # so visiting the primary service URL shows the UI instead of JSON.
+    try:
+        if UI_MOUNTED:
+            return RedirectResponse(url="/ui")
+    except NameError:
+        pass
+
     return {
         "message": "Nerdcast Finder API",
         "docs": "/docs"

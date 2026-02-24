@@ -106,7 +106,14 @@ app = Dash(
         dbc.icons.BOOTSTRAP
     ],
     title="Podcast Finder",
-    suppress_callback_exceptions=True
+    suppress_callback_exceptions=True,
+    # When the Dash app is mounted under a subpath (we mount at /ui),
+    # Dash must be configured to generate asset and component URLs
+    # relative to that prefix. These settings ensure requests to
+    # /ui/_dash-component-suites and /ui/assets/* are generated.
+    requests_pathname_prefix="/ui/",
+    routes_pathname_prefix="/ui/",
+    assets_url_path="/ui/assets"
 )
 
 # Custom index with aggressive theme enforcement and logging

@@ -181,10 +181,32 @@ class SearchService:
                     duration_seconds = episode_metadata.duration_seconds if episode_metadata else None
                     file_size_mb = episode_metadata.file_size_mb if episode_metadata else None
                     
+                    # Normalize author/program fields: prefer program_name, fallback to podcast_source
+                    program = episode_metadata.program_name if episode_metadata and getattr(episode_metadata, 'program_name', None) else None
+                    podcast_src = episode_metadata.podcast_source if episode_metadata and getattr(episode_metadata, 'podcast_source', None) else None
+                    author = program.strip() if program and program.strip() else (podcast_src if podcast_src else None)
+
+                    # Debug log: record what metadata we found for this result
+                    try:
+                        logger.info(f"[SEARCH-DEBUG] episode={segment.episode} program_name={program!r} podcast_source={podcast_src!r} author={author!r} distance={distance}")
+                        # Fallback: also append to a debug file to ensure we capture values
+                        try:
+                            from pathlib import Path
+                            dbg_path = settings.get_data_dir() / "search_debug.log"
+                            with open(dbg_path, "a", encoding="utf-8") as fh:
+                                fh.write(f"episode={segment.episode}\tprogram_name={program!r}\tpodcast_source={podcast_src!r}\tauthor={author!r}\tdistance={distance}\n")
+                        except Exception:
+                            pass
+                    except Exception:
+                        # Ensure logging never breaks search
+                        pass
+
                     results.append({
                         "episode": segment.episode,  # Keep filename for backwards compatibility
                         "title": title,
-                        "author": episode_metadata.program_name if episode_metadata and getattr(episode_metadata, 'program_name', None) else (episode_metadata.podcast_source if episode_metadata else None),
+                        "author": author,
+                        "program_name": program,
+                        "podcast_source": podcast_src,
                         "image_url": image_url,
                         "published_date": published_date.isoformat() if published_date else None,
                         "duration_seconds": duration_seconds,

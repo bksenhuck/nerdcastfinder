@@ -20,6 +20,9 @@ class SearchResult(BaseModel):
     published_date: str | None = None
     duration_seconds: int | None = None
     file_size_mb: float | None = None
+    author: str | None = None
+    program_name: str | None = None
+    podcast_source: str | None = None
     excerpt: str
     score: float
 
@@ -48,7 +51,7 @@ def get_search_service() -> SearchService:
     return SearchServiceSingleton()
 
 
-@router.get("/search", response_model=List[SearchResult])
+@router.get("/search")
 async def search(
     q: str = Query(..., description="Search query", min_length=1),
     top_k: int = Query(
@@ -108,20 +111,62 @@ async def search(
         )
         
         logger.success(f"Search completed successfully - Found {len(results)} results")
-        
-        return [
-            SearchResult(
-                episode=result["episode"],
-                title=result.get("title", result["episode"]),
-                image_url=result.get("image_url"),
-                published_date=result.get("published_date"),
-                duration_seconds=result.get("duration_seconds"),
-                file_size_mb=result.get("file_size_mb"),
-                excerpt=result["excerpt"],
-                score=result["score"]
-            )
-            for result in results
-        ]
+
+        # Ensure `author`/`program_name`/`podcast_source` are populated
+        # Fallback: read directly from sqlite for any missing metadata (robust against ORM issues)
+        try:
+            import sqlite3
+            from pathlib import Path
+            db_path = settings.get_database_path()
+            # Annotate results with db path and existence for debugging
+            db_exists = db_path.exists()
+            conn = None
+            if db_exists:
+                conn = sqlite3.connect(str(db_path))
+                cur = conn.cursor()
+                for r in results:
+                    # record db path/existence per result
+                    r.setdefault('_debug', {})
+                    r['_debug']['db_path'] = str(db_path)
+                    r['_debug']['db_exists'] = db_exists
+                    if r.get('author') is None:
+                        ep = r.get('episode')
+                        if ep:
+                            cur.execute('SELECT program_name, podcast_source FROM podcast_episodes WHERE filename = ?', (ep,))
+                            row = cur.fetchone()
+                            if row:
+                                program_name_val, podcast_source_val = row
+                                r['program_name'] = program_name_val
+                                r['podcast_source'] = podcast_source_val
+                                r['author'] = (program_name_val.strip() if program_name_val and program_name_val.strip() else (podcast_source_val if podcast_source_val else None))
+                    # Attach debug info about DB lookup
+                    try:
+                        ep_dbg = r.get('episode')
+                        cur.execute('SELECT filename, program_name, podcast_source FROM podcast_episodes WHERE filename = ?', (ep_dbg,))
+                        row_dbg = cur.fetchone()
+                        if row_dbg:
+                            r['_debug'] = {'db_found': True, 'db_filename': row_dbg[0], 'db_program_name': row_dbg[1], 'db_podcast_source': row_dbg[2]}
+                        else:
+                            r['_debug'] = {'db_found': False, 'db_filename': None}
+                    except Exception:
+                        r['_debug'] = {'db_lookup_error': True}
+                conn.close()
+        except Exception:
+            # Non-fatal: proceed with whatever results we have
+            pass
+
+        # Return raw dicts so we preserve any dynamically-populated metadata
+        # (some Pydantic/FastAPI serialization settings may drop None fields)
+        # Ensure author/program_name/podcast_source keys exist for frontend fallback
+        for r in results:
+            if 'author' not in r:
+                r['author'] = None
+            if 'program_name' not in r:
+                r['program_name'] = None
+            if 'podcast_source' not in r:
+                r['podcast_source'] = None
+
+        return results
     except Exception as e:
         import traceback
         logger.error(f"Search failed: {str(e)}")

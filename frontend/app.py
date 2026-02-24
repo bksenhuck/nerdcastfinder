@@ -283,11 +283,12 @@ def home_layout():
                         className="form-control-lg"
                     ),
                     dbc.Button(
-                        "Search",
+                        html.I(className="bi bi-search"),
                         id="search-button",
                         color="primary",
                         className="btn-lg",
-                        n_clicks=0
+                        n_clicks=0,
+                        title="Buscar"
                     )
                 ], className="mb-3"),
                 # Informational alert about current search behavior
@@ -1118,6 +1119,24 @@ def search_podcasts(
             title = result.get('title', result['episode'])
             image_url = result.get('image_url')
             author = result.get('author') or result.get('program_name') or result.get('podcast_source') or None
+
+            # If author/program_name is missing from backend response, fall back to local sqlite DB
+            if not author:
+                try:
+                    import sqlite3
+                    from pathlib import Path
+                    db_path = Path(__file__).parents[1] / 'backend' / 'data' / 'nerdcasts.db'
+                    if db_path.exists():
+                        conn = sqlite3.connect(str(db_path))
+                        cur = conn.cursor()
+                        cur.execute('SELECT program_name, podcast_source FROM podcast_episodes WHERE filename = ?', (result.get('episode'),))
+                        row = cur.fetchone()
+                        if row:
+                            prog, src = row
+                            author = (prog.strip() if prog and prog.strip() else (src if src else None))
+                        conn.close()
+                except Exception:
+                    pass
             
             # Highlight similar words in excerpt
             highlighted_text = highlight_similar_words(

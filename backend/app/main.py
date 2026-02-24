@@ -18,7 +18,6 @@ from backend.app.core.logger import logger
 
 # Dash integration (import frontend.app explicitly to avoid module name conflict)
 import importlib
-dash_app_module = importlib.import_module("frontend.app")
 logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO))
 
 
@@ -30,9 +29,25 @@ app = FastAPI(
 )
 logger.info("[BOOT] FastAPI app criado.")
 
-logger.info("[BOOT] Montando Dash app em /ui...")
-app.mount("/ui", WSGIMiddleware(dash_app_module.app.server))
-logger.info("[BOOT] Dash app montado em /ui.")
+# Try to import and mount the Dash frontend if Dash is available. On
+# environments where the frontend dependencies are not installed (e.g.
+# a backend-only deploy), avoid crashing the process and continue
+# serving the API.
+try:
+    logger.info("[BOOT] Tentando importar o frontend (Dash)...")
+    dash_app_module = importlib.import_module("frontend.app")
+    # Only mount if the module exposes the Dash server object
+    if hasattr(dash_app_module, "app") and hasattr(dash_app_module.app, "server"):
+        logger.info("[BOOT] Montando Dash app em /ui...")
+        app.mount("/ui", WSGIMiddleware(dash_app_module.app.server))
+        logger.info("[BOOT] Dash app montado em /ui.")
+    else:
+        logger.warning("[BOOT] Módulo frontend carregado mas não expõe 'app.server'; pulando montagem.")
+except ModuleNotFoundError as e:
+    logger.warning("[BOOT] Dash não está instalado no ambiente; UI não será montada.\n"
+                   "Install 'dash' and related packages to enable the UI.")
+except Exception as e:
+    logger.error(f"[BOOT] Erro ao tentar montar frontend: {e}")
 
 
 # Middleware de log detalhado

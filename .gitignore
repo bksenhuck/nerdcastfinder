@@ -54,4 +54,5 @@ backend/data/faiss_index/*.index
 # Models cache
 models/
 .cache/
+.claude/
 *.mp3

@@ -40,7 +40,7 @@ backend/data/podcasts/
 # Inclui FAISS index e SQLite DB para busca
 !backend/data/faiss_index/
 !backend/data/faiss_index/**
-!backend/data/nerdcasts.db
+!backend/data/podcast_database.db
 
 # Keep frontend/ included na imagem para UI funcionar
 !frontend/

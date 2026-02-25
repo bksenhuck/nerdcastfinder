@@ -3,7 +3,7 @@
 Este documento descreve os arquivos de dados e bancos presentes no workspace, com localização, esquema básico e contagens encontradas localmente.
 
 **SQLite (metadados)**:
-- Path: `backend/data/nerdcasts.db`
+- Path: `backend/data/podcast_database.db`
 - Objetos (tabelas e índices):
   - Tabela `podcast_episodes`
     - Colunas (resumidas): `id`, `filename`, `title_original`, `published_date`, `duration_seconds`, `file_size_mb`, `audio_url`, `status`, `created_at`, `updated_at`, `downloaded_at`, `summary`, `image_url`, `podcast_source`, `program_name`
@@ -20,8 +20,8 @@ Este documento descreve os arquivos de dados e bancos presentes no workspace, co
   - `podcast_segments`: 41162 registros
 
 Observações:
-- Arquivo do DB (SQLite) tem WAL/SHM (`nerdcasts.db-wal`, `nerdcasts.db-shm`) enquanto o banco está em uso.
-- Antes de alterar esquema em produção, faça backup: copie `backend/data/nerdcasts.db` para outro local.
+- Arquivo do DB (SQLite) tem WAL/SHM (`podcast_database.db-wal`, `podcast_database.db-shm`) enquanto o banco está em uso.
+- Antes de alterar esquema em produção, faça backup: copie `backend/data/podcast_database.db` para outro local.
 
 **FAISS (índice vetorial)**:
 - Diretório: `backend/data/faiss_index/`
@@ -49,7 +49,7 @@ Observações:
 - Atualizar metadata (summary/image): `python -m backend.pipelines.update_metadata` (script: `backend/pipelines/update_metadata.py`).
 
 **Recomendações e ações comuns**:
-- Backup: copie `backend/data/nerdcasts.db` antes de alterações de esquema.
+- Backup: copie `backend/data/podcast_database.db` antes de alterações de esquema.
 - Rebuild index: pare o backend (para evitar arquivos lockados), rode `python -m backend.pipelines.rebuild_index`, e então reinicie o backend.
 - Em caso de mistura de dimensões de embedding (várias versões do modelo): o rebuild irá detectar dimensões e pular embeddings com dimensão diferente — ver logs do script para detalhes sobre `skipped_wrong_dim` e `skipped_no_emb`.
 

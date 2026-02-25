@@ -3,7 +3,7 @@ Check if metadata is populated in the database
 """
 import sqlite3
 
-db_path = "backend/data/nerdcasts.db"
+db_path = "backend/data/podcast_database.db"
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 

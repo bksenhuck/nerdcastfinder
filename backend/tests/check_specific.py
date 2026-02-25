@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect('backend/data/nerdcasts.db')
+conn = sqlite3.connect('backend/data/podcast_database.db')
 cursor = conn.cursor()
 
 cursor.execute("SELECT filename, title_original, published_date, duration_seconds, file_size_mb FROM podcast_episodes WHERE filename LIKE 'empreendedor_61%'")

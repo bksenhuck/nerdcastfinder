@@ -62,7 +62,7 @@ nerdcastfinder/
 │   ├── data/
 │   │   ├── podcasts/            # Place audio files here
 │   │   ├── faiss_index/         # FAISS index storage
-│   │   └── nerdcasts.db         # SQLite database
+│   │   └── podcast_database.db         # SQLite database
 │   ├── requirements.txt
 │   ├── start_backend.ps1        # Backend quick start
 │   └── ARCHITECTURE.md          # Code organization docs
@@ -193,7 +193,7 @@ uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level
 - Arquivos que precisam existir no runtime:
    - `backend/data/faiss_index/podcasts.index`  
    - `backend/data/faiss_index/embedding_id_mapping.npy`  
-   - `backend/data/nerdcasts.db` (SQLite)
+   - `backend/data/podcast_database.db` (SQLite)
 
 - Observações importantes:
    - O deploy é runtime-only: não execute pipelines de ingestão no ambiente de produção.
@@ -242,7 +242,7 @@ Deploy to Cloud Run:
 gcloud run deploy <SERVICE> \
   --image <REGION>-docker.pkg.dev/<PROJECT_ID>/<AR_REPO>/<SERVICE>:latest \
   --region <REGION> --platform managed --allow-unauthenticated \
-  --set-env-vars FAISS_GCS_URI=gs://<BUCKET>/podcasts.index,FAISS_MAPPING_GCS_URI=gs://<BUCKET>/embedding_id_mapping.npy,FAISS_DB_GCS_URI=gs://<BUCKET>/nerdcasts.db \
+  --set-env-vars FAISS_GCS_URI=gs://<BUCKET>/podcasts.index,FAISS_MAPPING_GCS_URI=gs://<BUCKET>/embedding_id_mapping.npy,FAISS_DB_GCS_URI=gs://<BUCKET>/podcast_database.db \
   --memory=2Gi --cpu=1 --concurrency=1 --timeout=1000s
 ```
 

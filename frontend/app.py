@@ -1128,7 +1128,7 @@ def search_podcasts(
                 try:
                     import sqlite3
                     from pathlib import Path
-                    db_path = Path(__file__).parents[1] / 'backend' / 'data' / 'nerdcasts.db'
+                    db_path = Path(__file__).parents[1] / 'backend' / 'data' / 'podcast_database.db'
                     if db_path.exists():
                         conn = sqlite3.connect(str(db_path))
                         cur = conn.cursor()

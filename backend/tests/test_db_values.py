@@ -1,7 +1,7 @@
 import sqlite3
 import json
 
-conn = sqlite3.connect('backend/data/nerdcasts.db')
+conn = sqlite3.connect('backend/data/podcast_database.db')
 cursor = conn.cursor()
 
 episode_name = "empreendedor_67_-_debetti_tradição_e_inovação"

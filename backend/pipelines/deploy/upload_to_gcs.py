@@ -3,7 +3,7 @@ Upload local data artifacts to Google Cloud Storage
 
 This script:
 1. Checkpoints the SQLite WAL into the main DB file (ensures consistency)
-2. Uploads nerdcasts.db, podcasts.index and embedding_id_mapping.npy to GCS
+2. Uploads podcast_database.db, podcasts.index and embedding_id_mapping.npy to GCS
 3. Optionally triggers a Cloud Run redeploy
 
 Usage:
@@ -19,7 +19,7 @@ Requirements:
 GCS URIs are read from env vars (same as Cloud Run):
     FAISS_GCS_URI          e.g. gs://podcast-finder-data/podcasts.index
     FAISS_MAPPING_GCS_URI  e.g. gs://podcast-finder-data/embedding_id_mapping.npy
-    FAISS_DB_GCS_URI       e.g. gs://podcast-finder-data/nerdcasts.db
+    FAISS_DB_GCS_URI       e.g. gs://podcast-finder-data/podcast_database.db
 """
 import sys
 import sqlite3
@@ -48,7 +48,7 @@ def checkpoint_wal(db_path: Path):
     """
     Flush the SQLite WAL into the main database file.
 
-    Must be done before uploading nerdcasts.db to GCS, otherwise the uploaded
+    Must be done before uploading podcast_database.db to GCS, otherwise the uploaded
     file may be missing data that was only written to the WAL journal.
     """
     logger.info(f"[WAL] Checkpointing WAL into {db_path.name}...")

@@ -122,7 +122,7 @@ class Settings:
     @staticmethod
     def get_database_path() -> Path:
         """Get the SQLite database path"""
-        return Settings.get_data_dir() / "nerdcasts.db"
+        return Settings.get_data_dir() / "podcast_database.db"
 
     @staticmethod
     def get_database_url() -> str:
@@ -174,7 +174,7 @@ class Settings:
     def get_gcs_db_uri() -> str:
         """GCS URI for the SQLite DB (FAISS_DB_GCS_URI env var takes precedence)."""
         bucket = os.getenv("GCS_BUCKET", "podcast-finder-data")
-        return os.getenv("FAISS_DB_GCS_URI", f"gs://{bucket}/nerdcasts.db")
+        return os.getenv("FAISS_DB_GCS_URI", f"gs://{bucket}/podcast_database.db")
 
     @staticmethod
     def get_gcs_index_uri() -> str:

@@ -56,7 +56,7 @@ nerdcastfinder/
 │   │   ├── test_model_config.py
 │   │   └── check_embedding_dimensions.py
 │   └── data/                 # Runtime data (isolated)
-│       ├── nerdcasts.db
+│       ├── podcast_database.db
 │       ├── faiss_index/
 │       └── podcasts/
 ├── frontend/                 # Dash frontend (unchanged)

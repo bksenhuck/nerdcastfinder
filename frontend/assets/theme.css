@@ -124,6 +124,33 @@ html[data-theme="dark"] .alert * {
     color: #212529 !important;
 }
 
+/* dcc.Dropdown (react-select) — these elements have white/light backgrounds
+   so their text must stay dark in dark mode. */
+html[data-theme="dark"] .Select-value-label,
+html[data-theme="dark"] .Select-placeholder,
+html[data-theme="dark"] .Select-option,
+html[data-theme="dark"] .Select-option *,
+html[data-theme="dark"] .Select-menu-outer,
+html[data-theme="dark"] .Select-menu-outer *,
+html[data-theme="dark"] .VirtualizedSelectOption,
+html[data-theme="dark"] .VirtualizedSelectFocusedOption {
+    color: #212529 !important;
+}
+
+/* Search input inside the dropdown */
+html[data-theme="dark"] .Select-input input {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+}
+
+/* dcc.Slider tooltip — white background, needs dark text */
+html[data-theme="dark"] .rc-slider-tooltip-content,
+html[data-theme="dark"] .rc-slider-tooltip-inner,
+html[data-theme="dark"] .dash-tooltip,
+html[data-theme="dark"] .dash-tooltip * {
+    color: #212529 !important;
+}
+
 /* Disable all transitions */
 *,
 *::before,

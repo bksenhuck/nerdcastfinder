@@ -223,6 +223,24 @@ Notes:
 - Ensure the Cloud Run runtime service account has `roles/storage.objectViewer` on the `podcast-finder-data` bucket so the container can download the index and DB at startup.
 - Adjust `--memory`, `--cpu`, `--concurrency` and `--timeout` according to load and FAISS initialization needs. The values above are recommended for a POC with a large FAISS index.
 
+### Updating the FAISS index or SQLite DB (no rebuild needed)
+
+When you have new data locally (updated `nerdcasts.db` and/or `nerdcast.index`), you only need to upload the files to GCS and restart the Cloud Run service — no Docker rebuild required:
+
+```bash
+# 1. Upload updated files to GCS
+gsutil cp backend/data/faiss_index/nerdcast.index gs://podcast-finder-data/nerdcast.index
+gsutil cp backend/data/faiss_index/embedding_id_mapping.npy gs://podcast-finder-data/embedding_id_mapping.npy
+gsutil cp backend/data/nerdcasts.db gs://podcast-finder-data/nerdcasts.db
+
+# 2. Redeploy using the existing image (forces a new revision that downloads fresh data at startup)
+gcloud run deploy podcast-finder \
+  --image us-central1-docker.pkg.dev/podcast-finder-488414/api/podcast-finder:latest \
+  --region us-central1 --platform managed
+```
+
+The container downloads the FAISS index and DB from GCS on every cold start, so the new revision will automatically pick up the updated data.
+
 
 ### 2. Run Ingestion Pipeline
 

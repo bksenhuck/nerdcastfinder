@@ -257,6 +257,19 @@ def home_layout():
                         style={"textDecoration": "none", "color": "inherit"}
                     ),
                     html.Div([
+                        html.Span(
+                            id="backend-status-dot",
+                            title="Status do backend",
+                            style={
+                                "display": "inline-block",
+                                "width": "10px",
+                                "height": "10px",
+                                "borderRadius": "50%",
+                                "backgroundColor": "#6c757d",
+                                "marginRight": "10px",
+                                "verticalAlign": "middle",
+                            }
+                        ),
                         dcc.Link(
                             "Sobre",
                             href="/about",
@@ -570,6 +583,19 @@ def about_layout():
                         style={"textDecoration": "none", "color": "inherit"}
                     ),
                     html.Div([
+                        html.Span(
+                            id="backend-status-dot",
+                            title="Status do backend",
+                            style={
+                                "display": "inline-block",
+                                "width": "10px",
+                                "height": "10px",
+                                "borderRadius": "50%",
+                                "backgroundColor": "#6c757d",
+                                "marginRight": "10px",
+                                "verticalAlign": "middle",
+                            }
+                        ),
                         dcc.Link(
                             "← Voltar",
                             href="/",
@@ -715,6 +741,9 @@ app.layout = html.Div([
     
     # Store for theme state (dark/light) - persists to localStorage
     dcc.Store(id="theme-store", storage_type="local"),
+
+    # Interval for backend status polling (every 15s)
+    dcc.Interval(id="backend-status-interval", interval=15_000, n_intervals=0),
     
     # Page wrapper
     html.Div(id="page-wrapper", children=[
@@ -871,6 +900,28 @@ def update_theme_icon(theme):
     if theme == "dark":
         return html.I(className="bi bi-sun-fill")
     return html.I(className="bi bi-moon-fill")
+
+
+@app.callback(
+    Output("backend-status-dot", "style"),
+    Input("backend-status-interval", "n_intervals"),
+)
+def update_backend_status(n_intervals):
+    """Poll /ready and paint the status dot green (ready) or red (unavailable)."""
+    base_style = {
+        "display": "inline-block",
+        "width": "10px",
+        "height": "10px",
+        "borderRadius": "50%",
+        "marginRight": "10px",
+        "verticalAlign": "middle",
+    }
+    try:
+        resp = requests.get(f"{BACKEND_URL.rstrip('/')}/ready", timeout=3)
+        color = "#28a745" if resp.status_code == 200 else "#dc3545"
+    except Exception:
+        color = "#dc3545"
+    return {**base_style, "backgroundColor": color}
 
 
 @app.callback(

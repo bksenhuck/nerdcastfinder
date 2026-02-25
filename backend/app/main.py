@@ -243,6 +243,13 @@ async def load_index_background():
                 dest_db = db_path
                 blob.download_to_filename(str(dest_db))
                 logger.info(f"[BOOT] SQLite DB downloaded to {dest_db}")
+                # The SQLAlchemy engine was created at import time and may hold an
+                # open file descriptor to the old (empty) DB. Disposing forces the
+                # pool to close all connections so the next query opens the newly
+                # downloaded file.
+                from backend.app.db.session import engine as _db_engine
+                _db_engine.dispose()
+                logger.info("[BOOT] SQLAlchemy engine disposed — will reconnect to downloaded DB")
             except Exception as e:
                 logger.error(f"[BOOT] Failed to download SQLite DB via storage client: {e}")
     except Exception:

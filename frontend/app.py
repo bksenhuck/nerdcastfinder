@@ -1330,7 +1330,7 @@ def search_podcasts(
                                 metadata_items,
                                 style={"color": card_text}
                             )
-                        ], width=3, className="d-flex flex-column align-items-center",
+                        ], width=3, className="d-flex flex-column align-items-center justify-content-center",
                         style={"borderLeft": f"1px solid {info_border}", "paddingLeft": "16px", "minWidth": "140px"}
                         )
                     ], className="g-3")

@@ -63,6 +63,20 @@ def get_podcast_stats():
         return 0, 0, 0, 0
 
 
+def get_last_updated() -> str:
+    """Return the most recent episode updated_at date as a formatted string."""
+    try:
+        from sqlalchemy import func
+        db = get_db_session()
+        last = db.query(func.max(PodcastEpisode.updated_at)).scalar()
+        db.close()
+        if last:
+            return last.strftime("%d/%m/%Y")
+        return "—"
+    except Exception:
+        return "—"
+
+
 def get_available_filters():
     """Get available feeds and programs for filtering"""
     try:
@@ -691,6 +705,9 @@ def about_layout():
     ], fluid=True, className="py-4")
 
 
+# Resolved once at startup
+_last_updated = get_last_updated()
+
 # Main app layout with routing
 app.layout = html.Div([
     # URL routing
@@ -712,7 +729,11 @@ app.layout = html.Div([
     html.Footer(id="footer", children=[
         html.Hr(id="footer-hr", style={"margin": "0"}),
         html.P(
-            "Powered by FastAPI, FAISS, and sentence-transformers",
+            [
+                "Powered by FastAPI, FAISS, and sentence-transformers",
+                html.Span(" · ", className="mx-2 opacity-50"),
+                html.Span(f"Dados atualizados em: {_last_updated}", className="opacity-75"),
+            ],
             id="footer-text",
             className="text-center small py-3 mb-0"
         )

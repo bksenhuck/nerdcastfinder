@@ -34,16 +34,22 @@ COPY backend/data/faiss_index /app/backend/data/faiss_index
 # DB-specific env var is provided, or you can embed the DB in the image
 # by adding a COPY line here (not recommended for large binaries).
 
-# --- Pre-download sentence-transformers model into the image ---
-# Avoids runtime HuggingFace downloads (rate-limits / cold-start latency).
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-mpnet-base-v2'); print('Model cached.')"
-
 # --- Copy remaining files (overwrite duplicates if any) ---
 COPY . /app
 
 # --- Environment + permissions ---
 ENV PORT=8080 PYTHONUNBUFFERED=1
-RUN useradd --create-home appuser && chown -R appuser /app
+# Point HuggingFace cache to a fixed path so the pre-downloaded model is
+# accessible by appuser at runtime (not /root/.cache which is root-only).
+ENV HF_HOME=/opt/huggingface
+
+# --- Pre-download sentence-transformers model into the image ---
+# Avoids runtime HuggingFace downloads (rate-limits / cold-start latency).
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-mpnet-base-v2'); print('Model cached.')"
+
+RUN useradd --create-home appuser \
+    && chown -R appuser /app \
+    && chown -R appuser /opt/huggingface
 USER appuser
 
 EXPOSE 8080

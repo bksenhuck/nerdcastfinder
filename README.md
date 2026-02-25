@@ -185,13 +185,13 @@ uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level
 - Variáveis de ambiente necessárias:
    - `PORT` (fornecido pelo Render)
    - `PYTHON_VERSION` (ex.: `3.11`)
-   - `FAISS_INDEX_PATH` (opcional) — path para `nerdcast.index` ou diretório que contenha `nerdcast.index`. Se não setado, usa `backend/data/faiss_index/nerdcast.index`.
+   - `FAISS_INDEX_PATH` (opcional) — path para `podcasts.index` ou diretório que contenha `podcasts.index`. Se não setado, usa `backend/data/faiss_index/podcasts.index`.
    - `BACKEND_URL` (se o frontend for deployado separadamente)
    - `LOG_LEVEL` (opcional, ex.: `INFO`, `DEBUG`)
    - `CORS_ALLOW_ORIGINS` (opcional, lista CSV de origens para produção)
 
 - Arquivos que precisam existir no runtime:
-   - `backend/data/faiss_index/nerdcast.index`  
+   - `backend/data/faiss_index/podcasts.index`  
    - `backend/data/faiss_index/embedding_id_mapping.npy`  
    - `backend/data/nerdcasts.db` (SQLite)
 
@@ -216,7 +216,7 @@ gcloud builds submit --tag us-central1-docker.pkg.dev/podcast-finder-488414/api/
 
 Deploy the image to Cloud Run (public service) with FAISS assets downloaded at runtime:
 ```bash
-gcloud run deploy podcast-finder --image us-central1-docker.pkg.dev/podcast-finder-488414/api/podcast-finder:latest --region us-central1 --platform managed --allow-unauthenticated --set-env-vars FAISS_GCS_URI=gs://podcast-finder-data/nerdcast.index,FAISS_MAPPING_GCS_URI=gs://podcast-finder-data/embedding_id_mapping.npy,FAISS_DB_GCS_URI=gs://podcast-finder-data/nerdcasts.db --memory=2Gi --cpu=1 --concurrency=1 --timeout=1000s
+gcloud run deploy podcast-finder --image us-central1-docker.pkg.dev/podcast-finder-488414/api/podcast-finder:latest --region us-central1 --platform managed --allow-unauthenticated --set-env-vars FAISS_GCS_URI=gs://podcast-finder-data/podcasts.index,FAISS_MAPPING_GCS_URI=gs://podcast-finder-data/embedding_id_mapping.npy,FAISS_DB_GCS_URI=gs://podcast-finder-data/nerdcasts.db --memory=2Gi --cpu=1 --concurrency=1 --timeout=1000s
 ```
 
 Notes:
@@ -225,11 +225,11 @@ Notes:
 
 ### Updating the FAISS index or SQLite DB (no rebuild needed)
 
-When you have new data locally (updated `nerdcasts.db` and/or `nerdcast.index`), you only need to upload the files to GCS and restart the Cloud Run service — no Docker rebuild required:
+When you have new data locally (updated `nerdcasts.db` and/or `podcasts.index`), you only need to upload the files to GCS and restart the Cloud Run service — no Docker rebuild required:
 
 ```bash
 # 1. Upload updated files to GCS
-gsutil cp backend/data/faiss_index/nerdcast.index gs://podcast-finder-data/nerdcast.index
+gsutil cp backend/data/faiss_index/podcasts.index gs://podcast-finder-data/podcasts.index
 gsutil cp backend/data/faiss_index/embedding_id_mapping.npy gs://podcast-finder-data/embedding_id_mapping.npy
 gsutil cp backend/data/nerdcasts.db gs://podcast-finder-data/nerdcasts.db
 

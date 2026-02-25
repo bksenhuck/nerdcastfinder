@@ -962,47 +962,19 @@ def search_podcasts(
         ], className="mt-4"), ""
     
     try:
-        # Call backend API
-        params = {"q": query.strip(), "top_k": top_k}
-        
-        # Add optional filters
-        if feed_filter:
-            params["feed"] = feed_filter
-        if program_filter:
-            params["program"] = program_filter
-        
-        # Add minimum confidence threshold if set
-        # similarity_threshold is in range 0.0-1.0, pass it directly as min_confidence
-        if similarity_threshold and similarity_threshold > 0:
-            params["min_confidence"] = round(similarity_threshold, 2)
-        
-        # Build full search URL from BACKEND_URL (allows BACKEND_URL to be a base URL)
-        search_url = f"{BACKEND_URL.rstrip('/')}/api/search"
-        logger.info(f"Making request to: {search_url}")
-        logger.info(f"Parameters: {params}")
+        # Call search service directly (avoids HTTP self-call deadlock with single worker)
+        from backend.app.api.search import get_search_service
+        logger.info(f"Query: '{query.strip()}', top_k={top_k}, feed={feed_filter}, program={program_filter}")
 
-        response = requests.get(
-            search_url,
-            params=params,
-            timeout=30
+        service = get_search_service()
+        results = service.search(
+            query=query.strip(),
+            top_k=top_k,
+            podcast_source=feed_filter or None,
+            program_name=program_filter or None,
+            min_confidence=round(similarity_threshold, 2) if similarity_threshold and similarity_threshold > 0 else None,
         )
-        
-        logger.info(f"Response status: {response.status_code}")
-        logger.info(f"Response headers: {dict(response.headers)}")
-        
-        if response.status_code != 200:
-            logger.error(f"Error response: {response.text}")
-            # Mensagem amigável para o usuário, detalhes nos logs
-            return html.Div(
-                dbc.Alert(
-                    "Infelizmente aconteceu um erro ao processar sua busca. Por favor, tente novamente em alguns instantes.",
-                    color="danger"
-                ),
-                className="mt-4"
-            ), ""
-        
-        results = response.json()
-        logger.success(f"Received {len(results)} results from backend")
+        logger.success(f"Received {len(results)} results from search service")
         
         # Check if backend returned any results
         if not results:
@@ -1322,23 +1294,6 @@ def search_podcasts(
             header,
             html.Div(cards)
         ]), ""
-    
-    except requests.exceptions.ConnectionError as e:
-        logger.error(f"Connection Error: {e}")
-        return html.Div(
-            dbc.Alert(
-                "Cannot connect to backend. Make sure the API server is running on port 8005.",
-                color="danger"
-            ),
-            className="mt-4"
-        ), ""
-    
-    except requests.exceptions.Timeout as e:
-        logger.error(f"Timeout Error: {e}")
-        return html.Div(
-            dbc.Alert("Request timed out. Please try again.", color="warning"),
-            className="mt-4"
-        ), ""
     
     except Exception as e:
         import traceback

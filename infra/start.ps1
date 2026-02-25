@@ -64,9 +64,10 @@ if (-not (Test-Path $frontendDir)) {
     exit 1
 }
 
-Write-Host "Starting Backend API..." -ForegroundColor Cyan
-Write-Host "   Location: http://localhost:8005" -ForegroundColor Gray
-Write-Host "   Docs: http://localhost:8005/docs" -ForegroundColor Gray
+Write-Host "Starting unified app (backend + frontend)..." -ForegroundColor Cyan
+Write-Host "   Location: http://localhost:8080" -ForegroundColor Gray
+Write-Host "   API Docs: http://localhost:8080/docs" -ForegroundColor Gray
+Write-Host "   UI:       http://localhost:8080/ui" -ForegroundColor Gray
 Write-Host ""
 
 # Prepare activation command
@@ -78,26 +79,15 @@ if ($venvActivated) {
     $activateCmd = "Write-Host 'WARNING: Running without venv!' -ForegroundColor Red"
 }
 
-# Start Backend in a new terminal
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$projectRoot'; $activateCmd; Write-Host '=== NERDCAST FINDER - BACKEND ===' -ForegroundColor Green; python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8005 --reload"
-
-# Wait a bit before starting frontend
-Start-Sleep -Seconds 3
-
-Write-Host "Starting Frontend..." -ForegroundColor Cyan
-Write-Host "   Location: http://127.0.0.1:8050" -ForegroundColor Gray
-Write-Host ""
-
-# Start Frontend in a new terminal
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$projectRoot'; $activateCmd; cd '$frontendDir'; Write-Host '=== NERDCAST FINDER - FRONTEND ===' -ForegroundColor Green; python app.py"
+# Start unified app in a new terminal (mirrors Cloud Run)
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$projectRoot'; $activateCmd; Write-Host '=== NERDCAST FINDER ===' -ForegroundColor Green; python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8080 --reload"
 
 Write-Host ""
 Write-Host "=" -NoNewline; Write-Host ("=" * 59)
-Write-Host "Both servers are starting in separate terminals" -ForegroundColor Green
+Write-Host "Server is starting in a separate terminal" -ForegroundColor Green
 Write-Host "=" -NoNewline; Write-Host ("=" * 59)
 Write-Host ""
-Write-Host "Backend:  http://localhost:8005" -ForegroundColor White
-Write-Host "Frontend: http://127.0.0.1:8050" -ForegroundColor White
+Write-Host "App: http://localhost:8080/ui" -ForegroundColor White
 Write-Host ""
 Write-Host "Press Enter to close this window (servers will keep running)..." -ForegroundColor Yellow
 Read-Host

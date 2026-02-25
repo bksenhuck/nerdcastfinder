@@ -218,7 +218,7 @@ async def load_index_background():
     except Exception:
         # If google-cloud-storage is not available or any other error
         # occurs, log and proceed; SearchService will handle missing files.
-        logger.exception("[BOOT] Unexpected error during optional GCS download step (storage client)")
+        logger.error("[BOOT] Unexpected error during optional GCS download step (storage client)")
 
     # Optional: download the SQLite DB from GCS if provided.
     # Always download when the env var is set — do NOT skip if the file already
@@ -246,7 +246,7 @@ async def load_index_background():
             except Exception as e:
                 logger.error(f"[BOOT] Failed to download SQLite DB via storage client: {e}")
     except Exception:
-        logger.exception("[BOOT] Unexpected error during optional DB GCS download step (storage client)")
+        logger.error("[BOOT] Unexpected error during optional DB GCS download step (storage client)")
 
     loop = asyncio.get_event_loop()
     try:

@@ -109,10 +109,10 @@ class Settings:
             p = Path(env_path)
             # If a directory was provided, use the default filename inside it
             if p.is_dir():
-                return p / "nerdcast.index"
+                return p / "podcasts.index"
             return p
 
-        return Settings.get_faiss_dir() / "nerdcast.index"
+        return Settings.get_faiss_dir() / "podcasts.index"
     
     @staticmethod
     def get_database_path() -> Path:

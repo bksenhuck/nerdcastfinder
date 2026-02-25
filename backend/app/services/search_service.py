@@ -217,6 +217,14 @@ class SearchService:
         finally:
             db.close()
         
+        # Deduplicate: keep only the highest-scoring segment per episode
+        seen: dict = {}
+        for r in results:
+            ep = r["episode"]
+            if ep not in seen or r["score"] > seen[ep]["score"]:
+                seen[ep] = r
+        results = list(seen.values())
+
         # Apply confidence threshold filter if specified
         if min_confidence is not None:
             results = [r for r in results if r["score"] >= min_confidence]

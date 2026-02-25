@@ -761,7 +761,7 @@ app.layout = html.Div([
             [
                 "Powered by FastAPI, FAISS, and sentence-transformers",
                 html.Span(" · ", className="mx-2 opacity-50"),
-                html.Span(f"Dados atualizados em: {_last_updated}", className="opacity-75"),
+                html.Span(id="last-updated-span", children=f"Dados atualizados em: {_last_updated}", className="opacity-75"),
             ],
             id="footer-text",
             className="text-center small py-3 mb-0"
@@ -922,6 +922,20 @@ def update_backend_status(n_intervals):
     except Exception:
         color = "#dc3545"
     return {**base_style, "backgroundColor": color}
+
+
+@app.callback(
+    Output("last-updated-span", "children"),
+    Input("backend-status-interval", "n_intervals"),
+)
+def update_last_updated(n_intervals):
+    """Fetch last updated date from the backend API."""
+    try:
+        resp = requests.get(f"{BACKEND_URL.rstrip('/')}/api/last-updated", timeout=3)
+        date = resp.json().get("date", "—") if resp.status_code == 200 else "—"
+    except Exception:
+        date = "—"
+    return f"Dados atualizados em: {date}"
 
 
 @app.callback(
@@ -1316,8 +1330,8 @@ def search_podcasts(
                                 metadata_items,
                                 style={"color": card_text}
                             )
-                        ], width=2, className="d-flex flex-column align-items-center",
-                        style={"borderLeft": f"1px solid {info_border}", "paddingLeft": "12px"}
+                        ], width=3, className="d-flex flex-column align-items-center",
+                        style={"borderLeft": f"1px solid {info_border}", "paddingLeft": "16px", "minWidth": "140px"}
                         )
                     ], className="g-3")
                 ], style={"padding": "1rem"})
@@ -1339,9 +1353,9 @@ def search_podcasts(
                 style={"color": card_text}
             ),
             html.P(
-                f"Confiabilidade mínima: {similarity_threshold:.2f}",
+                f"Confiabilidade mínima: {similarity_threshold:.0%}" if similarity_threshold and similarity_threshold > 0 else "Sem filtro de confiabilidade",
                 className="mb-2",
-                style={"color": card_text}
+                style={"color": card_text, "opacity": "0.7", "fontSize": "0.85rem"}
             )
         ])
         

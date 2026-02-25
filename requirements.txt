@@ -10,3 +10,4 @@ torch
 requests==2.31.0
 dash>=2.13.0
 dash-bootstrap-components>=1.4.0
+google-cloud-storage>=2.7.0

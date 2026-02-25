@@ -21,7 +21,7 @@ from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastEpisode, PodcastSegment
 
 # Configuration
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8005")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8080")
 
 
 def get_podcast_stats():
@@ -67,7 +67,7 @@ def get_available_filters():
     """Get available feeds and programs for filtering"""
     try:
         response = requests.get(
-            "http://localhost:8005/api/filters",
+            f"{BACKEND_URL.rstrip('/')}/api/filters",
             timeout=5
         )
         if response.status_code == 200:
@@ -107,13 +107,16 @@ app = Dash(
     ],
     title="Podcast Finder",
     suppress_callback_exceptions=True,
-    # When the Dash app is mounted under a subpath (we mount at /ui),
-    # Dash must be configured to generate asset and component URLs
-    # relative to that prefix. These settings ensure requests to
-    # /ui/_dash-component-suites and /ui/assets/* are generated.
+    # FastAPI's WSGIMiddleware strips the mount prefix (/ui) before
+    # forwarding requests to the WSGI app, so PATH_INFO arrives without
+    # the /ui prefix. routes_pathname_prefix must be "/" so Dash registers
+    # Flask routes at the stripped paths (e.g. "/" not "/ui/").
+    # requests_pathname_prefix="/ui/" tells the client-side JS to use
+    # the full /ui/... URLs when fetching Dash resources, which FastAPI
+    # will then strip and forward correctly.
     requests_pathname_prefix="/ui/",
-    routes_pathname_prefix="/ui/",
-    assets_url_path="/ui/assets"
+    routes_pathname_prefix="/",
+    assets_url_path="assets"
 )
 
 # Custom index with aggressive theme enforcement and logging
@@ -125,7 +128,7 @@ app.index_string = '''
         <title>{%title%}</title>
         {%favicon%}
         <!-- Preferred favicon (PNG) served from assets -->
-        <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/podcast_finder_logo.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/ui/assets/images/podcast_finder_logo.png">
         <!-- Fallback for browsers requesting /favicon.ico -->
         <link rel="shortcut icon" href="/favicon.ico">
         <script>
@@ -226,7 +229,7 @@ def home_layout():
                     dcc.Link(
                         html.Div([
                             html.Img(
-                                src="/assets/images/podcast_finder_logo.png",
+                                src="/ui/assets/images/podcast_finder_logo.png",
                                 className="d-inline-block me-3",
                                 style={"height": "50px", "width": "auto", "verticalAlign": "middle"}
                             ),
@@ -556,7 +559,7 @@ def about_layout():
                     dcc.Link(
                         html.Div([
                             html.Img(
-                                src="/assets/images/podcast_finder_logo.png",
+                                src="/ui/assets/images/podcast_finder_logo.png",
                                 className="d-inline-block me-3",
                                 style={"height": "50px", "width": "auto", "verticalAlign": "middle"}
                             ),

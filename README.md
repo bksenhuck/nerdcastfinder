@@ -203,6 +203,27 @@ uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level
 backend/data/podcasts/
 ```
 
+---
+
+## Deploy to Google Cloud Run
+
+Quick reference for building the image with Cloud Build and deploying to Cloud Run (exact commands used in this project):
+
+Build the container and push to Artifact Registry:
+```bash
+gcloud builds submit --tag us-central1-docker.pkg.dev/podcast-finder-488414/api/podcast-finder:latest
+```
+
+Deploy the image to Cloud Run (public service) with FAISS assets downloaded at runtime:
+```bash
+gcloud run deploy podcast-finder --image us-central1-docker.pkg.dev/podcast-finder-488414/api/podcast-finder:latest --region us-central1 --platform managed --allow-unauthenticated --set-env-vars FAISS_GCS_URI=gs://podcast-finder-data/nerdcast.index,FAISS_MAPPING_GCS_URI=gs://podcast-finder-data/embedding_id_mapping.npy,FAISS_DB_GCS_URI=gs://podcast-finder-data/nerdcasts.db --memory=2Gi --cpu=1 --concurrency=1 --timeout=1000s
+```
+
+Notes:
+- Ensure the Cloud Run runtime service account has `roles/storage.objectViewer` on the `podcast-finder-data` bucket so the container can download the index and DB at startup.
+- Adjust `--memory`, `--cpu`, `--concurrency` and `--timeout` according to load and FAISS initialization needs. The values above are recommended for a POC with a large FAISS index.
+
+
 ### 2. Run Ingestion Pipeline
 
 This transcribes audio, generates embeddings, and builds the search index:

@@ -337,9 +337,10 @@ def download_episode(
         'duration_seconds': episode.get('duration_seconds'),
         'published_date': episode.get('published_date'),
         'summary': episode.get('summary'),
-        'image_url': episode.get('image_url')
+        'image_url': episode.get('image_url'),
+        'program_name': episode.get('program_name')
     }
-    
+
     # Check if already exists
     if output_path.exists():
         file_size_mb = output_path.stat().st_size / (1024 * 1024)
@@ -372,9 +373,10 @@ def download_episode(
             'duration_seconds': episode.get('duration_seconds'),
             'published_date': episode.get('published_date'),
             'summary': episode.get('summary'),
-            'image_url': episode.get('image_url')
+            'image_url': episode.get('image_url'),
+            'program_name': episode.get('program_name')
         }
-        
+
         return True, f"✓ Download: {title} ({file_size_mb:.1f}MB)", metadata
         
     except requests.exceptions.Timeout:
@@ -388,16 +390,18 @@ def download_episode(
 def download_episodes_parallel(
     episodes: List[Dict[str, str]],
     output_dir: Path,
+    podcast_name: str,
     max_workers: int = None
 ) -> Tuple[int, int]:
     """
     Download episodes in parallel, collect metadata, then save to DB sequentially
-    
+
     Args:
         episodes: List of episode dicts
         output_dir: Output directory
+        podcast_name: Podcast source name (used when saving to DB)
         max_workers: Maximum concurrent downloads (default: from settings)
-        
+
     Returns:
         Tuple of (success_count, failed_count)
     """
@@ -437,19 +441,20 @@ def download_episodes_parallel(
     # Save all metadata to database sequentially (avoid concurrent DB writes)
     if all_metadata:
         logger.section(f"Salvando {len(all_metadata)} metadados no DB...")
-        db_success, db_error = save_all_episode_metadata(all_metadata)
+        db_success, db_error = save_all_episode_metadata(all_metadata, podcast_name)
         logger.success(f"✓ {db_success} salvos | ⚠️  {db_error} erros")
     
     return success_count, failed_count
 
 
-def save_all_episode_metadata(metadata_list: List[Dict]) -> Tuple[int, int]:
+def save_all_episode_metadata(metadata_list: List[Dict], podcast_name: str) -> Tuple[int, int]:
     """
     Save all episode metadata to database in batches with progress feedback
-    
+
     Args:
         metadata_list: List of metadata dicts from downloads
-        
+        podcast_name: Podcast source name to store in DB
+
     Returns:
         Tuple of (success_count, error_count)
     """
@@ -600,6 +605,7 @@ def main(limit: Optional[int] = None, max_workers: Optional[int] = None, podcast
     success_count, failed_count = download_episodes_parallel(
         episodes,
         output_dir,
+        podcast_name=podcast_name,
         max_workers=max_workers
     )
     elapsed_time = time.time() - start_time

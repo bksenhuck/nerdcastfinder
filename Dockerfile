@@ -29,7 +29,14 @@ RUN python -m pip install --upgrade pip \
 COPY backend /app/backend
 COPY frontend /app/frontend
 COPY backend/data/faiss_index /app/backend/data/faiss_index
-COPY backend/data/nerdcasts.db /app/backend/data/nerdcasts.db
+# Note: `nerdcasts.db` is intentionally NOT copied into the image here.
+# The POC runtime will download the DB from GCS if `FAISS_GCS_URI` or a
+# DB-specific env var is provided, or you can embed the DB in the image
+# by adding a COPY line here (not recommended for large binaries).
+
+# --- Pre-download sentence-transformers model into the image ---
+# Avoids runtime HuggingFace downloads (rate-limits / cold-start latency).
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-mpnet-base-v2'); print('Model cached.')"
 
 # --- Copy remaining files (overwrite duplicates if any) ---
 COPY . /app

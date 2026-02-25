@@ -6,15 +6,12 @@ logger.header("[BOOT] Iniciando backend/main.py", width=60)
 import logging
 import time
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.wsgi import WSGIMiddleware
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import os
-import subprocess
-import shutil
-from fastapi.responses import JSONResponse
 
 from backend.app.core.config import settings
 from backend.app.api import search, episodes
@@ -37,16 +34,25 @@ logger.info("[BOOT] FastAPI app criado.")
 # Track whether UI was mounted so root can redirect to it when available.
 UI_MOUNTED = False
 
+@app.get("/")
+async def root():
+    """Redirect root '/' to '/ui/' if UI is mounted, else return API info."""
+    if UI_MOUNTED:
+        return RedirectResponse(url="/ui/")
+    return JSONResponse({
+        "message": "Nerdcast Finder API",
+        "docs": "/docs",
+        "ui": "/ui/"
+    })
+
+@app.get("/ui")
+async def ui_redirect():
+    """Redirect /ui to /ui/ for Dash compatibility."""
+    return RedirectResponse(url="/ui/")
+
 # Try to import and mount the Dash frontend if Dash is available. On
 # environments where the frontend dependencies are not installed (e.g.
 # a backend-only deploy), avoid crashing the process and continue
-# Search readiness flags. `search_ready` is True only after FAISS index
-# and mapping were successfully loaded. `search_loading` indicates an
-# in-progress background load. These are safe globals per worker.
-search_ready = False
-search_loading = False
-search_load_started_at = None
-search_load_duration = None
 # serving the API.
 try:
     logger.info("[BOOT] Tentando importar o frontend (Dash)...")
@@ -54,16 +60,29 @@ try:
     # Only mount if the module exposes the Dash server object
     if hasattr(dash_app_module, "app") and hasattr(dash_app_module.app, "server"):
         logger.info("[BOOT] Montando Dash app em /ui...")
+        # Mount the Dash WSGI app at '/ui' (no trailing slash). Dash's
+        # internal prefixes should include the trailing slash (e.g.
+        # requests_pathname_prefix="/ui/") so the generated client URLs
+        # match the mount point.
         app.mount("/ui", WSGIMiddleware(dash_app_module.app.server))
         UI_MOUNTED = True
         logger.info("[BOOT] Dash app montado em /ui.")
     else:
         logger.warning("[BOOT] Módulo frontend carregado mas não expõe 'app.server'; pulando montagem.")
-except ModuleNotFoundError as e:
+except ModuleNotFoundError:
     logger.warning("[BOOT] Dash não está instalado no ambiente; UI não será montada.\n"
                    "Install 'dash' and related packages to enable the UI.")
 except Exception as e:
     logger.error(f"[BOOT] Erro ao tentar montar frontend: {e}")
+
+
+# Search readiness flags. `search_ready` is True only after FAISS index
+# and mapping were successfully loaded. `search_loading` indicates an
+# in-progress background load. These are safe globals per worker.
+search_ready = False
+search_loading = False
+search_load_started_at = None
+search_load_duration = None
 
 
 # Middleware de log detalhado
@@ -117,14 +136,14 @@ async def startup_event():
     are executed in a thread executor inside the background task.
     """
     logger.header("Application Startup", width=60)
-    
+
     try:
         logger.info("🔧 Spawning background FAISS index loader...")
         asyncio.create_task(load_index_background())
         logger.info("✓ Background FAISS loader spawned")
     except Exception as e:
         logger.error(f"✗ Failed to spawn background loader: {e}")
-    
+
     logger.info("✓ Application startup complete")
     logger.info("=" * 60)
 
@@ -153,9 +172,14 @@ async def load_index_background():
     logger.info("[BOOT] Background FAISS load: starting...")
 
     # Optional: try to download index/mapping from GCS if env vars are set
+    # Use the google-cloud-storage Python client (no gsutil required).
     faiss_gcs_uri = os.environ.get("FAISS_GCS_URI")
     mapping_gcs_uri = os.environ.get("FAISS_MAPPING_GCS_URI")
     try:
+        from google.cloud import storage
+
+        client = storage.Client()
+
         target_dir = settings.get_faiss_dir()
         # If target_dir is not writable inside the container, use /tmp/faiss
         if not os.access(str(target_dir), os.W_OK):
@@ -166,31 +190,60 @@ async def load_index_background():
         if faiss_gcs_uri and not Path(idx_path).exists():
             logger.info(f"[BOOT] FAISS index missing locally — attempting GCS download: {faiss_gcs_uri}")
             try:
+                # Parse gs://bucket/path URI
+                _, path = faiss_gcs_uri.split("gs://", 1)
+                bucket_name, blob_name = path.split("/", 1)
+                bucket = client.bucket(bucket_name)
+                blob = bucket.blob(blob_name)
                 dest = target_dir / Path(str(idx_path)).name
-                subprocess.run(["gsutil", "cp", faiss_gcs_uri, str(dest)], check=True)
+                blob.download_to_filename(str(dest))
                 os.environ["FAISS_INDEX_PATH"] = str(dest)
                 logger.info(f"[BOOT] FAISS index downloaded to {dest}")
-            except FileNotFoundError:
-                logger.error("[BOOT] gsutil not found in the image; cannot download FAISS index.\n"
-                             "Install gcloud SDK or provide the index in the image or via another mechanism.")
-            except subprocess.CalledProcessError as cpe:
-                logger.error(f"[BOOT] gsutil failed to download FAISS index: {cpe}")
+            except Exception as e:
+                logger.error(f"[BOOT] Failed to download FAISS index via storage client: {e}")
 
         mapping_path = settings.get_faiss_dir() / "embedding_id_mapping.npy"
         if mapping_gcs_uri and not mapping_path.exists():
             logger.info(f"[BOOT] embedding_id_mapping missing locally — attempting GCS download: {mapping_gcs_uri}")
             try:
+                _, path = mapping_gcs_uri.split("gs://", 1)
+                bucket_name, blob_name = path.split("/", 1)
+                bucket = client.bucket(bucket_name)
+                blob = bucket.blob(blob_name)
                 dest_map = mapping_path
-                subprocess.run(["gsutil", "cp", mapping_gcs_uri, str(dest_map)], check=True)
+                blob.download_to_filename(str(dest_map))
                 logger.info(f"[BOOT] mapping file downloaded to {dest_map}")
-            except FileNotFoundError:
-                logger.error("[BOOT] gsutil not found in the image; cannot download mapping file.")
-            except subprocess.CalledProcessError as cpe:
-                logger.error(f"[BOOT] gsutil failed to download mapping file: {cpe}")
+            except Exception as e:
+                logger.error(f"[BOOT] Failed to download mapping file via storage client: {e}")
     except Exception:
-        # Non-fatal: if download logic fails, we'll still attempt to load
-        # the index and let SearchService handle missing files.
-        logger.exception("[BOOT] Unexpected error during optional GCS download step")
+        # If google-cloud-storage is not available or any other error
+        # occurs, log and proceed; SearchService will handle missing files.
+        logger.exception("[BOOT] Unexpected error during optional GCS download step (storage client)")
+
+    # Optional: download the SQLite DB from GCS if provided
+    faiss_db_gcs_uri = os.environ.get("FAISS_DB_GCS_URI")
+    try:
+        if faiss_db_gcs_uri:
+            db_path = settings.get_database_path()
+            if not db_path.exists():
+                logger.info(f"[BOOT] SQLite DB missing locally — attempting GCS download: {faiss_db_gcs_uri}")
+                try:
+                    from google.cloud import storage as _storage
+
+                    client_db = _storage.Client()
+                    _, path = faiss_db_gcs_uri.split("gs://", 1)
+                    bucket_name, blob_name = path.split("/", 1)
+                    bucket = client_db.bucket(bucket_name)
+                    blob = bucket.blob(blob_name)
+                    # Ensure parent dir exists and is writable
+                    db_path.parent.mkdir(parents=True, exist_ok=True)
+                    dest_db = db_path
+                    blob.download_to_filename(str(dest_db))
+                    logger.info(f"[BOOT] SQLite DB downloaded to {dest_db}")
+                except Exception as e:
+                    logger.error(f"[BOOT] Failed to download SQLite DB via storage client: {e}")
+    except Exception:
+        logger.exception("[BOOT] Unexpected error during optional DB GCS download step (storage client)")
 
     loop = asyncio.get_event_loop()
     try:

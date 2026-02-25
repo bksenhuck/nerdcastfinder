@@ -220,28 +220,31 @@ async def load_index_background():
         # occurs, log and proceed; SearchService will handle missing files.
         logger.exception("[BOOT] Unexpected error during optional GCS download step (storage client)")
 
-    # Optional: download the SQLite DB from GCS if provided
+    # Optional: download the SQLite DB from GCS if provided.
+    # Always download when the env var is set — do NOT skip if the file already
+    # exists locally. An empty DB can be created by SQLAlchemy before this task
+    # runs (race condition on cold start), and skipping the download in that
+    # case would leave the app with an empty/unusable database.
     faiss_db_gcs_uri = os.environ.get("FAISS_DB_GCS_URI")
     try:
         if faiss_db_gcs_uri:
             db_path = settings.get_database_path()
-            if not db_path.exists():
-                logger.info(f"[BOOT] SQLite DB missing locally — attempting GCS download: {faiss_db_gcs_uri}")
-                try:
-                    from google.cloud import storage as _storage
+            logger.info(f"[BOOT] Downloading SQLite DB from GCS: {faiss_db_gcs_uri}")
+            try:
+                from google.cloud import storage as _storage
 
-                    client_db = _storage.Client()
-                    _, path = faiss_db_gcs_uri.split("gs://", 1)
-                    bucket_name, blob_name = path.split("/", 1)
-                    bucket = client_db.bucket(bucket_name)
-                    blob = bucket.blob(blob_name)
-                    # Ensure parent dir exists and is writable
-                    db_path.parent.mkdir(parents=True, exist_ok=True)
-                    dest_db = db_path
-                    blob.download_to_filename(str(dest_db))
-                    logger.info(f"[BOOT] SQLite DB downloaded to {dest_db}")
-                except Exception as e:
-                    logger.error(f"[BOOT] Failed to download SQLite DB via storage client: {e}")
+                client_db = _storage.Client()
+                _, path = faiss_db_gcs_uri.split("gs://", 1)
+                bucket_name, blob_name = path.split("/", 1)
+                bucket = client_db.bucket(bucket_name)
+                blob = bucket.blob(blob_name)
+                # Ensure parent dir exists and is writable
+                db_path.parent.mkdir(parents=True, exist_ok=True)
+                dest_db = db_path
+                blob.download_to_filename(str(dest_db))
+                logger.info(f"[BOOT] SQLite DB downloaded to {dest_db}")
+            except Exception as e:
+                logger.error(f"[BOOT] Failed to download SQLite DB via storage client: {e}")
     except Exception:
         logger.exception("[BOOT] Unexpected error during optional DB GCS download step (storage client)")
 

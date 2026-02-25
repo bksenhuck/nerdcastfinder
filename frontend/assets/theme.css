@@ -115,6 +115,15 @@ html[data-theme="light"] a {
     color: #0d6efd !important;
 }
 
+/* Keep Bootstrap alert text readable in dark mode.
+   The global "body *" rule above sets all text to #f8f9fa (light) in dark
+   mode, but Bootstrap alerts have a light background, so the text needs to
+   stay dark to remain readable. */
+html[data-theme="dark"] .alert,
+html[data-theme="dark"] .alert * {
+    color: #212529 !important;
+}
+
 /* Disable all transitions */
 *,
 *::before,

@@ -39,6 +39,8 @@ backend/data/podcasts/*.m4a
 backend/data/podcasts/*.flac
 backend/data/podcasts/*.ogg
 backend/data/nerdcasts.db
+backend/data/nerdcasts.db-wal
+backend/data/nerdcasts.db-shm
 backend/data/faiss_index/*.index
 
 # Logs

@@ -9,10 +9,10 @@ This script:
 5. Saves episode metadata (title, duration, date, size) to database
 
 Usage:
-    python -m backend.pipelines.download --list
-    python -m backend.pipelines.download --podcast nerdcast
-    python -m backend.pipelines.download --podcast nerdcast --limit 10
-    python -m backend.pipelines.download --all
+    python -m backend.pipelines.ingest.download --list
+    python -m backend.pipelines.ingest.download --podcast nerdcast
+    python -m backend.pipelines.ingest.download --podcast nerdcast --limit 10
+    python -m backend.pipelines.ingest.download --all
     
 Options:
     --list : Show available podcasts

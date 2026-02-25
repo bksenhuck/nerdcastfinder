@@ -291,11 +291,6 @@ def home_layout():
                         placeholder="Busque por um tema, palavra-chave ou assunto...",
                         type="text",
                         className="form-control-lg",
-                        style={
-                            "paddingRight": "110px",
-                            "position": "relative",
-                            "zIndex": "1"
-                        }
                     ),
                     dbc.Button(
                         html.I(className="bi bi-search"),
@@ -304,18 +299,6 @@ def home_layout():
                         className="btn-lg",
                         n_clicks=0,
                         title="Buscar",
-                        style={
-                            "width": "96px",
-                            "marginLeft": "-48px",
-                            "borderTopLeftRadius": "0",
-                            "borderBottomLeftRadius": "0",
-                            "display": "flex",
-                            "alignItems": "center",
-                            "justifyContent": "center",
-                            "position": "relative",
-                            "zIndex": "3",
-                            "boxShadow": "0 2px 6px rgba(0,0,0,0.08)"
-                        }
                     )
                 ], className="mb-3"),
                 # Informational alert about current search behavior

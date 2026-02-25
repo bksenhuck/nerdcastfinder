@@ -55,7 +55,14 @@ def extract_program_from_title(title: str) -> Optional[str]:
     
     if 'nerdoffice' in title_lower or 'nerd office' in title_lower:
         return 'NerdOffice'
-    
+
+    # Pelada na Net feed programs
+    if 'pelada na net' in title_lower or 'pelada na net' in title_lower:
+        return 'Pelada na Net'
+
+    if '8 e a faixa' in title_lower:
+        return '8 e a faixa'
+
     # If no specific program identified, try to extract from pattern "ProgramName Number - Title"
     # Example: "SomePodcast 123 - Episode Title"
     match = re.match(r'^([A-Za-z\s]+)\s+\d', title)

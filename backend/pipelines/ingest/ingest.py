@@ -8,9 +8,9 @@ This script:
 4. Builds/updates FAISS index for search
 
 Usage:
-    python -m backend.pipelines.ingest --list
-    python -m backend.pipelines.ingest --podcast nerdcast
-    python -m backend.pipelines.ingest --all
+    python -m backend.pipelines.ingest.ingest --list
+    python -m backend.pipelines.ingest.ingest --podcast nerdcast
+    python -m backend.pipelines.ingest.ingest --all
 
 Options:
     --list : Show available podcasts
@@ -26,7 +26,7 @@ from backend.app.services.transcription_service import TranscriptionService
 from backend.app.services.embedding_service import EmbeddingService
 from backend.app.db.session import init_db, get_db_session
 from backend.app.db.models import PodcastSegment
-from backend.pipelines.rebuild_index import rebuild_faiss_index
+from backend.pipelines.index.rebuild_index import rebuild_faiss_index
 
 
 class PodcastIngestionPipeline:

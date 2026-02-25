@@ -8,7 +8,7 @@ stored in the SQLite database. Use this after:
 - Adding new segments without rebuilding index
 
 Usage:
-    python -m backend.pipelines.rebuild_index
+    python -m backend.pipelines.index.rebuild_index
 """
 import sys
 import numpy as np

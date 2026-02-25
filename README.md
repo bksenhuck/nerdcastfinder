@@ -207,39 +207,67 @@ backend/data/podcasts/
 
 ## Deploy to Google Cloud Run
 
-Quick reference for building the image with Cloud Build and deploying to Cloud Run (exact commands used in this project):
+Infrastructure values (project ID, region, service name, bucket) are read from environment
+variables. Copy `.env.example` to `.env` and fill in your values before running any deploy script.
+
+### Setup (first time)
+
+```bash
+cp .env.example .env
+# Edit .env and set GCP_PROJECT_ID, GCS_BUCKET, etc.
+```
+
+### Build + Deploy (via pipeline script)
+
+```bash
+# Build image with Cloud Build and deploy to Cloud Run
+python -m backend.pipelines.deploy.build_and_deploy
+
+# Build only (no deploy)
+python -m backend.pipelines.deploy.build_and_deploy --build-only
+
+# Deploy only (reuse existing image)
+python -m backend.pipelines.deploy.build_and_deploy --deploy-only
+```
+
+### Raw gcloud commands (reference)
 
 Build the container and push to Artifact Registry:
 ```bash
-gcloud builds submit --tag us-central1-docker.pkg.dev/podcast-finder-488414/api/podcast-finder:latest
+gcloud builds submit --tag <REGION>-docker.pkg.dev/<PROJECT_ID>/<AR_REPO>/<SERVICE>:latest
 ```
 
-Deploy the image to Cloud Run (public service) with FAISS assets downloaded at runtime:
+Deploy to Cloud Run:
 ```bash
-gcloud run deploy podcast-finder --image us-central1-docker.pkg.dev/podcast-finder-488414/api/podcast-finder:latest --region us-central1 --platform managed --allow-unauthenticated --set-env-vars FAISS_GCS_URI=gs://podcast-finder-data/podcasts.index,FAISS_MAPPING_GCS_URI=gs://podcast-finder-data/embedding_id_mapping.npy,FAISS_DB_GCS_URI=gs://podcast-finder-data/nerdcasts.db --memory=2Gi --cpu=1 --concurrency=1 --timeout=1000s
+gcloud run deploy <SERVICE> \
+  --image <REGION>-docker.pkg.dev/<PROJECT_ID>/<AR_REPO>/<SERVICE>:latest \
+  --region <REGION> --platform managed --allow-unauthenticated \
+  --set-env-vars FAISS_GCS_URI=gs://<BUCKET>/podcasts.index,FAISS_MAPPING_GCS_URI=gs://<BUCKET>/embedding_id_mapping.npy,FAISS_DB_GCS_URI=gs://<BUCKET>/nerdcasts.db \
+  --memory=2Gi --cpu=1 --concurrency=1 --timeout=1000s
 ```
 
 Notes:
-- Ensure the Cloud Run runtime service account has `roles/storage.objectViewer` on the `podcast-finder-data` bucket so the container can download the index and DB at startup.
-- Adjust `--memory`, `--cpu`, `--concurrency` and `--timeout` according to load and FAISS initialization needs. The values above are recommended for a POC with a large FAISS index.
+- Ensure the Cloud Run service account has `roles/storage.objectViewer` on the GCS bucket.
+- Adjust `--memory`, `--cpu`, `--concurrency` and `--timeout` as needed.
 
 ### Updating the FAISS index or SQLite DB (no rebuild needed)
 
-When you have new data locally (updated `nerdcasts.db` and/or `podcasts.index`), you only need to upload the files to GCS and restart the Cloud Run service — no Docker rebuild required:
+When you have new data locally, use the upload pipeline — it checkpoints the SQLite WAL before
+uploading (prevents sending an incomplete DB to GCS):
 
 ```bash
-# 1. Upload updated files to GCS
-gsutil cp backend/data/faiss_index/podcasts.index gs://podcast-finder-data/podcasts.index
-gsutil cp backend/data/faiss_index/embedding_id_mapping.npy gs://podcast-finder-data/embedding_id_mapping.npy
-gsutil cp backend/data/nerdcasts.db gs://podcast-finder-data/nerdcasts.db
+# Upload DB + index + mapping, then redeploy Cloud Run
+python -m backend.pipelines.deploy.upload_to_gcs --deploy
 
-# 2. Redeploy using the existing image (forces a new revision that downloads fresh data at startup)
-gcloud run deploy podcast-finder \
-  --image us-central1-docker.pkg.dev/podcast-finder-488414/api/podcast-finder:latest \
-  --region us-central1 --platform managed
+# Upload only the DB (e.g. after a metadata fix)
+python -m backend.pipelines.deploy.upload_to_gcs --db-only
+
+# Upload only the FAISS index + mapping (e.g. after rebuild_index)
+python -m backend.pipelines.deploy.upload_to_gcs --index-only
 ```
 
-The container downloads the FAISS index and DB from GCS on every cold start, so the new revision will automatically pick up the updated data.
+The container downloads the FAISS index and DB from GCS on every cold start, so the new
+revision will automatically pick up the updated data.
 
 
 ### 2. Run Ingestion Pipeline

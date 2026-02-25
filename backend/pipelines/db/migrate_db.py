@@ -2,7 +2,7 @@
 Migration script to add new columns to nerdcast_episodes table
 
 Usage:
-    python -m backend.pipelines.migrate_db
+    python -m backend.pipelines.db.migrate_db
 """
 import sqlite3
 from pathlib import Path

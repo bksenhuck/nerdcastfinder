@@ -148,6 +148,43 @@ class Settings:
     # LOG_LEVEL can be 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
+    # ===== GCP / Deploy Settings =====
+    # Never hardcode project IDs in source — always read from environment
+    GCP_PROJECT_ID: str = os.getenv("GCP_PROJECT_ID", "")
+    GCP_REGION: str = os.getenv("GCP_REGION", "us-central1")
+    GCP_AR_REPO: str = os.getenv("GCP_AR_REPO", "api")  # Artifact Registry repo
+    CLOUDRUN_SERVICE: str = os.getenv("CLOUDRUN_SERVICE", "podcast-finder")
+    GCS_BUCKET: str = os.getenv("GCS_BUCKET", "podcast-finder-data")
+
+    @staticmethod
+    def get_docker_image() -> str:
+        """Build Docker image URI from env vars."""
+        project = os.getenv("GCP_PROJECT_ID", "")
+        region = os.getenv("GCP_REGION", "us-central1")
+        repo = os.getenv("GCP_AR_REPO", "api")
+        service = os.getenv("CLOUDRUN_SERVICE", "podcast-finder")
+        return f"{region}-docker.pkg.dev/{project}/{repo}/{service}:latest"
+
+    @staticmethod
+    def get_gcs_db_uri() -> str:
+        """GCS URI for the SQLite DB (FAISS_DB_GCS_URI env var takes precedence)."""
+        bucket = os.getenv("GCS_BUCKET", "podcast-finder-data")
+        return os.getenv("FAISS_DB_GCS_URI", f"gs://{bucket}/nerdcasts.db")
+
+    @staticmethod
+    def get_gcs_index_uri() -> str:
+        """GCS URI for the FAISS index (FAISS_GCS_URI env var takes precedence)."""
+        bucket = os.getenv("GCS_BUCKET", "podcast-finder-data")
+        return os.getenv("FAISS_GCS_URI", f"gs://{bucket}/podcasts.index")
+
+    @staticmethod
+    def get_gcs_mapping_uri() -> str:
+        """GCS URI for the embedding mapping (FAISS_MAPPING_GCS_URI takes precedence)."""
+        bucket = os.getenv("GCS_BUCKET", "podcast-finder-data")
+        return os.getenv(
+            "FAISS_MAPPING_GCS_URI", f"gs://{bucket}/embedding_id_mapping.npy"
+        )
+
     @staticmethod
     def get_cors_origins() -> list:
         """Return CORS origins list, optionally read from env var CORS_ALLOW_ORIGINS

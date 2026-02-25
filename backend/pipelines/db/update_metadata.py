@@ -2,7 +2,7 @@
 Script to update missing summary and image_url for existing episodes
 
 Usage:
-    python -m backend.pipelines.update_metadata
+    python -m backend.pipelines.db.update_metadata
 """
 import sqlite3
 import feedparser

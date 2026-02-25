@@ -44,8 +44,11 @@ ENV PORT=8080 PYTHONUNBUFFERED=1
 ENV HF_HOME=/opt/huggingface
 
 # --- Pre-download sentence-transformers model into the image ---
-# Avoids runtime HuggingFace downloads (rate-limits / cold-start latency).
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-mpnet-base-v2'); print('Model cached.')"
+# Model name is taken from build ARG (defaults to the value in config.py).
+# Override at build time: gcloud builds submit --substitutions=_EMBEDDING_MODEL=all-MiniLM-L6-v2
+ARG EMBEDDING_MODEL=all-mpnet-base-v2
+ENV EMBEDDING_MODEL=${EMBEDDING_MODEL}
+RUN python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['EMBEDDING_MODEL']); print('Model cached.')"
 
 RUN useradd --create-home appuser \
     && chown -R appuser /app \

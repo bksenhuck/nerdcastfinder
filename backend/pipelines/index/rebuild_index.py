@@ -97,22 +97,25 @@ def rebuild_faiss_index():
         # Build FAISS index
         logger.info("Building FAISS index...")
         dimension = embeddings.shape[1]
-        index = faiss.IndexFlatL2(dimension)
+
+        # Normalize to unit length: IndexFlatIP on normalized vectors = cosine similarity
+        faiss.normalize_L2(embeddings)
+        index = faiss.IndexFlatIP(dimension)
         index.add(embeddings)
-        
+
         # Ensure directory exists
         faiss_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Save FAISS index
         logger.info(f"Saving index to {format_path(index_path)}")
         faiss.write_index(index, str(index_path))
-        
+
         # Save mapping from FAISS position to embedding_id
         mapping_path = faiss_dir / "embedding_id_mapping.npy"
         np.save(str(mapping_path), np.array(embedding_ids, dtype='int32'))
-        
+
         logger.success("FAISS index rebuilt successfully!")
-        logger.info(f"Index type: IndexFlatL2")
+        logger.info(f"Index type: IndexFlatIP (cosine similarity)")
         logger.info(f"Dimension: {dimension}")
         logger.info(f"Total vectors: {index.ntotal}")
         logger.info(f"Mapping: {mapping_path.name}")

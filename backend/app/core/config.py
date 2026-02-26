@@ -20,10 +20,11 @@ class Settings:
     # RTX 5070 now supported with PyTorch 2.10.0 + CUDA 12.8!
 
     # Embedding models (tradeoff between speed and quality):
-    # - "all-MiniLM-L6-v2": Small, fast (384 dims)
-    # - "all-MiniLM-L12-v2": Medium, balanced (384 dims)
-    # - "all-mpnet-base-v2": Large, best quality (768 dims) - slower but more accurate
-    EMBEDDING_MODEL: str = "all-mpnet-base-v2"
+    # - "all-MiniLM-L6-v2": Small, fast English-only (384 dims)
+    # - "all-MiniLM-L12-v2": Medium, balanced English-only (384 dims)
+    # - "all-mpnet-base-v2": Large, English-only (768 dims) — NOT suitable for PT-BR
+    # - "paraphrase-multilingual-mpnet-base-v2": Large, multilingual 50+ langs (768 dims) ✓
+    EMBEDDING_MODEL: str = "paraphrase-multilingual-mpnet-base-v2"
 
     # ===== Transcription Settings =====
     CHUNK_SIZE: int = 750  # Target characters per chunk

@@ -134,7 +134,10 @@ class SearchService:
         # Generate query embedding
         query_embedding = self.embedding_service.generate_embedding(query)
         query_embedding = np.array([query_embedding]).astype('float32')
-        
+
+        # Normalize query to unit length (required for cosine similarity with IndexFlatIP)
+        faiss.normalize_L2(query_embedding)
+
         # Search FAISS index
         distances, indices = self.index.search(query_embedding, top_k)
         
@@ -170,9 +173,8 @@ class SearchService:
                         if episode_metadata.program_name != program_name:
                             continue
                     
-                    # Convert distance to similarity score (lower distance = higher similarity)
-                    # L2 distance to similarity: use inverse
-                    similarity_score = 1 / (1 + float(distance))
+                    # IndexFlatIP on L2-normalized vectors returns cosine similarity directly (0 to 1)
+                    similarity_score = max(0.0, min(1.0, float(distance)))
                     
                     # Use metadata if available, otherwise use segment episode name
                     title = episode_metadata.title_original if episode_metadata else segment.episode
@@ -217,6 +219,14 @@ class SearchService:
         finally:
             db.close()
         
+        # Deduplicate: keep only the highest-scoring segment per episode
+        seen: dict = {}
+        for r in results:
+            ep = r["episode"]
+            if ep not in seen or r["score"] > seen[ep]["score"]:
+                seen[ep] = r
+        results = list(seen.values())
+
         # Apply confidence threshold filter if specified
         if min_confidence is not None:
             results = [r for r in results if r["score"] >= min_confidence]

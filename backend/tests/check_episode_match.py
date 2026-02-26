@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect('backend/data/nerdcasts.db')
+conn = sqlite3.connect('backend/data/podcast_database.db')
 cursor = conn.cursor()
 
 # Filename que apareceu no resultado da API

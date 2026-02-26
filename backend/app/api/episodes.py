@@ -209,3 +209,19 @@ def get_filters():
     except Exception as e:
         logger.error(f"Failed to get filters: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/last-updated", tags=["episodes"])
+def get_last_updated():
+    """Return the most recent episode updated_at as DD/MM/YYYY, or '—' if unavailable."""
+    try:
+        from sqlalchemy import func
+        db = get_db_session()
+        last = db.query(func.max(PodcastEpisode.updated_at)).scalar()
+        db.close()
+        if last:
+            return {"date": last.strftime("%d/%m/%Y")}
+        return {"date": "—"}
+    except Exception as e:
+        logger.error(f"Failed to get last updated: {e}")
+        return {"date": "—"}

@@ -62,7 +62,7 @@ nerdcastfinder/
 │   ├── data/
 │   │   ├── podcasts/            # Place audio files here
 │   │   ├── faiss_index/         # FAISS index storage
-│   │   └── nerdcasts.db         # SQLite database
+│   │   └── podcast_database.db         # SQLite database
 │   ├── requirements.txt
 │   ├── start_backend.ps1        # Backend quick start
 │   └── ARCHITECTURE.md          # Code organization docs
@@ -185,15 +185,15 @@ uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level
 - Variáveis de ambiente necessárias:
    - `PORT` (fornecido pelo Render)
    - `PYTHON_VERSION` (ex.: `3.11`)
-   - `FAISS_INDEX_PATH` (opcional) — path para `nerdcast.index` ou diretório que contenha `nerdcast.index`. Se não setado, usa `backend/data/faiss_index/nerdcast.index`.
+   - `FAISS_INDEX_PATH` (opcional) — path para `podcasts.index` ou diretório que contenha `podcasts.index`. Se não setado, usa `backend/data/faiss_index/podcasts.index`.
    - `BACKEND_URL` (se o frontend for deployado separadamente)
    - `LOG_LEVEL` (opcional, ex.: `INFO`, `DEBUG`)
    - `CORS_ALLOW_ORIGINS` (opcional, lista CSV de origens para produção)
 
 - Arquivos que precisam existir no runtime:
-   - `backend/data/faiss_index/nerdcast.index`  
+   - `backend/data/faiss_index/podcasts.index`  
    - `backend/data/faiss_index/embedding_id_mapping.npy`  
-   - `backend/data/nerdcasts.db` (SQLite)
+   - `backend/data/podcast_database.db` (SQLite)
 
 - Observações importantes:
    - O deploy é runtime-only: não execute pipelines de ingestão no ambiente de produção.
@@ -202,6 +202,73 @@ uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level
 
 backend/data/podcasts/
 ```
+
+---
+
+## Deploy to Google Cloud Run
+
+Infrastructure values (project ID, region, service name, bucket) are read from environment
+variables. Copy `.env.example` to `.env` and fill in your values before running any deploy script.
+
+### Setup (first time)
+
+```bash
+cp .env.example .env
+# Edit .env and set GCP_PROJECT_ID, GCS_BUCKET, etc.
+```
+
+### Build + Deploy (via pipeline script)
+
+```bash
+# Build image with Cloud Build and deploy to Cloud Run
+python -m backend.pipelines.deploy.build_and_deploy
+
+# Build only (no deploy)
+python -m backend.pipelines.deploy.build_and_deploy --build-only
+
+# Deploy only (reuse existing image)
+python -m backend.pipelines.deploy.build_and_deploy --deploy-only
+```
+
+### Raw gcloud commands (reference)
+
+Build the container and push to Artifact Registry:
+```bash
+gcloud builds submit --tag <REGION>-docker.pkg.dev/<PROJECT_ID>/<AR_REPO>/<SERVICE>:latest
+```
+
+Deploy to Cloud Run:
+```bash
+gcloud run deploy <SERVICE> \
+  --image <REGION>-docker.pkg.dev/<PROJECT_ID>/<AR_REPO>/<SERVICE>:latest \
+  --region <REGION> --platform managed --allow-unauthenticated \
+  --set-env-vars FAISS_GCS_URI=gs://<BUCKET>/podcasts.index,FAISS_MAPPING_GCS_URI=gs://<BUCKET>/embedding_id_mapping.npy,FAISS_DB_GCS_URI=gs://<BUCKET>/podcast_database.db \
+  --memory=2Gi --cpu=1 --concurrency=1 --timeout=1000s
+```
+
+Notes:
+- Ensure the Cloud Run service account has `roles/storage.objectViewer` on the GCS bucket.
+- Adjust `--memory`, `--cpu`, `--concurrency` and `--timeout` as needed.
+
+### Updating the FAISS index or SQLite DB (no rebuild needed)
+
+When you have new data locally, use the upload pipeline — it checkpoints the SQLite WAL before
+uploading (prevents sending an incomplete DB to GCS):
+
+```bash
+# Upload DB + index + mapping, then redeploy Cloud Run
+python -m backend.pipelines.deploy.upload_to_gcs --deploy
+
+# Upload only the DB (e.g. after a metadata fix)
+python -m backend.pipelines.deploy.upload_to_gcs --db-only
+
+# Upload only the FAISS index + mapping (e.g. after rebuild_index)
+python -m backend.pipelines.deploy.upload_to_gcs --index-only
+```
+
+The container downloads the FAISS index and DB from GCS on every cold start, so the new
+revision will automatically pick up the updated data.
+
 
 ### 2. Run Ingestion Pipeline
 

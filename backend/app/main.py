@@ -6,10 +6,12 @@ logger.header("[BOOT] Iniciando backend/main.py", width=60)
 import logging
 import time
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.wsgi import WSGIMiddleware
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+import os
 
 from backend.app.core.config import settings
 from backend.app.api import search, episodes
@@ -32,6 +34,22 @@ logger.info("[BOOT] FastAPI app criado.")
 # Track whether UI was mounted so root can redirect to it when available.
 UI_MOUNTED = False
 
+@app.get("/")
+async def root():
+    """Redirect root '/' to '/ui/' if UI is mounted, else return API info."""
+    if UI_MOUNTED:
+        return RedirectResponse(url="/ui/")
+    return JSONResponse({
+        "message": "Nerdcast Finder API",
+        "docs": "/docs",
+        "ui": "/ui/"
+    })
+
+@app.get("/ui")
+async def ui_redirect():
+    """Redirect /ui to /ui/ for Dash compatibility."""
+    return RedirectResponse(url="/ui/")
+
 # Try to import and mount the Dash frontend if Dash is available. On
 # environments where the frontend dependencies are not installed (e.g.
 # a backend-only deploy), avoid crashing the process and continue
@@ -42,16 +60,29 @@ try:
     # Only mount if the module exposes the Dash server object
     if hasattr(dash_app_module, "app") and hasattr(dash_app_module.app, "server"):
         logger.info("[BOOT] Montando Dash app em /ui...")
+        # Mount the Dash WSGI app at '/ui' (no trailing slash). Dash's
+        # internal prefixes should include the trailing slash (e.g.
+        # requests_pathname_prefix="/ui/") so the generated client URLs
+        # match the mount point.
         app.mount("/ui", WSGIMiddleware(dash_app_module.app.server))
         UI_MOUNTED = True
         logger.info("[BOOT] Dash app montado em /ui.")
     else:
         logger.warning("[BOOT] Módulo frontend carregado mas não expõe 'app.server'; pulando montagem.")
-except ModuleNotFoundError as e:
+except ModuleNotFoundError:
     logger.warning("[BOOT] Dash não está instalado no ambiente; UI não será montada.\n"
                    "Install 'dash' and related packages to enable the UI.")
 except Exception as e:
     logger.error(f"[BOOT] Erro ao tentar montar frontend: {e}")
+
+
+# Search readiness flags. `search_ready` is True only after FAISS index
+# and mapping were successfully loaded. `search_loading` indicates an
+# in-progress background load. These are safe globals per worker.
+search_ready = False
+search_loading = False
+search_load_started_at = None
+search_load_duration = None
 
 
 # Middleware de log detalhado
@@ -98,36 +129,157 @@ logger.info("[BOOT] Routers incluídos.")
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize services on startup"""
+    """Initialize services on startup without blocking the event loop.
+
+    Spawns a background task that will load the FAISS index so the
+    worker can begin accepting connections sooner. Heavy operations
+    are executed in a thread executor inside the background task.
+    """
     logger.header("Application Startup", width=60)
-    
-    # Pre-initialize search service to load FAISS index
-    from backend.app.api.search import get_search_service
+
     try:
-        logger.info("🔧 Pre-loading SearchService...")
-        get_search_service()
-        logger.info("✓ SearchService pre-loaded successfully")
+        logger.info("🔧 Spawning background FAISS index loader...")
+        asyncio.create_task(load_index_background())
+        logger.info("✓ Background FAISS loader spawned")
     except Exception as e:
-        logger.error(f"✗ Failed to pre-load SearchService: {e}")
-    
+        logger.error(f"✗ Failed to spawn background loader: {e}")
+
     logger.info("✓ Application startup complete")
     logger.info("=" * 60)
 
 
-@app.get("/")
-async def root():
-    # If the UI was mounted, redirect the root to the mounted Dash app
-    # so visiting the primary service URL shows the UI instead of JSON.
-    try:
-        if UI_MOUNTED:
-            return RedirectResponse(url="/ui")
-    except NameError:
-        pass
+async def load_index_background():
+    """Background task: run blocking index initialization in executor.
 
-    return {
-        "message": "Nerdcast Finder API",
-        "docs": "/docs"
-    }
+    - Calls `get_search_service()` inside a thread executor to avoid
+      blocking the event loop.
+    - Attempts optional GCS download if `FAISS_GCS_URI` or
+      `FAISS_MAPPING_GCS_URI` are provided via environment variables.
+    - Sets `search_ready` to True on success and logs duration.
+    """
+    global search_ready, search_loading, search_load_started_at, search_load_duration
+
+    if search_ready:
+        logger.info("[BOOT] SearchService already marked ready; skipping load.")
+        return
+
+    if search_loading:
+        logger.info("[BOOT] SearchService load already in progress; skipping duplicate start.")
+        return
+
+    search_loading = True
+    search_load_started_at = time.time()
+    logger.info("[BOOT] Background FAISS load: starting...")
+
+    # Optional: try to download index/mapping from GCS if env vars are set
+    # Use the google-cloud-storage Python client (no gsutil required).
+    faiss_gcs_uri = os.environ.get("FAISS_GCS_URI")
+    mapping_gcs_uri = os.environ.get("FAISS_MAPPING_GCS_URI")
+    try:
+        from google.cloud import storage
+
+        client = storage.Client()
+
+        target_dir = settings.get_faiss_dir()
+        # If target_dir is not writable inside the container, use /tmp/faiss
+        if not os.access(str(target_dir), os.W_OK):
+            target_dir = Path("/tmp/faiss")
+            target_dir.mkdir(parents=True, exist_ok=True)
+
+        idx_path = settings.get_faiss_index_path()
+        if faiss_gcs_uri and not Path(idx_path).exists():
+            logger.info(f"[BOOT] FAISS index missing locally — attempting GCS download: {faiss_gcs_uri}")
+            try:
+                # Parse gs://bucket/path URI
+                _, path = faiss_gcs_uri.split("gs://", 1)
+                bucket_name, blob_name = path.split("/", 1)
+                bucket = client.bucket(bucket_name)
+                blob = bucket.blob(blob_name)
+                dest = target_dir / Path(str(idx_path)).name
+                blob.download_to_filename(str(dest))
+                os.environ["FAISS_INDEX_PATH"] = str(dest)
+                logger.info(f"[BOOT] FAISS index downloaded to {dest}")
+            except Exception as e:
+                logger.error(f"[BOOT] Failed to download FAISS index via storage client: {e}")
+
+        mapping_path = settings.get_faiss_dir() / "embedding_id_mapping.npy"
+        if mapping_gcs_uri and not mapping_path.exists():
+            logger.info(f"[BOOT] embedding_id_mapping missing locally — attempting GCS download: {mapping_gcs_uri}")
+            try:
+                _, path = mapping_gcs_uri.split("gs://", 1)
+                bucket_name, blob_name = path.split("/", 1)
+                bucket = client.bucket(bucket_name)
+                blob = bucket.blob(blob_name)
+                dest_map = mapping_path
+                blob.download_to_filename(str(dest_map))
+                logger.info(f"[BOOT] mapping file downloaded to {dest_map}")
+            except Exception as e:
+                logger.error(f"[BOOT] Failed to download mapping file via storage client: {e}")
+    except Exception:
+        # If google-cloud-storage is not available or any other error
+        # occurs, log and proceed; SearchService will handle missing files.
+        logger.error("[BOOT] Unexpected error during optional GCS download step (storage client)")
+
+    # Optional: download the SQLite DB from GCS if provided.
+    # Always download when the env var is set — do NOT skip if the file already
+    # exists locally. An empty DB can be created by SQLAlchemy before this task
+    # runs (race condition on cold start), and skipping the download in that
+    # case would leave the app with an empty/unusable database.
+    faiss_db_gcs_uri = os.environ.get("FAISS_DB_GCS_URI")
+    try:
+        if faiss_db_gcs_uri:
+            db_path = settings.get_database_path()
+            logger.info(f"[BOOT] Downloading SQLite DB from GCS: {faiss_db_gcs_uri}")
+            try:
+                from google.cloud import storage as _storage
+
+                client_db = _storage.Client()
+                _, path = faiss_db_gcs_uri.split("gs://", 1)
+                bucket_name, blob_name = path.split("/", 1)
+                bucket = client_db.bucket(bucket_name)
+                blob = bucket.blob(blob_name)
+                # Ensure parent dir exists and is writable
+                db_path.parent.mkdir(parents=True, exist_ok=True)
+                dest_db = db_path
+                blob.download_to_filename(str(dest_db))
+                logger.info(f"[BOOT] SQLite DB downloaded to {dest_db}")
+                # The SQLAlchemy engine was created at import time and may hold an
+                # open file descriptor to the old (empty) DB. Disposing forces the
+                # pool to close all connections so the next query opens the newly
+                # downloaded file.
+                from backend.app.db.session import engine as _db_engine
+                _db_engine.dispose()
+                logger.info("[BOOT] SQLAlchemy engine disposed — will reconnect to downloaded DB")
+            except Exception as e:
+                logger.error(f"[BOOT] Failed to download SQLite DB via storage client: {e}")
+    except Exception:
+        logger.error("[BOOT] Unexpected error during optional DB GCS download step (storage client)")
+
+    loop = asyncio.get_event_loop()
+    try:
+        from backend.app.api.search import get_search_service
+
+        await loop.run_in_executor(None, get_search_service)
+
+        search_ready = True
+        search_load_duration = time.time() - search_load_started_at
+        logger.info(f"[BOOT] Background FAISS load completed in {search_load_duration:.2f}s")
+    except Exception as exc:  # noqa: BLE001 - keep broad for robustness here
+        logger.error(f"[BOOT] Background FAISS load failed: {exc}")
+    finally:
+        search_loading = False
+
+
+@app.get("/ready")
+async def ready():
+    """Readiness endpoint — returns 200 only when search index is ready.
+
+    - 200 + {"status": "ready"} when `search_ready` is True
+    - 503 + {"status": "loading"} otherwise
+    """
+    if search_ready:
+        return JSONResponse(status_code=200, content={"status": "ready"})
+    return JSONResponse(status_code=503, content={"status": "loading"})
 
 
 @app.get("/favicon.ico")

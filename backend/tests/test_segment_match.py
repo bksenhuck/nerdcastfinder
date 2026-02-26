@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect('backend/data/nerdcasts.db')
+conn = sqlite3.connect('backend/data/podcast_database.db')
 cursor = conn.cursor()
 
 # Check if table has been migrated to new name

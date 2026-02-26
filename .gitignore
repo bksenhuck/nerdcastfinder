@@ -27,18 +27,24 @@ wheels/
 # IDEs
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
 .DS_Store
 
 # Data files
+backend/data/nerdcasts.db
+backend/data/nerdcasts.db-wal
+backend/data/nerdcasts.db-shm
 backend/data/podcasts/*.mp3
 backend/data/podcasts/*.wav
 backend/data/podcasts/*.m4a
 backend/data/podcasts/*.flac
 backend/data/podcasts/*.ogg
-backend/data/nerdcasts.db
+backend/data/podcast_database.db
+backend/data/podcast_database.db-wal
+backend/data/podcast_database.db-shm
 backend/data/faiss_index/*.index
 
 # Logs
@@ -51,4 +57,5 @@ backend/data/faiss_index/*.index
 # Models cache
 models/
 .cache/
+.claude/
 *.mp3

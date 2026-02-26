@@ -5,10 +5,10 @@ Este script adiciona o campo program_name na tabela podcast_episodes e popula
 automaticamente baseado no título de cada episódio.
 
 Uso:
-    python -m backend.pipelines.add_program_name_field
-    
+    python -m backend.pipelines.db.add_program_name_field
+
     # Para dry-run (simular sem aplicar):
-    python -m backend.pipelines.add_program_name_field --dry-run
+    python -m backend.pipelines.db.add_program_name_field --dry-run
 """
 
 import sys

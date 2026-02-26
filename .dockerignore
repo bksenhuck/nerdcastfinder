@@ -1,0 +1,46 @@
+# Bytecode / caches
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# Build artifacts
+dist/
+build/
+.cache/
+
+# Git
+.git/
+.github/
+
+# Logs
+*.log
+
+# Tests, docs
+tests/
+docs/
+
+# Secrets and keys
+*.pem
+*.key
+secrets/
+.env
+
+# Node deps
+node_modules/
+
+# --- Data inclusion rules ---
+# Exclui apenas a pasta de podcasts grandes
+backend/data/podcasts/
+
+# Inclui FAISS index e SQLite DB para busca
+!backend/data/faiss_index/
+!backend/data/faiss_index/**
+!backend/data/podcast_database.db
+
+# Keep frontend/ included na imagem para UI funcionar
+!frontend/

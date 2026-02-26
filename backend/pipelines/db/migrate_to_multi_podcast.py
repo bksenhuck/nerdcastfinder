@@ -15,10 +15,10 @@ IMPORTANTE:
 - Para reverter, use o backup criado
 
 Uso:
-    python -m backend.pipelines.migrate_to_multi_podcast
-    
+    python -m backend.pipelines.db.migrate_to_multi_podcast
+
     # Para reverter (restaurar backup):
-    python -m backend.pipelines.migrate_to_multi_podcast --rollback
+    python -m backend.pipelines.db.migrate_to_multi_podcast --rollback
 """
 
 import sys

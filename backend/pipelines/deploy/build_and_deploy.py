@@ -25,7 +25,8 @@ def _get_deploy_cmd() -> list:
     env_vars = (
         f"FAISS_GCS_URI={settings.get_gcs_index_uri()},"
         f"FAISS_MAPPING_GCS_URI={settings.get_gcs_mapping_uri()},"
-        f"FAISS_DB_GCS_URI={settings.get_gcs_db_uri()}"
+        f"FAISS_DB_GCS_URI={settings.get_gcs_db_uri()},"
+        "HF_HUB_OFFLINE=1"  # Use baked model cache, no HuggingFace API calls at runtime
     )
     return [
         "gcloud", "run", "deploy", settings.CLOUDRUN_SERVICE,

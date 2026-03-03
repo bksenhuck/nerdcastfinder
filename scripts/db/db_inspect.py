@@ -6,15 +6,15 @@ Shows tables, row counts (volumetrias) and a few example rows for each table
 for the project's SQLite databases under `backend/data`.
 
 Usage:
-  python scripts/db_inspect.py                 # inspeciona ambos os DBs (podcast_database + nerdcasts)
-  python scripts/db_inspect.py --db path/to/db  # inspeciona um DB específico
+  python scripts/db/db_inspect.py                 # inspeciona ambos os DBs (podcast_database + nerdcasts)
+  python scripts/db/db_inspect.py --db path/to/db  # inspeciona um DB específico
 """
 from pathlib import Path
 import sqlite3
 import json
 import argparse
 
-DEFAULT_DB_DIR = Path(__file__).resolve().parents[1] / 'backend' / 'data'
+DEFAULT_DB_DIR = Path(__file__).resolve().parents[2] / 'backend' / 'data'
 DEFAULT_DBS = [DEFAULT_DB_DIR / 'podcast_database.db', DEFAULT_DB_DIR / 'nerdcasts.db']
 
 

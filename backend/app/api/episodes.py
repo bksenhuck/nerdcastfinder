@@ -29,17 +29,16 @@ class EpisodeMetadata(BaseModel):
 
 @router.get("/episodes", response_model=List[EpisodeMetadata], tags=["episodes"])
 def get_episodes(
-    status: Optional[str] = Query(None, description="Filter by status"),
-    limit: int = Query(100, ge=1, le=1000, description="Max results"),
-    skip: int = Query(0, ge=0, description="Skip N results"),
+    status: Optional[str] = Query(None, description="Filtrar por status: downloaded, transcribed, indexed"),
+    limit: int = Query(100, ge=1, le=1000, description="Máximo de resultados"),
+    skip: int = Query(0, ge=0, description="Pular N resultados (paginação)"),
 ):
     """
-    Get episode metadata
-    
-    Query Parameters:
-    - status: Filter by 'downloaded', 'transcribed', or 'indexed' (optional)
-    - limit: Maximum results (default: 100, max: 1000)
-    - skip: Skip N results for pagination (default: 0)
+    Lista episódios cadastrados com metadados (título, data, duração, tamanho).
+
+    - **status**: Filtrar por etapa do pipeline (`downloaded`, `transcribed`, `indexed`)
+    - **limit**: Máximo de resultados (padrão 100, máximo 1000)
+    - **skip**: Offset para paginação
     """
     try:
         db = get_db_session()
@@ -78,10 +77,7 @@ def get_episodes(
 @router.get("/episodes/{filename}", response_model=EpisodeMetadata, tags=["episodes"])
 def get_episode_by_filename(filename: str):
     """
-    Get episode metadata by normalized filename
-    
-    Args:
-        filename: Normalized filename (unique key)
+    Retorna os metadados de um episódio pelo seu filename normalizado (chave única).
     """
     try:
         db = get_db_session()
@@ -90,8 +86,8 @@ def get_episode_by_filename(filename: str):
         logger.info(f"📺 FETCHING EPISODE: {filename}")
         logger.info("=" * 60)
         
-        episode = db.query(NerdcastEpisode).filter(
-            NerdcastEpisode.filename == filename
+        episode = db.query(PodcastEpisode).filter(
+            PodcastEpisode.filename == filename
         ).first()
         
         db.close()
@@ -117,7 +113,7 @@ def get_episode_by_filename(filename: str):
 @router.get("/episodes/stats/summary", tags=["episodes"])
 def get_episodes_stats():
     """
-    Get summary statistics about episodes
+    Estatísticas gerais do acervo: total de episódios, horas de áudio, tamanho em disco.
     """
     try:
         db = get_db_session()
@@ -126,22 +122,22 @@ def get_episodes_stats():
         logger.info("📊 EPISODE STATISTICS")
         logger.info("=" * 60)
         
-        total_episodes = db.query(NerdcastEpisode).count()
-        downloaded = db.query(NerdcastEpisode).filter(
-            NerdcastEpisode.status == "downloaded"
+        total_episodes = db.query(PodcastEpisode).count()
+        downloaded = db.query(PodcastEpisode).filter(
+            PodcastEpisode.status == "downloaded"
         ).count()
-        transcribed = db.query(NerdcastEpisode).filter(
-            NerdcastEpisode.status == "transcribed"
+        transcribed = db.query(PodcastEpisode).filter(
+            PodcastEpisode.status == "transcribed"
         ).count()
-        indexed = db.query(NerdcastEpisode).filter(
-            NerdcastEpisode.status == "indexed"
+        indexed = db.query(PodcastEpisode).filter(
+            PodcastEpisode.status == "indexed"
         ).count()
         
         # Get total size and duration
         from sqlalchemy import func
         result = db.query(
-            func.sum(NerdcastEpisode.file_size_mb).label("total_size"),
-            func.sum(NerdcastEpisode.duration_seconds).label("total_duration")
+            func.sum(PodcastEpisode.file_size_mb).label("total_size"),
+            func.sum(PodcastEpisode.duration_seconds).label("total_duration")
         ).first()
         
         total_size_mb = result.total_size or 0
@@ -169,7 +165,6 @@ def get_episodes_stats():
         return stats
     
     except Exception as e:
-        log.error(f"Failed to get episode stats: {e}")
         logger.error(f"Failed to get episode stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -183,10 +178,7 @@ class FiltersResponse(BaseModel):
 @router.get("/filters", response_model=FiltersResponse, tags=["filters"])
 def get_filters():
     """
-    Get available filters (feeds and programs)
-    
-    Returns:
-        Available podcast sources (feeds) and program names for filtering
+    Retorna os feeds e programas disponíveis para uso como filtros na busca.
     """
     try:
         db = get_db_session()
@@ -213,7 +205,7 @@ def get_filters():
 
 @router.get("/last-updated", tags=["episodes"])
 def get_last_updated():
-    """Return the most recent episode updated_at as DD/MM/YYYY, or '—' if unavailable."""
+    """Data da atualização mais recente do acervo no formato DD/MM/YYYY."""
     try:
         from sqlalchemy import func
         db = get_db_session()

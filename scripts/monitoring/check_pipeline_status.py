@@ -6,8 +6,8 @@ Gera um relatorio .md com o status de cada episodio por podcast em cada etapa do
   - FAISS       : presenca no indice vetorial
 
 Uso:
-  python scripts/check_pipeline_status.py
-  python scripts/check_pipeline_status.py --output relatorio.md
+  python scripts/monitoring/check_pipeline_status.py
+  python scripts/monitoring/check_pipeline_status.py --output relatorio.md
 """
 import sys
 import argparse
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np  # noqa: E402
 
-sys.path.append(str(Path(__file__).resolve().parents[1]))
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from backend.app.core.config import settings  # noqa: E402
 from backend.app.core.logger import logger  # noqa: E402

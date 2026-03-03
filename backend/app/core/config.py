@@ -138,8 +138,19 @@ class Settings:
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
     API_RELOAD: bool = False  # Disabled to force clean restart
-    API_TITLE: str = "Nerdcast Finder API"
-    API_DESCRIPTION: str = "Semantic search API for podcast episodes"
+    API_TITLE: str = "Podcast Finder API"
+    API_DESCRIPTION: str = (
+        "Busca semântica em episódios de podcast por similaridade vetorial.\n\n"
+        "## Como funciona\n"
+        "1. Transcrições são segmentadas e convertidas em embeddings (vetores)\n"
+        "2. A query é convertida no mesmo espaço vetorial\n"
+        "3. O FAISS localiza os segmentos mais próximos por similaridade coseno\n\n"
+        "## Endpoints principais\n"
+        "- `GET /api/search` — busca semântica\n"
+        "- `GET /api/filters` — feeds e programas disponíveis\n"
+        "- `GET /api/episodes` — listagem de episódios\n"
+        "- `GET /ready` — status de carregamento do índice FAISS\n"
+    )
     API_VERSION: str = "1.0.0"
 
     # ===== CORS Settings =====

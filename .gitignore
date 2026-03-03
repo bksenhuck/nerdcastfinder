@@ -46,6 +46,8 @@ backend/data/podcast_database.db
 backend/data/podcast_database.db-wal
 backend/data/podcast_database.db-shm
 backend/data/faiss_index/*.index
+backend/data/faiss_index/embeddings_matrix.npy
+backend/data/faiss_index/embeddings_ids.npy
 
 # Logs
 *.log

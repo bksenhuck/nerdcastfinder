@@ -51,43 +51,44 @@ def get_search_service() -> SearchService:
     return SearchServiceSingleton()
 
 
-@router.get("/search")
+@router.get("/search", response_model=list[SearchResult])
 async def search(
-    q: str = Query(..., description="Search query", min_length=1),
+    q: str = Query(..., description="Texto a buscar nos episódios", min_length=1),
     top_k: int = Query(
         settings.DEFAULT_TOP_K,
-        description="Number of results to return",
+        description="Número de resultados a retornar",
         ge=1,
         le=settings.MAX_TOP_K
     ),
     feed: str = Query(
         None,
-        description="Filter by feed/podcast source (optional)"
+        description="Filtrar por feed/fonte do podcast (ex: nerdcast, pelada_na_net)"
     ),
     program: str = Query(
         None,
-        description="Filter by program name (optional)"
+        description="Filtrar por nome do programa (ex: NerdCast, NerdTech)"
     ),
     min_confidence: float = Query(
         None,
-        description="Minimum confidence score (0-1). If not specified, returns top K results. If specified, returns only results above threshold.",
+        description="Score mínimo de similaridade (0–1). Se omitido, retorna os top_k mais relevantes.",
         ge=0.0,
         le=1.0
     )
 ):
-    logger.info(f"[HANDLER] Parâmetros: q={q}, top_k={top_k}, feed={feed}, program={program}, min_confidence={min_confidence}")
     """
-    Semantic search for podcast episodes
-    
-    Args:
-        q: Search query string
-        top_k: Number of results to return (default: 10)
-        feed: Optional filter by podcast source/feed
-        program: Optional filter by program name
-    
-    Returns:
-        List of search results with episode name, excerpt, and similarity score
+    Busca semântica em episódios de podcast.
+
+    Converte a query em um embedding vetorial e usa FAISS para encontrar os
+    segmentos de transcrição mais similares. Retorna no máximo um resultado
+    por episódio (o segmento de maior score).
+
+    - **q**: Texto da busca (ex: "inteligência artificial", "games indie")
+    - **top_k**: Quantos episódios retornar (padrão 10, máximo 50)
+    - **feed**: Fonte do podcast (`nerdcast`, `pelada_na_net`, …)
+    - **program**: Nome do programa (`NerdCast`, `NerdTech`, …)
+    - **min_confidence**: Score mínimo de corte (0–1). Resultados abaixo são descartados.
     """
+    logger.info(f"[HANDLER] q={q}, top_k={top_k}, feed={feed}, program={program}, min_confidence={min_confidence}")
     logger.header("🔍 SEARCH REQUEST")
     logger.info(f"Query: '{q}'")
     logger.info(f"Top K: {top_k}")

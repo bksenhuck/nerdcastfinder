@@ -4,10 +4,11 @@ Script to update missing summary and image_url for existing episodes
 import sys
 from pathlib import Path
 
-# Add backend to path
-backend_dir = Path(__file__).parent / "backend"
+# Add project root and backend to path
+_project_root = Path(__file__).resolve().parents[2]
+backend_dir = _project_root / "backend"
 sys.path.insert(0, str(backend_dir))
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(_project_root))
 
 from app.config.settings import settings
 from backend.app.core.logger import logger
@@ -16,20 +17,20 @@ import feedparser
 def update_metadata():
     """Update missing metadata from RSS feed"""
     import sqlite3
-    
+
     db_path = settings.get_database_path()
     logger.section("Atualizando metadados faltantes do RSS feed")
-    
+
     # Fetch RSS feed
     logger.info("Buscando RSS feed...")
     feed = feedparser.parse('https://jovemnerd.com.br/feed-nerdcast/')
-    
+
     if not feed.entries:
         logger.error("❌ Erro ao buscar feed")
         return
-    
+
     logger.success(f"✓ {len(feed.entries)} episódios no feed")
-    
+
     # Build lookup dict by title
     feed_data = {}
     for entry in feed.entries:
@@ -38,41 +39,41 @@ def update_metadata():
         image_url = None
         if 'image' in entry and isinstance(entry['image'], dict):
             image_url = entry['image'].get('href', '')
-        
+
         feed_data[title] = {
             'summary': summary,
             'image_url': image_url
         }
-    
+
     logger.info(f"✓ {len(feed_data)} episódios processados do feed")
-    
+
     # Update database
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    
+
     # Check if table has been migrated to new name
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     tables = [row[0] for row in cursor.fetchall()]
-    
+
     # Use new table name if it exists, otherwise use old name
     table_name = 'podcast_episodes' if 'podcast_episodes' in tables else 'nerdcast_episodes'
-    
+
     if table_name == 'nerdcast_episodes':
         logger.warning("⚠️  Usando tabela antiga 'nerdcast_episodes'")
-    
+
     # Get episodes without summary or image_url
     cursor.execute(f"""
-        SELECT id, title_original 
+        SELECT id, title_original
         FROM {table_name}
         WHERE summary IS NULL OR image_url IS NULL
     """)
-    
+
     episodes_to_update = cursor.fetchall()
     logger.info(f"📝 {len(episodes_to_update)} episódios precisam de atualização")
-    
+
     updated = 0
     not_found = 0
-    
+
     for ep_id, title in episodes_to_update:
         if title in feed_data:
             data = feed_data[title]
@@ -84,10 +85,10 @@ def update_metadata():
             updated += 1
         else:
             not_found += 1
-    
+
     conn.commit()
     conn.close()
-    
+
     logger.success(f"✓ {updated} episódios atualizados")
     if not_found > 0:
         logger.warning(f"⚠️  {not_found} episódios não encontrados no feed (muito antigos)")

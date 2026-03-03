@@ -1,5 +1,5 @@
 """
-FastAPI main application entry point for Nerdcast Finder
+FastAPI main application entry point for Podcast Finder
 """
 from backend.app.core.logger import logger
 logger.header("[BOOT] Iniciando backend/main.py", width=60)
@@ -40,7 +40,7 @@ async def root():
     if UI_MOUNTED:
         return RedirectResponse(url="/ui/")
     return JSONResponse({
-        "message": "Nerdcast Finder API",
+        "message": "Podcast Finder API",
         "docs": "/docs",
         "ui": "/ui/"
     })
@@ -310,7 +310,7 @@ if __name__ == "__main__":
     import os
     import uvicorn
 
-    logger.header("NERDCAST FINDER - BACKEND API")
+    logger.header("PODCAST FINDER - BACKEND API")
     # Respect PORT env var when running as script (Render provides $PORT)
     port = int(os.environ.get("PORT", settings.API_PORT))
     logger.info(f"Starting server on http://{settings.API_HOST}:{port}")

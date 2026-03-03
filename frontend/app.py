@@ -271,6 +271,12 @@ def home_layout():
                             }
                         ),
                         dcc.Link(
+                            "← Início",
+                            href="/",
+                            className="me-3",
+                            style={"fontSize": "16px", "textDecoration": "none"}
+                        ),
+                        dcc.Link(
                             "Sobre",
                             href="/about",
                             id="about-link",
@@ -731,6 +737,226 @@ def about_layout():
     ], fluid=True, className="py-4")
 
 
+def welcome_layout():
+    """Layout for the welcome/landing page"""
+    total_downloaded, total_processed, total_programs, total_feeds = get_podcast_stats()
+
+    return dbc.Container(children=[
+        # Header
+        dbc.Row([
+            dbc.Col([
+                html.Div([
+                    dcc.Link(
+                        html.Div([
+                            html.Img(
+                                src="/ui/assets/images/podcast_finder_logo.png",
+                                className="d-inline-block me-3",
+                                style={"height": "50px", "width": "auto", "verticalAlign": "middle"}
+                            ),
+                            html.H1(
+                                "Podcast Finder",
+                                className="d-inline-block",
+                                style={"verticalAlign": "middle", "marginBottom": "0"}
+                            )
+                        ], style={"textAlign": "center", "marginTop": "20px", "marginBottom": "20px"}),
+                        href="/",
+                        style={"textDecoration": "none", "color": "inherit"}
+                    ),
+                    html.Div([
+                        html.Span(
+                            id="backend-status-dot",
+                            title="Status do backend",
+                            style={
+                                "display": "inline-block",
+                                "width": "10px",
+                                "height": "10px",
+                                "borderRadius": "50%",
+                                "backgroundColor": "#6c757d",
+                                "marginRight": "10px",
+                                "verticalAlign": "middle",
+                            }
+                        ),
+                        dcc.Link(
+                            "Buscar",
+                            href="/search",
+                            className="me-3",
+                            style={"fontSize": "16px", "textDecoration": "none"}
+                        ),
+                        dcc.Link(
+                            "Sobre",
+                            href="/about",
+                            className="me-3",
+                            style={"fontSize": "16px", "textDecoration": "none"}
+                        ),
+                        dbc.Button(
+                            html.I(className="bi bi-moon-fill"),
+                            id="theme-toggle",
+                            color="link",
+                            size="lg",
+                            style={"fontSize": "24px"}
+                        )
+                    ], style={
+                        "position": "absolute",
+                        "top": "20px",
+                        "right": "20px",
+                        "display": "flex",
+                        "alignItems": "center"
+                    })
+                ], style={"position": "relative"})
+            ])
+        ]),
+
+        # Hero
+        dbc.Row([
+            dbc.Col([
+                html.Div([
+                    html.H2(
+                        "Encontre qualquer assunto no Nerdcast",
+                        className="text-center mb-2",
+                        style={"fontWeight": "600", "fontSize": "1.8rem"}
+                    ),
+                    html.P(
+                        "Busca semântica por conteúdo transcrito — encontre episódios pelo que foi dito, não só pelo título.",
+                        className="text-center mb-4",
+                        style={"fontSize": "1.05rem", "opacity": "0.75"}
+                    )
+                ], className="mt-3 mb-2")
+            ], md=8, className="mx-auto")
+        ]),
+
+        # O Projeto + Stats
+        dbc.Row([
+            dbc.Col([
+                dbc.Row([
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardBody([
+                                html.H5([
+                                    html.I(className="bi bi-info-circle me-2"),
+                                    "O Projeto"
+                                ], className="mb-3"),
+                                html.P([
+                                    "O Podcast Finder é uma aplicação de ",
+                                    html.Strong("busca semântica"),
+                                    " que permite encontrar episódios por ",
+                                    html.Strong("significado e contexto"),
+                                    ", não apenas por palavras-chave exatas."
+                                ], className="mb-2"),
+                                html.P(
+                                    "Os episódios foram transcritos com Whisper, segmentados e indexados "
+                                    "vetorialmente para que você possa buscar pelo conteúdo falado.",
+                                    className="mb-0",
+                                    style={"opacity": "0.85"}
+                                )
+                            ])
+                        ], className="h-100")
+                    ], md=7, className="mb-3"),
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardBody([
+                                html.H5([
+                                    html.I(className="bi bi-bar-chart me-2"),
+                                    "Acervo"
+                                ], className="mb-3"),
+                                html.Div([
+                                    html.Div([
+                                        html.Span(
+                                            str(total_processed) if total_processed > 0 else "—",
+                                            style={"fontSize": "2.2rem", "fontWeight": "700", "lineHeight": "1"}
+                                        ),
+                                        html.Div("episódios indexados", style={"fontSize": "0.8rem", "opacity": "0.65"})
+                                    ], className="mb-3"),
+                                    html.Div([
+                                        html.Span(
+                                            str(total_programs) if total_programs > 0 else "—",
+                                            style={"fontSize": "1.6rem", "fontWeight": "600", "lineHeight": "1"}
+                                        ),
+                                        html.Div("programas", style={"fontSize": "0.8rem", "opacity": "0.65"})
+                                    ])
+                                ])
+                            ])
+                        ], className="h-100")
+                    ], md=5, className="mb-3")
+                ])
+            ], md=8, className="mx-auto")
+        ], className="mb-2"),
+
+        # Como funciona (3 steps)
+        dbc.Row([
+            dbc.Col([
+                html.H6(
+                    "Como funciona",
+                    className="text-center mb-3",
+                    style={"opacity": "0.6", "textTransform": "uppercase", "letterSpacing": "0.08em", "fontSize": "0.78rem"}
+                ),
+                dbc.Row([
+                    dbc.Col([
+                        html.Div([
+                            html.I(className="bi bi-mic-fill mb-2", style={"fontSize": "1.6rem", "display": "block"}),
+                            html.Strong("1. Transcrição", className="d-block mb-1"),
+                            html.Small(
+                                "Áudio transcrito com Whisper e dividido em trechos indexáveis",
+                                style={"opacity": "0.7"}
+                            )
+                        ], className="text-center p-3")
+                    ], md=4),
+                    dbc.Col([
+                        html.Div([
+                            html.I(className="bi bi-grid-3x3 mb-2", style={"fontSize": "1.6rem", "display": "block"}),
+                            html.Strong("2. Embeddings", className="d-block mb-1"),
+                            html.Small(
+                                "Trechos convertidos em vetores semânticos com all-mpnet-base-v2",
+                                style={"opacity": "0.7"}
+                            )
+                        ], className="text-center p-3")
+                    ], md=4),
+                    dbc.Col([
+                        html.Div([
+                            html.I(className="bi bi-search mb-2", style={"fontSize": "1.6rem", "display": "block"}),
+                            html.Strong("3. Busca Semântica", className="d-block mb-1"),
+                            html.Small(
+                                "Sua consulta é vetorizada e comparada via FAISS para encontrar os trechos mais relevantes",
+                                style={"opacity": "0.7"}
+                            )
+                        ], className="text-center p-3")
+                    ], md=4)
+                ])
+            ], md=8, className="mx-auto mb-4")
+        ]),
+
+        # CTA
+        dbc.Row([
+            dbc.Col([
+                html.Div([
+                    dcc.Link(
+                        dbc.Button(
+                            [
+                                html.I(className="bi bi-search me-2"),
+                                "Iniciar Busca"
+                            ],
+                            color="primary",
+                            size="lg",
+                            className="px-5",
+                            style={"fontSize": "1.05rem"}
+                        ),
+                        href="/search",
+                        style={"textDecoration": "none"}
+                    ),
+                    html.Div(
+                        [
+                            "ou veja os ",
+                            dcc.Link("detalhes técnicos", href="/about", style={"textDecoration": "none"}),
+                            " na página Sobre"
+                        ],
+                        className="mt-2",
+                        style={"fontSize": "0.85rem", "opacity": "0.6"}
+                    )
+                ], className="text-center py-4")
+            ], md=8, className="mx-auto")
+        ])
+    ], fluid=True, className="py-4")
+
+
 # Resolved once at startup
 _last_updated = get_last_updated()
 
@@ -835,8 +1061,10 @@ def display_page(pathname):
     """Render the appropriate page based on the URL"""
     if pathname == "/about":
         return about_layout()
-    else:
+    elif pathname == "/search":
         return home_layout()
+    else:
+        return welcome_layout()
 
 
 # Theme toggle callback - clientside for instant response

@@ -34,8 +34,11 @@ secrets/
 node_modules/
 
 # --- Data inclusion rules ---
-# Exclui apenas a pasta de podcasts grandes
+# Exclui pasta de podcasts grandes e arquivos temporários do SQLite
 backend/data/podcasts/
+backend/data/*.db-shm
+backend/data/*.db-wal
+backend/data/podcasts.db
 
 # Inclui FAISS index e SQLite DB para busca
 !backend/data/faiss_index/

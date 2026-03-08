@@ -12,6 +12,7 @@ from backend.app.core.config import settings
 from backend.app.core.logger import logger
 from backend.app.utils.text_utils import split_text_into_chunks
 from backend.app.utils.file_utils import find_audio_files, get_episode_name
+from backend.app.utils.path_utils import get_stable_id
 
 # Ensure FFmpeg is in PATH (for Windows winget installation)
 ffmpeg_path = Path.home() / "AppData/Local/Microsoft/WinGet/Links"
@@ -26,6 +27,7 @@ class TranscriptChunk:
     """Represents a chunk of transcribed text"""
     episode_name: str
     chunk_text: str
+    stable_id: str = ""
 
 
 class TranscriptionService:
@@ -107,17 +109,19 @@ class TranscriptionService:
         """
         return split_text_into_chunks(text, self.chunk_size)
     
-    def process_audio_file(self, audio_path: str) -> List[TranscriptChunk]:
+    def process_audio_file(self, audio_path: str, podcast_source: str = "nerdcast") -> List[TranscriptChunk]:
         """
         Process a single audio file: transcribe and chunk
         
         Args:
             audio_path: Path to audio file
+            podcast_source: Source of the podcast
             
         Returns:
             List of TranscriptChunk objects
         """
         episode_name = get_episode_name(audio_path)
+        stable_id = get_stable_id(audio_path, podcast_source)
         
         # Transcribe
         transcript = self.transcribe_audio(audio_path)
@@ -127,7 +131,7 @@ class TranscriptionService:
         
         # Create TranscriptChunk objects
         return [
-            TranscriptChunk(episode_name=episode_name, chunk_text=chunk)
+            TranscriptChunk(episode_name=episode_name, chunk_text=chunk, stable_id=stable_id)
             for chunk in chunks
         ]
     

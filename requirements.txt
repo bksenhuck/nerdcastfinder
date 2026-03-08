@@ -7,8 +7,10 @@ pydantic==2.5.3
 faiss-cpu>=1.7.4
 numpy==1.24.3
 sentence-transformers==2.3.1
+# Deep Learning & AI (RTX 50-series support via Nightly cu128)
+--pre --extra-index-url https://download.pytorch.org/whl/nightly/cu128
 torch
-requests==2.31.0
-dash>=2.13.0
-dash-bootstrap-components>=1.4.0
-google-cloud-storage>=2.7.0
+openai-whisper
+git+https://github.com/openai/whisper.git
+ffmpeg-python
+google-cloud-storage >=2.7.0

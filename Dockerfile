@@ -8,22 +8,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY requirements.txt ./
+COPY requirements-prod.txt ./
 RUN python -m pip install --upgrade pip
-RUN pip wheel --wheel-dir=/wheels -r requirements.txt || true
+RUN pip wheel --wheel-dir=/wheels -r requirements-prod.txt || true
 
 # --- Stage 2: Final image ---
 FROM python:3.11-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libsndfile1 libgomp1 ca-certificates \
+    libsndfile1 libgomp1 ca-certificates git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY --from=builder /wheels /wheels
-COPY requirements.txt ./
+COPY requirements-prod.txt ./
 RUN python -m pip install --upgrade pip \
-    && pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt \
-    || pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir --no-index --find-links=/wheels -r requirements-prod.txt \
+    || pip install --no-cache-dir -r requirements-prod.txt
 
 # --- Copy backend + frontend + search artifacts ---
 COPY backend /app/backend

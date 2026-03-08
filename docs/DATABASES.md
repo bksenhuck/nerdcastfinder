@@ -1,67 +1,152 @@
-**Resumo dos Bancos e Dados**
+# Bancos de Dados e Dados do Pipeline
 
-Este documento descreve os arquivos de dados e bancos presentes no workspace, com localização, esquema básico e contagens encontradas localmente.
+> Última atualização: 2026-03-06
 
-**SQLite (metadados)**:
-- Path: `backend/data/podcast_database.db`
-- Objetos (tabelas e índices):
-  - Tabela `podcast_episodes`
-    - Colunas (resumidas): `id`, `filename`, `title_original`, `published_date`, `duration_seconds`, `file_size_mb`, `audio_url`, `status`, `created_at`, `updated_at`, `downloaded_at`, `summary`, `image_url`, `podcast_source`, `program_name`
-    - Uso: armazena metadados de episódios (um registro por episódio). `podcast_source` e `program_name` suportam multi-podcast.
-  - Tabela `podcast_segments`
-    - Colunas (resumidas): `id`, `episode` (arquivo/filename referenciado), `content` (texto do segmento), `embedding_id`, `embedding` (blob numpy), `podcast_source`
-    - Uso: segmentos/textos gerados a partir do episódio com embeddings (armazenados como bytes).
-  - Índices relevantes:
-    - `ix_nerdcast_episodes_filename` (unique index em `podcast_episodes.filename`)
-    - `ix_nerdcast_segments_embedding_id` (unique index em `podcast_segments.embedding_id`)
-    - `ix_nerdcast_segments_episode` (index em `podcast_segments.episode`)
-- Contagens (local):
-  - `podcast_episodes`: 1686 registros
-  - `podcast_segments`: 41162 registros
-
-Observações:
-- Arquivo do DB (SQLite) tem WAL/SHM (`podcast_database.db-wal`, `podcast_database.db-shm`) enquanto o banco está em uso.
-- Antes de alterar esquema em produção, faça backup: copie `backend/data/podcast_database.db` para outro local.
-
-**FAISS (índice vetorial)**:
-- Diretório: `backend/data/faiss_index/`
-- Arquivos:
-  - `nerdcast.index` — arquivo do índice FAISS.
-  - `embedding_id_mapping.npy` — array numpy que mapeia posições do FAISS para `embedding_id` do DB.
-- Informações locais:
-  - `index.ntotal`: 41162 vetores
-  - dimensão do índice (d): 768
-  - `embedding_id_mapping.npy` length: 41162
-
-Observações:
-- O index é carregado por `SearchService` em `backend/app/services/search_service.py` (ver logs de inicialização).
-- Para (re)construir o índice use o script: `python -m backend.pipelines.rebuild_index`.
-
-**Arquivos de áudio / Podcasts**:
-- Diretório: `backend/data/podcasts/`
-- Feeds detectados (local):
-  - `nerdcast` — 1686 arquivos `.mp3` (corresponde aproximadamente ao número de episódios na DB)
-- Uso: os MP3s são a fonte dos quais o pipeline faz transcrição e segmentação.
-
-**Scripts úteis e pipelines**:
-- Rebuild FAISS: `python -m backend.pipelines.rebuild_index` (script: `backend/pipelines/rebuild_index.py`).
-- Ingest (download + transcrição + index): `python -m backend.pipelines.ingest` (script: `backend/pipelines/ingest.py`).
-- Atualizar metadata (summary/image): `python -m backend.pipelines.update_metadata` (script: `backend/pipelines/update_metadata.py`).
-
-**Recomendações e ações comuns**:
-- Backup: copie `backend/data/podcast_database.db` antes de alterações de esquema.
-- Rebuild index: pare o backend (para evitar arquivos lockados), rode `python -m backend.pipelines.rebuild_index`, e então reinicie o backend.
-- Em caso de mistura de dimensões de embedding (várias versões do modelo): o rebuild irá detectar dimensões e pular embeddings com dimensão diferente — ver logs do script para detalhes sobre `skipped_wrong_dim` e `skipped_no_emb`.
-
-**Onde olhar no código**:
-- Modelos ORM: `backend/app/db/models.py` (define `PodcastEpisode` e `PodcastSegment`).
-- Sessão/URL DB: `backend/app/db/session.py` e `backend/app/core/config.py` (`get_database_path()` / `get_database_url()`).
-- SearchService: `backend/app/services/search_service.py` (leitura do índice FAISS, mapeamento e montagem dos resultados).
-- Pipelines: `backend/pipelines/` (contêm `ingest.py`, `rebuild_index.py`, `download.py`, `update_metadata.py`).
-
-Se quiser, eu posso:
-- adicionar um script de `backfill` para popular uma nova coluna `author` (se decidirmos estender o esquema),
-- ou gerar um relatório CSV com contagens por programa/ano por consulta SQL.
+Este documento descreve o estado atual dos dados e bancos presentes no projeto, com esquema, contagens reais e observações sobre tamanho e crescimento.
 
 ---
-Arquivo gerado automaticamente com análise local do workspace.
+
+## SQLite — `backend/data/podcast_database.db`
+
+Banco principal da aplicação. Usado pelo frontend, API, scripts de pipeline e monitoramento.
+
+**Tamanho atual:** ~110 MB (WAL incluído)
+
+### Tabela `podcast_episodes`
+
+Metadados de cada episódio (um registro por episódio).
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | INTEGER PK | Chave primária autoincrement |
+| `podcast_source` | VARCHAR(100) | Identificador do podcast (`nerdcast`, `pelada_na_net`, …) |
+| `stable_id` | TEXT | ID estável derivado do número do episódio (ex: `nerdcast_454`) |
+| `program_name` | VARCHAR(100) | Sub-programa dentro do feed (ex: `Nerdcast`, `Emprecast`) |
+| `filename` | VARCHAR(255) | Nome do arquivo MP3 — chave única |
+| `title_original` | VARCHAR(500) | Título original do RSS |
+| `summary` | TEXT | Descrição/resumo do RSS |
+| `image_url` | TEXT | URL da capa do episódio |
+| `published_date` | DATETIME | Data de publicação |
+| `duration_seconds` | INTEGER | Duração em segundos |
+| `file_size_mb` | FLOAT | Tamanho do MP3 em MB |
+| `audio_url` | TEXT | URL do áudio no feed RSS |
+| `status` | VARCHAR(50) | Status do episódio (`downloaded`) |
+| `created_at` / `updated_at` / `downloaded_at` | DATETIME | Timestamps |
+
+**Contagens atuais:**
+
+| Podcast | Episódios | Intervalo de datas |
+|---|---|---|
+| `nerdcast` | 1.686 | 2006-04-02 → 2026-02-13 |
+| `pelada_na_net` | 765 | 2012-01-27 → 2026-02-23 |
+| **Total** | **2.451** | |
+
+---
+
+### Tabela `podcast_segments`
+
+Segmentos de texto gerados pela transcrição (Whisper) de cada episódio. É a maior tabela do banco — contém o texto transcrito na coluna `content`.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | INTEGER PK | Chave primária autoincrement |
+| `podcast_source` | VARCHAR(100) | Identificador do podcast |
+| `stable_id` | TEXT | Mesmo `stable_id` do episódio correspondente |
+| `episode` | VARCHAR(500) | Filename do episódio (campo legado, usado como fallback) |
+| `content` | TEXT | Texto transcrito do segmento (~720 chars médios) |
+| `embedding_id` | INTEGER | ID único que mapeia para a posição no índice FAISS |
+
+**Contagens atuais:**
+
+| Podcast | Segmentos | Média de chars/seg | Tamanho estimado do content |
+|---|---|---|---|
+| `nerdcast` | 61.541 | ~713 chars | ~43 MB |
+| `pelada_na_net` | 33.932 | ~741 chars | ~25 MB |
+| **Total** | **95.473** | ~723 chars | **~66 MB** |
+
+> A coluna `content` representa ~60% do tamanho total do arquivo `.db`. O restante são índices, metadados e overhead do SQLite.
+
+---
+
+## FAISS — `backend/data/faiss_index/`
+
+Índice vetorial para busca semântica. **Não cresce de forma crítica** — cada vetor ocupa espaço fixo (dimensão × 4 bytes).
+
+| Arquivo | Descrição |
+|---|---|
+| `podcasts.index` | Índice FAISS consolidado (todos os podcasts) |
+| `embedding_id_mapping.npy` | Array numpy: posição no FAISS → `embedding_id` do DB |
+
+**Estado atual:**
+- Vetores indexados: ~95.473
+- Dimensão dos vetores: 768 (modelo `paraphrase-multilingual-mpnet-base-v2`)
+- Tamanho estimado do índice: ~280 MB em memória, muito menor em disco (FlatL2)
+
+---
+
+## Arquivos de Áudio — `backend/data/podcasts/`
+
+MP3s baixados pelo pipeline. São a fonte para transcrição e **não são enviados para o GCS nem para produção**.
+
+| Podcast | Arquivos MP3 |
+|---|---|
+| `nerdcast` | ~1.686 |
+| `pelada_na_net` | ~765 |
+
+---
+
+## Crescimento estimado por novo podcast
+
+Com base nos dados atuais (média de ~56 segs/episódio × ~725 chars):
+
+| Escala do podcast | Episódios | Segmentos estimados | Crescimento no DB |
+|---|---|---|---|
+| Pequeno (< 100 eps) | 100 | ~5.600 | +4 MB |
+| Médio (100-500 eps) | 300 | ~16.800 | +12 MB |
+| Grande (500+ eps) | 800 | ~44.800 | +32 MB |
+
+> Com 5-6 podcasts de escala média/grande, o banco pode chegar a **300-500 MB**.
+
+---
+
+## Qualidade dos dados
+
+| Verificação | Resultado |
+|---|---|
+| Episódios sem `stable_id` | ✅ 0 (todos preenchidos) |
+| Segmentos sem `stable_id` | ✅ 0 (todos preenchidos) |
+| Segmentos órfãos (sem episódio correspondente) | ✅ 0 |
+| Episódios sem segmentos | Esperado para eps ainda não transcritos |
+
+---
+
+## Onde olhar no código
+
+| Componente | Caminho |
+|---|---|
+| Modelos ORM | `backend/app/db/models.py` |
+| Sessão / URL do banco | `backend/app/db/session.py`, `backend/app/core/config.py` |
+| `get_stable_id()` | `backend/app/utils/path_utils.py` |
+| Pipeline de ingest | `backend/pipelines/ingest/ingest.py` |
+| Pipeline de download | `backend/pipelines/ingest/download.py` |
+| Serviço de busca (FAISS) | `backend/app/services/search_service.py` |
+| Script de monitoramento | `scripts/monitoring/check_pipeline_status.py` |
+| Migração de `stable_id` | `scripts/db/migrate_to_stable_id.py` |
+
+---
+
+## Operações comuns
+
+```bash
+# Ver status do pipeline por episódio
+python scripts/monitoring/check_pipeline_status.py
+
+# Migrar stable_id em registros antigos
+python scripts/db/migrate_to_stable_id.py
+
+# Inspecionar o banco diretamente
+python scripts/db/db_inspect.py
+
+# Backup antes de alterações de esquema
+cp backend/data/podcast_database.db backend/data/podcast_database.db.bak
+```

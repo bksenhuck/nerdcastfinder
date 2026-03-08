@@ -129,14 +129,21 @@ logger.info("[BOOT] Routers incluídos.")
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize services on startup without blocking the event loop.
+    """Initialize services on startup.
 
-    Spawns a background task that will load the FAISS index so the
-    worker can begin accepting connections sooner. Heavy operations
-    are executed in a thread executor inside the background task.
+    1. Downloads the SQLite DB from GCS synchronously (awaited) so the
+       database is ready before any request is processed — avoids the
+       race condition where requests arrive before the background task
+       finishes downloading.
+    2. Spawns a background task to load the heavy FAISS index so the
+       worker starts accepting connections sooner.
     """
     logger.header("Application Startup", width=60)
 
+    # Step 1: Download DB from GCS synchronously BEFORE accepting requests.
+    await _download_db_from_gcs()
+
+    # Step 2: Spawn background task for the heavy FAISS index load.
     try:
         logger.info("🔧 Spawning background FAISS index loader...")
         asyncio.create_task(load_index_background())
@@ -146,6 +153,57 @@ async def startup_event():
 
     logger.info("✓ Application startup complete")
     logger.info("=" * 60)
+
+
+async def _download_db_from_gcs():
+    """Download the SQLite DB from GCS, overwriting the local in-image copy.
+
+    The engine always points to settings.get_database_path() (the local path).
+    If the download succeeds, the engine gets a fresh DB from GCS.
+    If it fails, the in-image DB (baked at build time) is used as fallback.
+    """
+    faiss_db_gcs_uri = os.environ.get("FAISS_DB_GCS_URI")
+    if not faiss_db_gcs_uri:
+        logger.info("[BOOT] FAISS_DB_GCS_URI not set — skipping DB download, using in-image DB")
+        return
+
+    from backend.app.core.config import settings as _settings
+    dest_db = _settings.get_database_path()
+    logger.info(f"[BOOT] Downloading SQLite DB: {faiss_db_gcs_uri} → {dest_db}")
+    try:
+        from google.cloud import storage as _storage
+
+        def _do_download():
+            client = _storage.Client()
+            _, path = faiss_db_gcs_uri.split("gs://", 1)
+            bucket_name, blob_name = path.split("/", 1)
+            client.bucket(bucket_name).blob(blob_name).download_to_filename(str(dest_db))
+
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, _do_download)
+        logger.info(f"[BOOT] DB downloaded ({dest_db.stat().st_size // 1024} KB)")
+
+        # Verify expected tables exist
+        import sqlite3 as _sqlite3
+        conn = _sqlite3.connect(str(dest_db))
+        try:
+            tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+        finally:
+            conn.close()
+        logger.info(f"[BOOT] DB tables: {tables}")
+        if "podcast_episodes" not in tables:
+            logger.error(f"[BOOT] DB is missing podcast_episodes! Using in-image DB as fallback.")
+            return
+
+        # Force the connection pool to reopen against the newly downloaded file
+        from backend.app.db.session import engine as _db_engine
+        _db_engine.dispose()
+        logger.info("[BOOT] DB ready. Engine pool reset.")
+
+    except Exception as e:
+        import traceback
+        logger.error(f"[BOOT] DB download failed: {e}\n{traceback.format_exc()}")
+        logger.warning("[BOOT] Falling back to in-image DB.")
 
 
 async def load_index_background():
@@ -220,41 +278,6 @@ async def load_index_background():
         # occurs, log and proceed; SearchService will handle missing files.
         logger.error("[BOOT] Unexpected error during optional GCS download step (storage client)")
 
-    # Optional: download the SQLite DB from GCS if provided.
-    # Always download when the env var is set — do NOT skip if the file already
-    # exists locally. An empty DB can be created by SQLAlchemy before this task
-    # runs (race condition on cold start), and skipping the download in that
-    # case would leave the app with an empty/unusable database.
-    faiss_db_gcs_uri = os.environ.get("FAISS_DB_GCS_URI")
-    try:
-        if faiss_db_gcs_uri:
-            db_path = settings.get_database_path()
-            logger.info(f"[BOOT] Downloading SQLite DB from GCS: {faiss_db_gcs_uri}")
-            try:
-                from google.cloud import storage as _storage
-
-                client_db = _storage.Client()
-                _, path = faiss_db_gcs_uri.split("gs://", 1)
-                bucket_name, blob_name = path.split("/", 1)
-                bucket = client_db.bucket(bucket_name)
-                blob = bucket.blob(blob_name)
-                # Ensure parent dir exists and is writable
-                db_path.parent.mkdir(parents=True, exist_ok=True)
-                dest_db = db_path
-                blob.download_to_filename(str(dest_db))
-                logger.info(f"[BOOT] SQLite DB downloaded to {dest_db}")
-                # The SQLAlchemy engine was created at import time and may hold an
-                # open file descriptor to the old (empty) DB. Disposing forces the
-                # pool to close all connections so the next query opens the newly
-                # downloaded file.
-                from backend.app.db.session import engine as _db_engine
-                _db_engine.dispose()
-                logger.info("[BOOT] SQLAlchemy engine disposed — will reconnect to downloaded DB")
-            except Exception as e:
-                logger.error(f"[BOOT] Failed to download SQLite DB via storage client: {e}")
-    except Exception:
-        logger.error("[BOOT] Unexpected error during optional DB GCS download step (storage client)")
-
     loop = asyncio.get_event_loop()
     try:
         from backend.app.api.search import get_search_service
@@ -304,6 +327,12 @@ async def favicon():
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+
+@app.get("/{path:path}")
+async def catch_all(path: str):
+    """Redirect unknown paths to the Dash UI so direct navigation works (e.g. /search -> /ui/search)."""
+    return RedirectResponse(url=f"/ui/{path}")
 
 
 if __name__ == "__main__":

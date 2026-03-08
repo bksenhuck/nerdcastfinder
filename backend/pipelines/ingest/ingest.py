@@ -168,7 +168,7 @@ class PodcastIngestionPipeline:
                 logger.info(f"[{i}/{len(audio_files)}] Processing {audio_file.name}")
 
                 # Transcribe this file
-                chunks = self.transcription_service.process_audio_file(str(audio_file))
+                chunks = self.transcription_service.process_audio_file(str(audio_file), self.podcast_name)
                 logger.success(f"  Transcribed: {len(chunks)} chunks")
 
                 # Generate embeddings for this file
@@ -231,11 +231,14 @@ class PodcastIngestionPipeline:
 
             # Insert new segments (text only — embeddings go to .npy)
             for idx, chunk in enumerate(chunks):
-                embedding_id = hash(f"{self.podcast_name}_{episode_name}_{idx}") % (2**31)
+                # Usar stable_id se disponível no chunk, senão gerar do episode_name
+                stable_id = chunk.stable_id or get_stable_id(episode_name, self.podcast_name)
+                embedding_id = hash(f"{self.podcast_name}_{stable_id}_{idx}") % (2**31)
 
                 segment = PodcastSegment(
                     podcast_source=self.podcast_name,
                     episode=episode_name,
+                    stable_id=stable_id,
                     content=chunk.chunk_text,
                     embedding_id=embedding_id
                 )

@@ -64,6 +64,11 @@ def checkpoint_wal(db_path: Path):
 
 def upload_file(local_path: Path, gcs_uri: str):
     """Upload a single local file to GCS."""
+    # Safety check: Avoid uploading SQLite temporary files
+    if local_path.name.endswith(("-shm", "-wal")):
+        logger.warning(f"[GCS] Skipping temporary SQLite file: {local_path.name}")
+        return
+
     try:
         from google.cloud import storage as gcs
     except ImportError:
@@ -75,12 +80,12 @@ def upload_file(local_path: Path, gcs_uri: str):
     bucket_name, blob_name = _parse_gcs_uri(gcs_uri)
     size_mb = local_path.stat().st_size / (1024 * 1024)
 
-    logger.info(f"[GCS] Uploading {local_path.name} ({size_mb:.1f} MB) → {gcs_uri}")
+    logger.info(f"[GCS] Uploading {local_path.name} ({size_mb:.1f} MB) -> {gcs_uri}")
     client = gcs.Client()
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(blob_name)
     blob.upload_from_filename(str(local_path))
-    logger.success(f"[GCS] ✓ {local_path.name} uploaded")
+    logger.success(f"[GCS] OK {local_path.name} uploaded")
 
 
 # ---------------------------------------------------------------------------

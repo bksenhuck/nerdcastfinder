@@ -7,8 +7,8 @@ from typing import Set
 
 from dotenv import load_dotenv
 
-# Load .env from project root (no-op if file doesn't exist)
-load_dotenv(Path(__file__).parent.parent.parent.parent / ".env")
+# Load .env from project root — override=True so .env values win over system env vars
+load_dotenv(Path(__file__).parent.parent.parent.parent / ".env", override=True)
 
 
 class Settings:

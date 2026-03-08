@@ -15,6 +15,7 @@ class PodcastEpisode(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     podcast_source = Column(String(100), nullable=False, index=True, default='nerdcast')
+    stable_id = Column(String(255), nullable=True, index=True)
     program_name = Column(String(100), nullable=True, index=True)
     filename = Column(String(255), nullable=False, unique=True, index=True)
     title_original = Column(String(500), nullable=False)
@@ -49,6 +50,7 @@ class PodcastSegment(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     podcast_source = Column(String(100), nullable=False, index=True, default='nerdcast')
+    stable_id = Column(String(255), nullable=True, index=True)
     episode = Column(String(500), nullable=False, index=True)
     content = Column(Text, nullable=False)
     embedding_id = Column(Integer, nullable=False, unique=True, index=True)

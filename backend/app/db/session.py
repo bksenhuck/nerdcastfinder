@@ -1,6 +1,7 @@
 """
 Database session management
 """
+import os
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
@@ -8,7 +9,9 @@ from sqlalchemy.pool import StaticPool
 from backend.app.core.config import settings
 from backend.app.db.models import Base
 
-# Get database URL from settings
+# Always use the local DB path. In production, startup_event downloads a fresh
+# copy from GCS to this same path before any request is served.
+# This way the in-image DB acts as a valid fallback if the download fails.
 DATABASE_URL = settings.get_database_url()
 
 # Create engine with optimized SQLite settings for concurrent writes

@@ -38,6 +38,7 @@ from urllib3.util.retry import Retry
 from backend.app.core.config import settings
 from backend.app.core.logger import logger
 from backend.app.utils.program_utils import extract_program_from_title, normalize_program_name
+from backend.app.utils.path_utils import get_stable_id
 
 # Thread lock for database writes (SQLite doesn't like concurrent writes)
 _db_lock = threading.Lock()
@@ -261,6 +262,7 @@ def save_episode_metadata(
                 
                 if existing:
                     # Update ALLepisode metadata
+                    existing.stable_id = get_stable_id(filename, podcast_name)
                     existing.podcast_source = podcast_name
                     existing.program_name = normalize_program_name(program_name, podcast_name)
                     existing.title_original = title_original
@@ -275,6 +277,7 @@ def save_episode_metadata(
                 else:
                     # Create new episode record
                     episode = PodcastEpisode(
+                        stable_id=get_stable_id(filename, podcast_name),
                         podcast_source=podcast_name,
                         program_name=normalize_program_name(program_name, podcast_name),
                         filename=filename,

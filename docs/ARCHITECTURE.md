@@ -205,7 +205,7 @@ All pipelines are runnable as modules:
 - **Bootstrap**: Styling
 
 ### ML/AI
-- **all-mpnet-base-v2**: 768-dim embeddings (best quality)
+- **intfloat/multilingual-e5-base**: 768-dim embeddings, asymmetric query↔passage retrieval (best quality)
 - **Whisper Medium**: Fast Portuguese transcription
 - **PyTorch**: ML framework with CUDA support
 

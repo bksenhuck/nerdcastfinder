@@ -19,7 +19,6 @@ class SearchResult(BaseModel):
     image_url: str | None = None
     published_date: str | None = None
     duration_seconds: int | None = None
-    file_size_mb: float | None = None
     author: str | None = None
     program_name: str | None = None
     podcast_source: str | None = None

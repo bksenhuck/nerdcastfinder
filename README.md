@@ -111,7 +111,7 @@ Edit `backend/app/config/settings.py`:
 
 ```python
 WHISPER_MODEL = "large-v3"              # base, small, medium, large, large-v2, large-v3
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"    # or: all-mpnet-base-v2
+EMBEDDING_MODEL = "all-MiniLM-L6-v2"    # or: intfloat/multilingual-e5-base
 CHUNK_SIZE = 750                         # Characters per segment
 TRANSCRIPTION_LANGUAGE = "pt"            # Language code or None for auto-detect
 DEFAULT_TOP_K = 10

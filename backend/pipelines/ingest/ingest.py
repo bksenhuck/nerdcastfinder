@@ -26,61 +26,20 @@ from backend.app.services.transcription_service import TranscriptionService
 from backend.app.services.embedding_service import EmbeddingService
 from backend.app.db.session import init_db, get_db_session
 from backend.app.db.models import PodcastSegment
+from backend.app.utils.faiss_utils import append_embeddings_to_npy
 from backend.pipelines.index.rebuild_index import rebuild_faiss_index
-
-
-def _append_embeddings_to_npy(new_ids: list, new_vecs: np.ndarray) -> None:
-    """
-    Merge new (embedding_id, vector) pairs into embeddings_matrix.npy /
-    embeddings_ids.npy, then filter out ids no longer in the DB.
-    """
-    faiss_dir = settings.get_faiss_dir()
-    matrix_path = faiss_dir / "embeddings_matrix.npy"
-    ids_path = faiss_dir / "embeddings_ids.npy"
-
-    # Query DB for all currently valid embedding_ids
-    db = get_db_session()
-    try:
-        valid_ids: set = {
-            row[0] for row in db.query(PodcastSegment.embedding_id).all()
-        }
-    finally:
-        db.close()
-
-    # Load existing matrix (if any) and keep only still-valid rows
-    merged: dict = {}
-    if matrix_path.exists() and ids_path.exists():
-        existing_ids = np.load(str(ids_path))
-        existing_matrix = np.load(str(matrix_path))
-        for i, eid in enumerate(existing_ids.tolist()):
-            if eid in valid_ids:
-                merged[eid] = existing_matrix[i]
-
-    # Add new vectors (overwrite if re-ingesting same episode)
-    for eid, vec in zip(new_ids, new_vecs):
-        merged[eid] = vec.astype("float32")
-
-    # Keep only valid ids
-    merged = {eid: vec for eid, vec in merged.items() if eid in valid_ids}
-
-    if not merged:
-        logger.warning("No embeddings to save to .npy")
-        return
-
-    ids_arr = np.array(list(merged.keys()), dtype="int32")
-    matrix_arr = np.array(list(merged.values()), dtype="float32")
-
-    faiss_dir.mkdir(parents=True, exist_ok=True)
-    np.save(str(ids_path), ids_arr)
-    np.save(str(matrix_path), matrix_arr)
-
-    logger.success(f"Embeddings .npy updated: {len(ids_arr)} vectors saved")
 
 
 class PodcastIngestionPipeline:
     """Orchestrates the entire ingestion pipeline"""
 
-    def __init__(self, podcast_name: str = None, resume_from: str = None):
+    def __init__(
+        self,
+        podcast_name: str = None,
+        resume_from: str = None,
+        pending_only: bool = False,
+        skip_rebuild: bool = False,
+    ):
         """
         Initialize the ingestion pipeline
 
@@ -88,9 +47,14 @@ class PodcastIngestionPipeline:
             podcast_name: Name of the podcast to ingest (e.g., 'nerdcast').
                          If None, will try to ingest from base podcasts dir.
             resume_from: Episode filename to resume from (e.g., 'lá_do_bunker_150')
+            pending_only: If True, skip episodes that already have segments in the DB.
+            skip_rebuild: If True, skip the final FAISS index rebuild step (useful
+                          when the caller will rebuild once after processing all podcasts).
         """
         self.podcast_name = podcast_name
         self.resume_from = resume_from
+        self.pending_only = pending_only
+        self.skip_rebuild = skip_rebuild
 
         if podcast_name:
             # Check if podcast exists in config
@@ -165,6 +129,22 @@ class PodcastIngestionPipeline:
             start=start_idx + 1
         ):
             try:
+                episode_name = audio_file.stem
+
+                # Skip if already ingested (pending_only mode)
+                if self.pending_only:
+                    db = get_db_session()
+                    try:
+                        existing = db.query(PodcastSegment).filter(
+                            PodcastSegment.episode == episode_name,
+                            PodcastSegment.podcast_source == self.podcast_name
+                        ).first()
+                    finally:
+                        db.close()
+                    if existing:
+                        logger.info(f"[{i}/{len(audio_files)}] ⏭️  Skipping (already ingested): {audio_file.name}")
+                        continue
+
                 logger.info(f"[{i}/{len(audio_files)}] Processing {audio_file.name}")
 
                 # Transcribe this file
@@ -190,12 +170,15 @@ class PodcastIngestionPipeline:
         logger.success(f"Processed {len(audio_files)} files, {total_segments} total segments")
 
         # Step 4: Rebuild FAISS index from database
-        logger.section("[4/5] Rebuilding FAISS index from database...")
-        index_path, total_vectors = rebuild_faiss_index()
-        if index_path:
-            logger.success(f"FAISS index built: {total_vectors} vectors")
+        if self.skip_rebuild:
+            logger.info("[4/5] Skipping FAISS rebuild (caller will rebuild)")
         else:
-            logger.warning("FAISS index rebuild failed (no segments)")
+            logger.section("[4/5] Rebuilding FAISS index from database...")
+            index_path, total_vectors = rebuild_faiss_index()
+            if index_path:
+                logger.success(f"FAISS index built: {total_vectors} vectors")
+            else:
+                logger.warning("FAISS index rebuild failed (no segments)")
 
         logger.header("INGESTION COMPLETE!")
         logger.info(f"Total segments indexed: {total_segments}")
@@ -258,14 +241,15 @@ class PodcastIngestionPipeline:
             db.close()
 
         # Persist embeddings to .npy (merge with existing, purge orphans)
-        _append_embeddings_to_npy(new_ids, np.array(new_vecs, dtype="float32"))
+        append_embeddings_to_npy(new_ids, np.array(new_vecs, dtype="float32"))
 
         return stored_count
 
 
 def main(
     podcast_name: str = None,
-    resume_from: str = None
+    resume_from: str = None,
+    pending_only: bool = False
 ):
     """Main entry point
 
@@ -273,6 +257,7 @@ def main(
         podcast_name: Name of the podcast to ingest (e.g., 'nerdcast').
                       If None, uses base dir.
         resume_from: Episode filename to resume from.
+        pending_only: If True, skip episodes already in the DB.
 
     Returns:
         True if successful, False otherwise
@@ -280,7 +265,8 @@ def main(
     try:
         pipeline = PodcastIngestionPipeline(
             podcast_name,
-            resume_from=resume_from
+            resume_from=resume_from,
+            pending_only=pending_only
         )
         return pipeline.run()
     except ValueError as e:
@@ -403,6 +389,12 @@ if __name__ == "__main__":
         help='Resume ingestion from specific episode (e.g., --resume-from lá_do_bunker_150)'
     )
 
+    parser.add_argument(
+        '--pending-only',
+        action='store_true',
+        help='Skip episodes that already have segments in the database (only process new ones)'
+    )
+
     args = parser.parse_args()
 
     # Handle --list
@@ -419,7 +411,8 @@ if __name__ == "__main__":
     if args.podcast:
         success = main(
             podcast_name=args.podcast,
-            resume_from=args.resume_from
+            resume_from=args.resume_from,
+            pending_only=args.pending_only
         )
         sys.exit(0 if success else 1)
 

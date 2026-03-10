@@ -1,6 +1,6 @@
 # Relatorio de Status: pelada_na_net
 
-> Gerado em: 2026-03-07 18:10
+> Gerado em: 2026-03-09 12:22
 
 | Data | Meta | Transcricao | Segs | FAISS | Episodio |
 |:---|:---:|:---:|---:|:---:|:---|
@@ -323,146 +323,146 @@
 | 2020-07-23 | ✅ | ✅ | 95 | ✅ | Pelada na Net #456 – Pra Que Serve O Futebol Arte? |
 | 2020-07-16 | ✅ | ✅ | 4 | ✅ | Pelada na Net #455 – Intervalo: The Last Of Us Part II |
 | 2020-07-09 | ✅ | ✅ | 89 | ✅ | Pelada na Net #454 – O Folclore Da Bola E Suas Místicas |
-| 2020-07-02 | ✅ | ❌ | - | ❌ | Pelada na Net #453 – Ser O Maior Ídolo É Suficiente? |
-| 2020-06-25 | ✅ | ❌ | - | ❌ | Pelada na Net #452 – A Crise No Meio De Campo |
-| 2020-06-18 | ✅ | ❌ | - | ❌ | Pelada na Net #451 – Democracia Corinthiana |
-| 2020-06-11 | ✅ | ❌ | - | ❌ | Pelada na Net #450 – Pra Que A Pressa? |
-| 2020-06-04 | ✅ | ❌ | - | ❌ | Pelada na Net #449 – Como Salvar A Seleção? |
-| 2020-05-28 | ✅ | ❌ | - | ❌ | Pelada na Net #448 – A Difícil Missão Do Treinador |
-| 2020-05-21 | ✅ | ❌ | - | ❌ | Pelada na Net #447 – Coadjuvantes Também São Craques |
-| 2020-05-14 | ✅ | ❌ | - | ❌ | Pelada na Net #446 – Dá Pra Comparar Pelé Com Maradona? |
-| 2020-05-07 | ✅ | ❌ | - | ❌ | Pelada na Net #445 – O Que Faz Um Time Grande? |
-| 2020-04-30 | ✅ | ❌ | - | ❌ | Pelada na Net #444 – Os Cinco Melhores Tipos De Flauta |
-| 2020-04-27 | ✅ | ❌ | - | ❌ | Pelada na Net #443 – Intervalo: Sobre O Nada Do Isolamento |
-| 2020-04-23 | ✅ | ❌ | - | ❌ | Pelada na Net #442 – A Reta Final Do Big Brother 20 |
-| 2020-04-16 | ✅ | ❌ | - | ❌ | Pelada na Net #441 – Bate No Paizão E Vai Embora |
-| 2020-04-09 | ✅ | ❌ | - | ❌ | Pelada na Net #440 – La Casa De Babu |
-| 2020-04-02 | ✅ | ❌ | - | ❌ | Pelada na Net #439 – Estragaram O Meu BBB 20 |
-| 2020-03-30 | ✅ | ❌ | - | ❌ | Pelada na Net #438 – Intervalo: Companhia Da Quarentena |
-| 2020-03-26 | ✅ | ❌ | - | ❌ | Pelada na Net #437 – Mas Xente, Não Pode Pegar Barata? |
-| 2020-03-19 | ✅ | ❌ | - | ❌ | Pelada na Net #436 – Big Brother É Melhor Que Futebol |
-| 2020-03-13 | ✅ | ❌ | - | ❌ | Pelada na Net #435 – Faz Parte Da Vida Adulta |
-| 2020-03-06 | ✅ | ❌ | - | ❌ | Pelada na Net #434 – Desejo A Todos Um Feliz 2020 |
-| 2020-02-26 | ✅ | ❌ | - | ❌ | Pelada na Net #433 – Intervalo: A Pureza Da Inocência |
-| 2020-02-24 | ✅ | ❌ | - | ❌ | Pelada na Net #432 – Intervalo: Eu Amo O Filme Do Sonic |
-| 2020-02-21 | ✅ | ❌ | - | ❌ | Pelada na Net #431 – Comprados Por Adnet E Felipe Neto |
-| 2020-02-14 | ✅ | ❌ | - | ❌ | Pelada na Net #430 – Minhas Fontes São Uber E Rodrigones |
-| 2020-02-07 | ✅ | ❌ | - | ❌ | Pelada na Net #429 – Carnalesão Já É Tradição |
-| 2020-01-31 | ✅ | ❌ | - | ❌ | Pelada na Net #428 – O Carcanhá Do Baby |
-| 2020-01-26 | ✅ | ❌ | - | ❌ | Pelada na Net #427 – Intervalo: A Ilustração E Seus Perrengues |
-| 2020-01-24 | ✅ | ❌ | - | ❌ | Pelada na Net #426 – Vai Começar Dois Mili Vinte |
-| 2020-01-17 | ✅ | ❌ | - | ❌ | Pelada na Net #425 – Intervalo: A Vida Do Produtor De Conteúdo |
-| 2020-01-10 | ✅ | ❌ | - | ❌ | Pelada na Net #424 – O FAQ do Peladinha 6 |
-| 2020-01-03 | ✅ | ❌ | - | ❌ | Pelada na Net #423 – Até O Futebol Tá De Férias E A Gente Não |
-| 2019-12-30 | ✅ | ❌ | - | ❌ | Pelada na Net #422 – Intervalo: Casos Boleiros de Família |
-| 2019-12-26 | ✅ | ❌ | - | ❌ | Pelada na Net #421 – Separados Por Um Firmino |
-| 2019-12-20 | ✅ | ❌ | - | ❌ | Pelada na Net #420 – Em Dezembro De Dezenove |
-| 2019-12-13 | ✅ | ❌ | - | ❌ | Pelada na Net #419 – Cai o Incaível |
-| 2019-12-06 | ✅ | ❌ | - | ❌ | Pelada na Net #418 – O Emocionante Pouso De Saco |
-| 2019-11-29 | ✅ | ❌ | - | ❌ | Pelada na Net #417 – A Nação Pede O Mundo |
-| 2019-11-22 | ✅ | ❌ | - | ❌ | Pelada na Net #416 – Ele Vai Andando, Andando, Andando |
-| 2019-11-15 | ✅ | ❌ | - | ❌ | Pelada na Net #415 – O Mister E O Pofexô |
-| 2019-11-11 | ✅ | ❌ | - | ❌ | Pelada na Net #414 – Intervalo: Eu Não Entendo A Culinária |
-| 2019-11-01 | ✅ | ❌ | - | ❌ | Pelada na Net #413 – Intervalo: A Incrível Mente de Peixe Aquático |
-| 2019-10-25 | ✅ | ❌ | - | ❌ | Pelada na Net #412 – O Mister Merece Nossos Aplausos |
-| 2019-10-18 | ✅ | ❌ | - | ❌ | Pelada na Net #411 – Quem Pode Parar O Cheirinho? |
-| 2019-10-11 | ✅ | ❌ | - | ❌ | Pelada na Net #410 – Carrega O Rabo Nas Costas |
-| 2019-10-04 | ✅ | ❌ | - | ❌ | Pelada na Net #409 – Que Nem Esse Menino Aí |
-| 2019-10-01 | ✅ | ❌ | - | ❌ | Pelada na Net #408 – Intervalo: Gastando Dinheiro Comprando Merda |
-| 2019-09-27 | ✅ | ❌ | - | ❌ | Pelada na Net #407 – Terraplanistas Versus Alienígenas |
-| 2019-09-20 | ✅ | ❌ | - | ❌ | Pelada na Net #406 – O Negócio É Mudar De Nome |
-| 2019-09-13 | ✅ | ❌ | - | ❌ | Pelada na Net #405 – O Peru Do Cazalbé Ganharia A Série B |
-| 2019-09-06 | ✅ | ❌ | - | ❌ | Pelada na Net #404 – Vergonha Da Profissão Futebol |
-| 2019-08-31 | ✅ | ❌ | - | ❌ | Pelada na Net #403 – Intervalo: Tá Fazendo Hora Extra |
-| 2019-08-30 | ✅ | ❌ | - | ❌ | Pelada na Net #402 – A Zica É Real, Mas Não É Bagunça |
-| 2019-08-23 | ✅ | ❌ | - | ❌ | Pelada na Net #401 – Esse Mister Mente Bonito Demais |
-| 2019-08-15 | ✅ | ❌ | - | ❌ | Pelada na Net #400 – A Quatrocentésima Vez É A Que Conta |
-| 2019-08-09 | ✅ | ❌ | - | ❌ | Pelada na Net #399 – Errar é o Mano, Acertar é Denilson |
-| 2019-08-02 | ✅ | ❌ | - | ❌ | Pelada na Net #398 – É Meleca Que Deu No Godoy |
-| 2019-07-30 | ✅ | ❌ | - | ❌ | Pelada na Net #397 – Intervalo: Aquaman Brasileiro |
-| 2019-07-26 | ✅ | ❌ | - | ❌ | Pelada na Net #396 – Como o Mister Agradece Bonito |
-| 2019-07-19 | ✅ | ❌ | - | ❌ | Pelada na Net #395 – Cheirinho De Porco Assado |
-| 2019-07-12 | ✅ | ❌ | - | ❌ | Pelada na Net #394 – É Campeão Sem O Meniney |
-| 2019-07-05 | ✅ | ❌ | - | ❌ | Pelada na Net #393 – El Chorito Es Livrito |
-| 2019-07-01 | ✅ | ❌ | - | ❌ | Pelada na Net #392 – Intervalo: Não Entendi O Que Aconteceu |
-| 2019-06-26 | ✅ | ❌ | - | ❌ | Pelada na Net #391 – A Turma do Cebolinha |
-| 2019-06-20 | ✅ | ❌ | - | ❌ | Pelada na Net #390 – Ainda Bem Que Tem A Argentina |
-| 2019-06-14 | ✅ | ❌ | - | ❌ | Pelada na Net #389 – A América Vai Tremer |
-| 2019-06-07 | ✅ | ❌ | - | ❌ | Pelada na Net #388 – O Dossiê do Menino Ney |
-| 2019-05-24 | ✅ | ❌ | - | ❌ | Pelada na Net #386 – Que Sorte! Meu Goleiro Morreu |
-| 2019-05-17 | ✅ | ❌ | - | ❌ | Pelada na Net #385 – Nós Amamos Enquete Aberta |
-| 2019-05-10 | ✅ | ❌ | - | ❌ | Pelada na Net #384 – Ô Porra, Que Que Houve? |
-| 2019-05-03 | ✅ | ❌ | - | ❌ | Pelada na Net #383 – Vieira E Seu Amigo Pavico |
-| 2019-04-26 | ✅ | ❌ | - | ❌ | Pelada na Net #382 – Tá Parecendo O Marcus Menna |
-| 2019-04-23 | ✅ | ❌ | - | ❌ | Pelada na Net #381 – Intervalo: O Maestro Do LoLzinho |
-| 2019-04-19 | ✅ | ❌ | - | ❌ | Pelada na Net #380 – Var Gostoso Dimais |
-| 2019-04-12 | ✅ | ❌ | - | ❌ | Pelada na Net #379 – Quem Levir A Culpi? |
-| 2019-04-05 | ✅ | ❌ | - | ❌ | Pelada na Net #378 – Não Me Chame De Tchutchuca |
-| 2019-03-29 | ✅ | ❌ | - | ❌ | Pelada na Net #377 – Uma Grande Pataquada |
-| 2019-03-22 | ✅ | ❌ | - | ❌ | Pelada na Net #376 – A Mamãe E O Podólogo |
-| 2019-03-15 | ✅ | ❌ | - | ❌ | Pelada na Net #375 – Ele Vence, E Vence, E Vence |
-| 2019-03-08 | ✅ | ❌ | - | ❌ | Pelada na Net #374 – O Que É Golden Shower? |
-| 2019-02-28 | ✅ | ❌ | - | ❌ | Pelada na Net #373 – Intervalo: Um Show de Fake News |
-| 2019-02-21 | ✅ | ❌ | - | ❌ | Pelada na Net #372 – Intervalo: Os Véio Paia Do YouTube |
-| 2019-02-18 | ✅ | ❌ | - | ❌ | Pelada na Net #371 – Intervalo: Top 3 Piores StandUp De Gênio |
-| 2019-02-15 | ✅ | ❌ | - | ❌ | Pelada na Net #370 – Corre Que O Pet Tá Puto |
-| 2019-02-08 | ✅ | ❌ | - | ❌ | Pelada na Net #369 – Jantado Com Garfo E Faca |
-| 2019-02-01 | ✅ | ❌ | - | ❌ | Pelada na Net #368 – Eu E Você Na Ilha De Gozo |
-| 2019-01-29 | ✅ | ❌ | - | ❌ | Pelada na Net #367 – Intervalo: Grande Prêmio Oscar Schmidt |
-| 2019-01-25 | ✅ | ❌ | - | ❌ | Pelada na Net #366 – Cheirinho de Puskas |
-| 2019-01-18 | ✅ | ❌ | - | ❌ | Pelada na Net #365 – Dinheiro É Pra Se Gastar |
-| 2019-01-10 | ✅ | ❌ | - | ❌ | Pelada na Net #364 – Intervalo: Acabou Foi Pouco |
-| 2019-01-04 | ✅ | ❌ | - | ❌ | Pelada na Net #363 – O FAQ do Peladinha 5 |
-| 2018-12-31 | ✅ | ❌ | - | ❌ | Pelada na Net #362 – Intervalo: Nada De Ano Novo |
-| 2018-12-28 | ✅ | ❌ | - | ❌ | Pelada na Net #361 – Intervalo: Ser Choronga Está Na Moda |
-| 2018-12-20 | ✅ | ❌ | - | ❌ | Pelada na Net #360 – Intervalo: Etiqueta Para Ouvintes |
-| 2018-12-14 | ✅ | ❌ | - | ❌ | Pelada na Net #359 – Athlético Dhemais, Phô |
-| 2018-12-07 | ✅ | ❌ | - | ❌ | Pelada na Net #358 – Tá Ruim, Mas Tá Bom |
-| 2018-11-30 | ✅ | ❌ | - | ❌ | Pelada na Net #357 – Dez Vezes Palmeiras |
-| 2018-11-27 | ✅ | ❌ | - | ❌ | Pelada na Net #356 – Intervalo: Especial Doug Lira |
-| 2018-11-23 | ✅ | ❌ | - | ❌ | Pelada na Net #355 – Fakenews No Estádio |
-| 2018-11-16 | ✅ | ❌ | - | ❌ | Pelada na Net #354 – Com Uma Mão Na Taça |
-| 2018-11-09 | ✅ | ❌ | - | ❌ | Pelada na Net #353 – Um Rio De Lágrimas |
-| 2018-11-04 | ✅ | ❌ | - | ❌ | Pelada na Net #352 – Intervalo: Os Outros Dizem Que É Bom |
-| 2018-10-30 | ✅ | ❌ | - | ❌ | Pelada na Net #351 – Intervalo: Um Chá De Frescurinha |
-| 2018-10-23 | ✅ | ❌ | - | ❌ | Pelada na Net #350 – Desculpe Por Este Programa |
-| 2018-10-20 | ✅ | ❌ | - | ❌ | Pelada na Net #349 – Intervalo: Top Top Apocalipses |
-| 2018-10-12 | ✅ | ❌ | - | ❌ | Pelada na Net #348 – A Raposa Sai Na Frente |
-| 2018-10-05 | ✅ | ❌ | - | ❌ | Pelada na Net #347 – Na Sombra De Ninguém |
-| 2018-09-30 | ✅ | ❌ | - | ❌ | Pelada na Net #346 – Intervalo: Por Sete Mil E Quinhentos |
-| 2018-09-28 | ✅ | ❌ | - | ❌ | Pelada na Net #345 – Cheirinho de Sacanagem |
-| 2018-09-21 | ✅ | ❌ | - | ❌ | Pelada na Net #344 – Tem Que Acabar a Arbitragem |
-| 2018-09-14 | ✅ | ❌ | - | ❌ | Pelada na Net #343 – E Segue Sendo Um Imbecil |
-| 2018-09-07 | ✅ | ❌ | - | ❌ | Pelada na Net #342 – Eleitor, Vote Consciente |
-| 2018-08-31 | ✅ | ❌ | - | ❌ | Pelada na Net #341 – A Arrombada Da Conmebol |
-| 2018-08-27 | ✅ | ❌ | - | ❌ | Pelada na Net #340 – Intervalo: Gostar É Bom, Odiar É Melhor |
-| 2018-08-24 | ✅ | ❌ | - | ❌ | Pelada na Net #339 – Valeu, Árbitro de Vidro |
-| 2018-08-17 | ✅ | ❌ | - | ❌ | Pelada na Net #338 – Frustraram o Barbosinha |
-| 2018-08-10 | ✅ | ❌ | - | ❌ | Pelada na Net #337 – O Cheirinho Está De Volta |
-| 2018-08-03 | ✅ | ❌ | - | ❌ | Pelada na Net #336 – O Paraguaio É O Terror |
-| 2018-07-27 | ✅ | ❌ | - | ❌ | Pelada na Net #335 – Existe Vida Pós-Copa? |
-| 2018-07-17 | ✅ | ❌ | - | ❌ | Pelada na Net #334 – Allez Les Bleus De Novo |
-| 2018-07-12 | ✅ | ❌ | - | ❌ | Pelada na Net #333 – Refutando Gustradamus |
-| 2018-07-09 | ✅ | ❌ | - | ❌ | Pelada na Net #332 – Adiaram O Meu Hexa |
-| 2018-07-04 | ✅ | ❌ | - | ❌ | Pelada na Net #331 – Que Copa É Essa, Bicho? |
-| 2018-06-29 | ✅ | ❌ | - | ❌ | Pelada na Net #330 – Melhor Japão Que Tem |
-| 2018-06-25 | ✅ | ❌ | - | ❌ | Pelada na Net #329 – A Cambalhota de Adenor |
-| 2018-06-20 | ✅ | ❌ | - | ❌ | Pelada na Net #328 – Só Se Salva o Cris Cris |
-| 2018-06-15 | ✅ | ❌ | - | ❌ | Pelada na Net #327 – A Copa do Kremlin |
-| 2018-06-08 | ✅ | ❌ | - | ❌ | Pelada na Net #326 – O Retorno do Metatarso |
-| 2018-06-01 | ✅ | ❌ | - | ❌ | Pelada na Net #325 – É Treze, Porra! |
-| 2018-05-25 | ✅ | ❌ | - | ❌ | Pelada na Net #324 – A Noite da Arábia |
-| 2018-05-18 | ✅ | ❌ | - | ❌ | Pelada na Net #323 – A Lista de Tite |
-| 2018-05-11 | ✅ | ❌ | - | ❌ | Pelada na Net #322 – Que Emissário Mais Danadinho! |
-| 2018-05-04 | ✅ | ❌ | - | ❌ | Pelada na Net #321 – Tá Faltando Aquele VAR |
-| 2018-04-27 | ✅ | ❌ | - | ❌ | Pelada na Net #320 – O Juizão, Apita Não! |
-| 2018-04-20 | ✅ | ❌ | - | ❌ | Pelada na Net #319 – Não Entendo De Futebol |
-| 2018-04-13 | ✅ | ❌ | - | ❌ | Pelada na Net #318 – Uma Porção De Zica |
-| 2018-04-06 | ✅ | ✅ | 115 | ✅ | Pelada na Net #317 – A Curirica Que Para No Ar |
-| 2018-03-30 | ✅ | ✅ | 85 | ✅ | Pelada na Net #316 – Intervalo: Coisas Que Merecem Boicote |
-| 2018-03-23 | ✅ | ✅ | 84 | ✅ | Pelada na Net #315 – No Passinho Do Sorrisinho |
-| 2018-03-16 | ✅ | ✅ | 103 | ✅ | Pelada na Net #314 – O Tempo Dirá Quem Foi Melhor |
-| 2018-03-09 | ✅ | ✅ | 90 | ✅ | Pelada na Net #313 – O Príncipe Tinha Razão |
+| 2020-07-02 | ✅ | ✅ | 80 | ✅ | Pelada na Net #453 – Ser O Maior Ídolo É Suficiente? |
+| 2020-06-25 | ✅ | ✅ | 84 | ✅ | Pelada na Net #452 – A Crise No Meio De Campo |
+| 2020-06-18 | ✅ | ✅ | 104 | ✅ | Pelada na Net #451 – Democracia Corinthiana |
+| 2020-06-11 | ✅ | ✅ | 96 | ✅ | Pelada na Net #450 – Pra Que A Pressa? |
+| 2020-06-04 | ✅ | ✅ | 114 | ✅ | Pelada na Net #449 – Como Salvar A Seleção? |
+| 2020-05-28 | ✅ | ✅ | 86 | ✅ | Pelada na Net #448 – A Difícil Missão Do Treinador |
+| 2020-05-21 | ✅ | ✅ | 75 | ✅ | Pelada na Net #447 – Coadjuvantes Também São Craques |
+| 2020-05-14 | ✅ | ✅ | 86 | ✅ | Pelada na Net #446 – Dá Pra Comparar Pelé Com Maradona? |
+| 2020-05-07 | ✅ | ✅ | 75 | ✅ | Pelada na Net #445 – O Que Faz Um Time Grande? |
+| 2020-04-30 | ✅ | ✅ | 81 | ✅ | Pelada na Net #444 – Os Cinco Melhores Tipos De Flauta |
+| 2020-04-27 | ✅ | ✅ | 82 | ✅ | Pelada na Net #443 – Intervalo: Sobre O Nada Do Isolamento |
+| 2020-04-23 | ✅ | ✅ | 70 | ✅ | Pelada na Net #442 – A Reta Final Do Big Brother 20 |
+| 2020-04-16 | ✅ | ✅ | 75 | ✅ | Pelada na Net #441 – Bate No Paizão E Vai Embora |
+| 2020-04-09 | ✅ | ✅ | 79 | ✅ | Pelada na Net #440 – La Casa De Babu |
+| 2020-04-02 | ✅ | ✅ | 91 | ✅ | Pelada na Net #439 – Estragaram O Meu BBB 20 |
+| 2020-03-30 | ✅ | ✅ | 98 | ✅ | Pelada na Net #438 – Intervalo: Companhia Da Quarentena |
+| 2020-03-26 | ✅ | ✅ | 101 | ✅ | Pelada na Net #437 – Mas Xente, Não Pode Pegar Barata? |
+| 2020-03-19 | ✅ | ✅ | 82 | ✅ | Pelada na Net #436 – Big Brother É Melhor Que Futebol |
+| 2020-03-13 | ✅ | ✅ | 77 | ✅ | Pelada na Net #435 – Faz Parte Da Vida Adulta |
+| 2020-03-06 | ✅ | ✅ | 80 | ✅ | Pelada na Net #434 – Desejo A Todos Um Feliz 2020 |
+| 2020-02-26 | ✅ | ✅ | 35 | ✅ | Pelada na Net #433 – Intervalo: A Pureza Da Inocência |
+| 2020-02-24 | ✅ | ✅ | 99 | ✅ | Pelada na Net #432 – Intervalo: Eu Amo O Filme Do Sonic |
+| 2020-02-21 | ✅ | ✅ | 64 | ✅ | Pelada na Net #431 – Comprados Por Adnet E Felipe Neto |
+| 2020-02-14 | ✅ | ✅ | 65 | ✅ | Pelada na Net #430 – Minhas Fontes São Uber E Rodrigones |
+| 2020-02-07 | ✅ | ✅ | 69 | ✅ | Pelada na Net #429 – Carnalesão Já É Tradição |
+| 2020-01-31 | ✅ | ✅ | 61 | ✅ | Pelada na Net #428 – O Carcanhá Do Baby |
+| 2020-01-26 | ✅ | ✅ | 119 | ✅ | Pelada na Net #427 – Intervalo: A Ilustração E Seus Perrengues |
+| 2020-01-24 | ✅ | ✅ | 74 | ✅ | Pelada na Net #426 – Vai Começar Dois Mili Vinte |
+| 2020-01-17 | ✅ | ✅ | 152 | ✅ | Pelada na Net #425 – Intervalo: A Vida Do Produtor De Conteúdo |
+| 2020-01-10 | ✅ | ✅ | 105 | ✅ | Pelada na Net #424 – O FAQ do Peladinha 6 |
+| 2020-01-03 | ✅ | ✅ | 79 | ✅ | Pelada na Net #423 – Até O Futebol Tá De Férias E A Gente Não |
+| 2019-12-30 | ✅ | ✅ | 123 | ✅ | Pelada na Net #422 – Intervalo: Casos Boleiros de Família |
+| 2019-12-26 | ✅ | ✅ | 64 | ✅ | Pelada na Net #421 – Separados Por Um Firmino |
+| 2019-12-20 | ✅ | ✅ | 85 | ✅ | Pelada na Net #420 – Em Dezembro De Dezenove |
+| 2019-12-13 | ✅ | ✅ | 101 | ✅ | Pelada na Net #419 – Cai o Incaível |
+| 2019-12-06 | ✅ | ✅ | 106 | ✅ | Pelada na Net #418 – O Emocionante Pouso De Saco |
+| 2019-11-29 | ✅ | ✅ | 111 | ✅ | Pelada na Net #417 – A Nação Pede O Mundo |
+| 2019-11-22 | ✅ | ✅ | 72 | ✅ | Pelada na Net #416 – Ele Vai Andando, Andando, Andando |
+| 2019-11-15 | ✅ | ✅ | 68 | ✅ | Pelada na Net #415 – O Mister E O Pofexô |
+| 2019-11-11 | ✅ | ✅ | 76 | ✅ | Pelada na Net #414 – Intervalo: Eu Não Entendo A Culinária |
+| 2019-11-01 | ✅ | ✅ | 89 | ✅ | Pelada na Net #413 – Intervalo: A Incrível Mente de Peixe Aquático |
+| 2019-10-25 | ✅ | ✅ | 60 | ✅ | Pelada na Net #412 – O Mister Merece Nossos Aplausos |
+| 2019-10-18 | ✅ | ✅ | 70 | ✅ | Pelada na Net #411 – Quem Pode Parar O Cheirinho? |
+| 2019-10-11 | ✅ | ✅ | 90 | ✅ | Pelada na Net #410 – Carrega O Rabo Nas Costas |
+| 2019-10-04 | ✅ | ✅ | 77 | ✅ | Pelada na Net #409 – Que Nem Esse Menino Aí |
+| 2019-10-01 | ✅ | ✅ | 88 | ✅ | Pelada na Net #408 – Intervalo: Gastando Dinheiro Comprando Merda |
+| 2019-09-27 | ✅ | ✅ | 93 | ✅ | Pelada na Net #407 – Terraplanistas Versus Alienígenas |
+| 2019-09-20 | ✅ | ✅ | 54 | ✅ | Pelada na Net #406 – O Negócio É Mudar De Nome |
+| 2019-09-13 | ✅ | ✅ | 94 | ✅ | Pelada na Net #405 – O Peru Do Cazalbé Ganharia A Série B |
+| 2019-09-06 | ✅ | ✅ | 86 | ✅ | Pelada na Net #404 – Vergonha Da Profissão Futebol |
+| 2019-08-31 | ✅ | ✅ | 91 | ✅ | Pelada na Net #403 – Intervalo: Tá Fazendo Hora Extra |
+| 2019-08-30 | ✅ | ✅ | 91 | ✅ | Pelada na Net #402 – A Zica É Real, Mas Não É Bagunça |
+| 2019-08-23 | ✅ | ✅ | 93 | ✅ | Pelada na Net #401 – Esse Mister Mente Bonito Demais |
+| 2019-08-15 | ✅ | ✅ | 257 | ✅ | Pelada na Net #400 – A Quatrocentésima Vez É A Que Conta |
+| 2019-08-09 | ✅ | ✅ | 87 | ✅ | Pelada na Net #399 – Errar é o Mano, Acertar é Denilson |
+| 2019-08-02 | ✅ | ✅ | 95 | ✅ | Pelada na Net #398 – É Meleca Que Deu No Godoy |
+| 2019-07-30 | ✅ | ✅ | 93 | ✅ | Pelada na Net #397 – Intervalo: Aquaman Brasileiro |
+| 2019-07-26 | ✅ | ✅ | 62 | ✅ | Pelada na Net #396 – Como o Mister Agradece Bonito |
+| 2019-07-19 | ✅ | ✅ | 80 | ✅ | Pelada na Net #395 – Cheirinho De Porco Assado |
+| 2019-07-12 | ✅ | ✅ | 85 | ✅ | Pelada na Net #394 – É Campeão Sem O Meniney |
+| 2019-07-05 | ✅ | ✅ | 85 | ✅ | Pelada na Net #393 – El Chorito Es Livrito |
+| 2019-07-01 | ✅ | ✅ | 74 | ✅ | Pelada na Net #392 – Intervalo: Não Entendi O Que Aconteceu |
+| 2019-06-26 | ✅ | ✅ | 103 | ✅ | Pelada na Net #391 – A Turma do Cebolinha |
+| 2019-06-20 | ✅ | ✅ | 1 | ✅ | Pelada na Net #390 – Ainda Bem Que Tem A Argentina |
+| 2019-06-14 | ✅ | ✅ | 95 | ✅ | Pelada na Net #389 – A América Vai Tremer |
+| 2019-06-07 | ✅ | ✅ | 108 | ✅ | Pelada na Net #388 – O Dossiê do Menino Ney |
+| 2019-05-24 | ✅ | ✅ | 82 | ✅ | Pelada na Net #386 – Que Sorte! Meu Goleiro Morreu |
+| 2019-05-17 | ✅ | ✅ | 102 | ✅ | Pelada na Net #385 – Nós Amamos Enquete Aberta |
+| 2019-05-10 | ✅ | ✅ | 119 | ✅ | Pelada na Net #384 – Ô Porra, Que Que Houve? |
+| 2019-05-03 | ✅ | ✅ | 130 | ✅ | Pelada na Net #383 – Vieira E Seu Amigo Pavico |
+| 2019-04-26 | ✅ | ✅ | 92 | ✅ | Pelada na Net #382 – Tá Parecendo O Marcus Menna |
+| 2019-04-23 | ✅ | ✅ | 145 | ✅ | Pelada na Net #381 – Intervalo: O Maestro Do LoLzinho |
+| 2019-04-19 | ✅ | ✅ | 32 | ✅ | Pelada na Net #380 – Var Gostoso Dimais |
+| 2019-04-12 | ✅ | ✅ | 82 | ✅ | Pelada na Net #379 – Quem Levir A Culpi? |
+| 2019-04-05 | ✅ | ✅ | 95 | ✅ | Pelada na Net #378 – Não Me Chame De Tchutchuca |
+| 2019-03-29 | ✅ | ✅ | 86 | ✅ | Pelada na Net #377 – Uma Grande Pataquada |
+| 2019-03-22 | ✅ | ✅ | 65 | ✅ | Pelada na Net #376 – A Mamãe E O Podólogo |
+| 2019-03-15 | ✅ | ✅ | 83 | ✅ | Pelada na Net #375 – Ele Vence, E Vence, E Vence |
+| 2019-03-08 | ✅ | ✅ | 100 | ✅ | Pelada na Net #374 – O Que É Golden Shower? |
+| 2019-02-28 | ✅ | ✅ | 65 | ✅ | Pelada na Net #373 – Intervalo: Um Show de Fake News |
+| 2019-02-21 | ✅ | ✅ | 103 | ✅ | Pelada na Net #372 – Intervalo: Os Véio Paia Do YouTube |
+| 2019-02-18 | ✅ | ✅ | 82 | ✅ | Pelada na Net #371 – Intervalo: Top 3 Piores StandUp De Gênio |
+| 2019-02-15 | ✅ | ✅ | 81 | ✅ | Pelada na Net #370 – Corre Que O Pet Tá Puto |
+| 2019-02-08 | ✅ | ✅ | 87 | ✅ | Pelada na Net #369 – Jantado Com Garfo E Faca |
+| 2019-02-01 | ✅ | ✅ | 74 | ✅ | Pelada na Net #368 – Eu E Você Na Ilha De Gozo |
+| 2019-01-29 | ✅ | ✅ | 109 | ✅ | Pelada na Net #367 – Intervalo: Grande Prêmio Oscar Schmidt |
+| 2019-01-25 | ✅ | ✅ | 83 | ✅ | Pelada na Net #366 – Cheirinho de Puskas |
+| 2019-01-18 | ✅ | ✅ | 99 | ✅ | Pelada na Net #365 – Dinheiro É Pra Se Gastar |
+| 2019-01-10 | ✅ | ✅ | 84 | ✅ | Pelada na Net #364 – Intervalo: Acabou Foi Pouco |
+| 2019-01-04 | ✅ | ✅ | 109 | ✅ | Pelada na Net #363 – O FAQ do Peladinha 5 |
+| 2018-12-31 | ✅ | ✅ | 86 | ✅ | Pelada na Net #362 – Intervalo: Nada De Ano Novo |
+| 2018-12-28 | ✅ | ✅ | 87 | ✅ | Pelada na Net #361 – Intervalo: Ser Choronga Está Na Moda |
+| 2018-12-20 | ✅ | ✅ | 106 | ✅ | Pelada na Net #360 – Intervalo: Etiqueta Para Ouvintes |
+| 2018-12-14 | ✅ | ✅ | 86 | ✅ | Pelada na Net #359 – Athlético Dhemais, Phô |
+| 2018-12-07 | ✅ | ✅ | 97 | ✅ | Pelada na Net #358 – Tá Ruim, Mas Tá Bom |
+| 2018-11-30 | ✅ | ✅ | 78 | ✅ | Pelada na Net #357 – Dez Vezes Palmeiras |
+| 2018-11-27 | ✅ | ✅ | 89 | ✅ | Pelada na Net #356 – Intervalo: Especial Doug Lira |
+| 2018-11-23 | ✅ | ✅ | 61 | ✅ | Pelada na Net #355 – Fakenews No Estádio |
+| 2018-11-16 | ✅ | ✅ | 90 | ✅ | Pelada na Net #354 – Com Uma Mão Na Taça |
+| 2018-11-09 | ✅ | ✅ | 82 | ✅ | Pelada na Net #353 – Um Rio De Lágrimas |
+| 2018-11-04 | ✅ | ✅ | 93 | ✅ | Pelada na Net #352 – Intervalo: Os Outros Dizem Que É Bom |
+| 2018-10-30 | ✅ | ✅ | 76 | ✅ | Pelada na Net #351 – Intervalo: Um Chá De Frescurinha |
+| 2018-10-23 | ✅ | ✅ | 52 | ✅ | Pelada na Net #350 – Desculpe Por Este Programa |
+| 2018-10-20 | ✅ | ✅ | 93 | ✅ | Pelada na Net #349 – Intervalo: Top Top Apocalipses |
+| 2018-10-12 | ✅ | ✅ | 37 | ✅ | Pelada na Net #348 – A Raposa Sai Na Frente |
+| 2018-10-05 | ✅ | ✅ | 86 | ✅ | Pelada na Net #347 – Na Sombra De Ninguém |
+| 2018-09-30 | ✅ | ✅ | 97 | ✅ | Pelada na Net #346 – Intervalo: Por Sete Mil E Quinhentos |
+| 2018-09-28 | ✅ | ✅ | 100 | ✅ | Pelada na Net #345 – Cheirinho de Sacanagem |
+| 2018-09-21 | ✅ | ✅ | 90 | ✅ | Pelada na Net #344 – Tem Que Acabar a Arbitragem |
+| 2018-09-14 | ✅ | ✅ | 92 | ✅ | Pelada na Net #343 – E Segue Sendo Um Imbecil |
+| 2018-09-07 | ✅ | ✅ | 102 | ✅ | Pelada na Net #342 – Eleitor, Vote Consciente |
+| 2018-08-31 | ✅ | ✅ | 76 | ✅ | Pelada na Net #341 – A Arrombada Da Conmebol |
+| 2018-08-27 | ✅ | ✅ | 87 | ✅ | Pelada na Net #340 – Intervalo: Gostar É Bom, Odiar É Melhor |
+| 2018-08-24 | ✅ | ✅ | 78 | ✅ | Pelada na Net #339 – Valeu, Árbitro de Vidro |
+| 2018-08-17 | ✅ | ✅ | 36 | ✅ | Pelada na Net #338 – Frustraram o Barbosinha |
+| 2018-08-10 | ✅ | ✅ | 99 | ✅ | Pelada na Net #337 – O Cheirinho Está De Volta |
+| 2018-08-03 | ✅ | ✅ | 86 | ✅ | Pelada na Net #336 – O Paraguaio É O Terror |
+| 2018-07-27 | ✅ | ✅ | 96 | ✅ | Pelada na Net #335 – Existe Vida Pós-Copa? |
+| 2018-07-17 | ✅ | ✅ | 43 | ✅ | Pelada na Net #334 – Allez Les Bleus De Novo |
+| 2018-07-12 | ✅ | ✅ | 1 | ✅ | Pelada na Net #333 – Refutando Gustradamus |
+| 2018-07-09 | ✅ | ✅ | 110 | ✅ | Pelada na Net #332 – Adiaram O Meu Hexa |
+| 2018-07-04 | ✅ | ✅ | 88 | ✅ | Pelada na Net #331 – Que Copa É Essa, Bicho? |
+| 2018-06-29 | ✅ | ✅ | 100 | ✅ | Pelada na Net #330 – Melhor Japão Que Tem |
+| 2018-06-25 | ✅ | ✅ | 48 | ✅ | Pelada na Net #329 – A Cambalhota de Adenor |
+| 2018-06-20 | ✅ | ✅ | 93 | ✅ | Pelada na Net #328 – Só Se Salva o Cris Cris |
+| 2018-06-15 | ✅ | ✅ | 66 | ✅ | Pelada na Net #327 – A Copa do Kremlin |
+| 2018-06-08 | ✅ | ✅ | 95 | ✅ | Pelada na Net #326 – O Retorno do Metatarso |
+| 2018-06-01 | ✅ | ✅ | 112 | ✅ | Pelada na Net #325 – É Treze, Porra! |
+| 2018-05-25 | ✅ | ✅ | 111 | ✅ | Pelada na Net #324 – A Noite da Arábia |
+| 2018-05-18 | ✅ | ✅ | 67 | ✅ | Pelada na Net #323 – A Lista de Tite |
+| 2018-05-11 | ✅ | ✅ | 98 | ✅ | Pelada na Net #322 – Que Emissário Mais Danadinho! |
+| 2018-05-04 | ✅ | ✅ | 94 | ✅ | Pelada na Net #321 – Tá Faltando Aquele VAR |
+| 2018-04-27 | ✅ | ✅ | 109 | ✅ | Pelada na Net #320 – O Juizão, Apita Não! |
+| 2018-04-20 | ✅ | ✅ | 93 | ✅ | Pelada na Net #319 – Não Entendo De Futebol |
+| 2018-04-13 | ✅ | ✅ | 106 | ✅ | Pelada na Net #318 – Uma Porção De Zica |
+| 2018-04-06 | ✅ | ✅ | 113 | ✅ | Pelada na Net #317 – A Curirica Que Para No Ar |
+| 2018-03-30 | ✅ | ✅ | 72 | ✅ | Pelada na Net #316 – Intervalo: Coisas Que Merecem Boicote |
+| 2018-03-23 | ✅ | ✅ | 101 | ✅ | Pelada na Net #315 – No Passinho Do Sorrisinho |
+| 2018-03-16 | ✅ | ✅ | 107 | ✅ | Pelada na Net #314 – O Tempo Dirá Quem Foi Melhor |
+| 2018-03-09 | ✅ | ✅ | 79 | ✅ | Pelada na Net #313 – O Príncipe Tinha Razão |
 | 2018-03-02 | ✅ | ✅ | 105 | ✅ | Pelada na Net #312 – Que Coisa Louca |
 | 2018-02-23 | ✅ | ✅ | 93 | ✅ | Pelada na Net #311 – Tudo Na Maior Tranquilidade |
 | 2018-02-16 | ✅ | ✅ | 81 | ✅ | Pelada na Net #310 – Absolutamente Tudo Normal |
@@ -703,16 +703,16 @@
 | 2012-12-19 | ✅ | ✅ | 85 | ✅ | Pelada na Net #48 – Season Finale! |
 | 2012-12-12 | ✅ | ✅ | 53 | ✅ | Pelada na Net #47 |
 | 2012-12-04 | ✅ | ✅ | 55 | ✅ | Pelada na Net #46 |
-| 2012-11-28 | ✅ | ❌ | - | ❌ | Pelada na Net #45 |
-| 2012-11-20 | ✅ | ❌ | - | ❌ | Pelada na Net #44 |
-| 2012-10-24 | ✅ | ❌ | - | ❌ | Pelada na Net #40 |
-| 2012-10-17 | ✅ | ❌ | - | ❌ | Pelada na Net #39 |
-| 2012-10-10 | ✅ | ❌ | - | ❌ | Pelada na Net #38 |
-| 2012-10-03 | ✅ | ❌ | - | ❌ | Pelada na Net #37 |
-| 2012-09-19 | ✅ | ❌ | - | ❌ | Pelada na Net #35 |
-| 2012-09-12 | ✅ | ❌ | - | ❌ | Pelada na Net #34 |
-| 2012-09-05 | ✅ | ❌ | - | ❌ | Pelada na Net #33 |
-| 2012-08-29 | ✅ | ❌ | - | ❌ | Pelada na Net #32 |
+| 2012-11-28 | ✅ | ✅ | 70 | ✅ | Pelada na Net #45 |
+| 2012-11-20 | ✅ | ✅ | 56 | ✅ | Pelada na Net #44 |
+| 2012-10-24 | ✅ | ✅ | 54 | ✅ | Pelada na Net #40 |
+| 2012-10-17 | ✅ | ✅ | 55 | ✅ | Pelada na Net #39 |
+| 2012-10-10 | ✅ | ✅ | 37 | ✅ | Pelada na Net #38 |
+| 2012-10-03 | ✅ | ✅ | 48 | ✅ | Pelada na Net #37 |
+| 2012-09-19 | ✅ | ✅ | 47 | ✅ | Pelada na Net #35 |
+| 2012-09-12 | ✅ | ✅ | 51 | ✅ | Pelada na Net #34 |
+| 2012-09-05 | ✅ | ✅ | 60 | ✅ | Pelada na Net #33 |
+| 2012-08-29 | ✅ | ✅ | 54 | ✅ | Pelada na Net #32 |
 | 2012-08-22 | ✅ | ✅ | 45 | ✅ | Pelada na Net #31 |
 | 2012-08-15 | ✅ | ✅ | 41 | ✅ | Pelada na Net #30 |
 | 2012-08-01 | ✅ | ✅ | 41 | ✅ | Pelada na Net #28 |
@@ -730,8 +730,8 @@
 | 2012-04-25 | ✅ | ✅ | 36 | ✅ | Pelada na Net #14 |
 | 2012-04-18 | ✅ | ✅ | 46 | ✅ | Pelada na Net #13 |
 | 2012-04-11 | ✅ | ✅ | 43 | ✅ | Pelada na Net #12 |
-| 2012-03-28 | ✅ | ❌ | - | ❌ | Pelada na Net #10 |
-| 2012-03-21 | ✅ | ❌ | - | ❌ | Pelada na Net #09 |
+| 2012-03-28 | ✅ | ✅ | 45 | ✅ | Pelada na Net #10 |
+| 2012-03-21 | ✅ | ✅ | 50 | ✅ | Pelada na Net #09 |
 | 2026-02-09 | ✅ | ✅ | 392 | ✅ | 8 e a faixa - A coragem de Bad Bunny em ano de Copa nos EUA |
 | 2026-02-02 | ✅ | ✅ | 392 | ✅ | 8 e a faixa - A história foi feita no futebol feminino |
 | 2026-01-19 | ✅ | ✅ | 392 | ✅ | 8 e a faixa - Senegal vence a Copa Africana de Nações |
@@ -761,11 +761,11 @@
 | 2025-07-14 | ✅ | ✅ | 392 | ✅ | 8 e a faixa - Chelsea vence a Copa do Mundo de Clubes |
 | 2025-07-07 | ✅ | ✅ | 392 | ✅ | 8 e a faixa - As quartas de final da Copa do Mundo de Clubes |
 | 2025-06-23 | ✅ | ✅ | 392 | ✅ | 8 e a faixa - A segunda rodada da Copa do Mundo de Clubes |
-| 2012-03-14 | ✅ | ❌ | - | ❌ | Pelada na Net #08 |
-| 2012-03-07 | ✅ | ❌ | - | ❌ | Pelada na Net #07 |
-| 2012-02-29 | ✅ | ❌ | - | ❌ | Pelada na Net #06 |
-| 2012-02-22 | ✅ | ❌ | - | ❌ | Pelada na Net #05 |
-| 2012-02-15 | ✅ | ❌ | - | ❌ | Pelada na Net #04 |
-| 2012-02-08 | ✅ | ❌ | - | ❌ | Pelada na Net #03 |
-| 2012-02-01 | ✅ | ❌ | - | ❌ | Pelada na Net #02 |
-| 2012-01-27 | ✅ | ❌ | - | ❌ | Pelada na NET #01 – Piloto |
+| 2012-03-14 | ✅ | ✅ | 47 | ✅ | Pelada na Net #08 |
+| 2012-03-07 | ✅ | ✅ | 38 | ✅ | Pelada na Net #07 |
+| 2012-02-29 | ✅ | ✅ | 45 | ✅ | Pelada na Net #06 |
+| 2012-02-22 | ✅ | ✅ | 39 | ✅ | Pelada na Net #05 |
+| 2012-02-15 | ✅ | ✅ | 55 | ✅ | Pelada na Net #04 |
+| 2012-02-08 | ✅ | ✅ | 32 | ✅ | Pelada na Net #03 |
+| 2012-02-01 | ✅ | ✅ | 36 | ✅ | Pelada na Net #02 |
+| 2012-01-27 | ✅ | ✅ | 31 | ✅ | Pelada na NET #01 – Piloto |

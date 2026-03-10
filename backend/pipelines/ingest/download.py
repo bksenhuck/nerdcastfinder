@@ -22,7 +22,6 @@ Options:
     --max-workers N : Number of concurrent downloads (default: 2)
 """
 import sys
-import re
 import time
 import threading
 from pathlib import Path
@@ -30,192 +29,21 @@ from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import feedparser
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 from backend.app.core.config import settings
 from backend.app.core.logger import logger
-from backend.app.utils.program_utils import extract_program_from_title, normalize_program_name
+from backend.app.utils.program_utils import normalize_program_name
 from backend.app.utils.path_utils import get_stable_id
+from backend.app.utils.rss_utils import (
+    create_session,
+    extract_episode_info,
+    fetch_feed,
+    normalize_filename,
+)
 
 # Thread lock for database writes (SQLite doesn't like concurrent writes)
 _db_lock = threading.Lock()
-
-
-def create_session() -> requests.Session:
-    """
-    Create a requests session with retry logic
-    
-    Returns:
-        Configured requests Session
-    """
-    session = requests.Session()
-    
-    # Configure retry strategy
-    retry_strategy = Retry(
-        total=settings.DOWNLOAD_MAX_RETRIES,
-        backoff_factor=settings.DOWNLOAD_BACKOFF_FACTOR,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["GET"]
-    )
-    
-    adapter = HTTPAdapter(max_retries=retry_strategy)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
-    
-    return session
-
-
-def normalize_filename(title: str) -> str:
-    """
-    Normalize episode title to safe filename
-    
-    Args:
-        title: Episode title
-        
-    Returns:
-        Safe filename without extension
-    """
-    # Convert to lowercase
-    filename = title.lower()
-    
-    # Replace spaces with underscores
-    filename = filename.replace(" ", "_")
-    
-    # Remove invalid filesystem characters
-    filename = re.sub(r'[<>:"/\\|?*]', '', filename)
-    
-    # Remove special characters, keep only alphanumeric, underscore, hyphen
-    filename = re.sub(r'[^\w\-]', '', filename)
-    
-    # Remove multiple underscores
-    filename = re.sub(r'_+', '_', filename)
-    
-    # Trim underscores from start/end
-    filename = filename.strip('_')
-    
-    # Limit length (Windows has 255 char path limit)
-    max_length = 200
-    if len(filename) > max_length:
-        filename = filename[:max_length].rstrip('_')
-    
-    return filename
-
-
-def fetch_feed(feed_url: str) -> Optional[feedparser.FeedParserDict]:
-    """
-    Fetch and parse RSS feed
-    
-    Args:
-        feed_url: URL of the RSS feed
-        
-    Returns:
-        Parsed feed or None if error
-    """
-    try:
-        feed = feedparser.parse(feed_url)
-        
-        if feed.bozo:
-            logger.warning("⚠️  Feed com problemas de parsing")
-        
-        if not feed.entries:
-            logger.error("❌ Nenhum episódio encontrado no feed")
-            return None
-        
-        logger.success(f"Found {len(feed.entries)} episodes in feed")
-        return feed
-        
-    except Exception as e:
-        logger.error(f"Failed to fetch feed: {e}")
-        return None
-
-
-def extract_episode_info(entry: feedparser.FeedParserDict) -> Optional[Dict]:
-    """
-    Extract episode information from feed entry
-    
-    Args:
-        entry: Feed entry
-        
-    Returns:
-        Dict with title, audio_url, duration, published_date, enclosure_length
-    """
-    try:
-        title = entry.get('title', '').strip()
-        if not title:
-            return None
-        
-        # Get audio URL from enclosure
-        enclosures = entry.get('enclosures', [])
-        if not enclosures:
-            return None
-        
-        # Find audio enclosure
-        audio_url = None
-        enclosure_length = None  # Size in bytes
-        for enclosure in enclosures:
-            if 'audio' in enclosure.get('type', ''):
-                audio_url = enclosure.get('href', '')
-                enclosure_length = enclosure.get('length', '')
-                break
-        
-        if not audio_url:
-            # Fallback: use first enclosure if no audio type found
-            audio_url = enclosures[0].get('href', '')
-            enclosure_length = enclosures[0].get('length', '')
-        
-        if not audio_url:
-            return None
-        
-        # Extract duration (often in itunes:duration tag)
-        duration_seconds = None
-        if 'itunes_duration' in entry:
-            duration_str = entry.get('itunes_duration', '')
-            try:
-                # Handle format: "HH:MM:SS" or just seconds
-                if ':' in str(duration_str):
-                    parts = str(duration_str).split(':')
-                    duration_seconds = int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
-                else:
-                    duration_seconds = int(duration_str)
-            except (ValueError, IndexError):
-                pass
-        
-        # Extract published date
-        published_date = None
-        if 'published_parsed' in entry and entry['published_parsed']:
-            try:
-                published_date = datetime(*entry['published_parsed'][:6])
-            except (TypeError, ValueError):
-                pass
-        
-        # Extract summary/description
-        summary = entry.get('summary', '').strip()
-        
-        # Extract image URL
-        image_url = None
-        if 'image' in entry and isinstance(entry['image'], dict):
-            image_url = entry['image'].get('href', '')
-        
-        # Extract program name from title
-        program_name = extract_program_from_title(title)
-        
-        return {
-            'title': title,
-            'audio_url': audio_url,
-            'duration_seconds': duration_seconds,
-            'published_date': published_date,
-            'enclosure_length': int(enclosure_length) if enclosure_length else None,
-            'summary': summary,
-            'image_url': image_url,
-            'program_name': program_name
-        }
-        
-    except Exception as e:
-        logger.error(f"Error extracting episode info: {e}")
-        return None
 
 
 def save_episode_metadata(

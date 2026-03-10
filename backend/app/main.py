@@ -15,6 +15,7 @@ import os
 
 from backend.app.core.config import settings
 from backend.app.api import search, episodes
+from backend.app.utils.gcs_utils import parse_gcs_uri
 
 from backend.app.core.logger import logger
 
@@ -47,8 +48,13 @@ async def root():
 
 @app.get("/ui")
 async def ui_redirect():
-    """Redirect /ui to /ui/ for Dash compatibility."""
-    return RedirectResponse(url="/ui/")
+    """Redirect /ui to /ui/ if Dash is mounted, else inform user."""
+    if UI_MOUNTED:
+        return RedirectResponse(url="/ui/")
+    return JSONResponse(
+        status_code=503,
+        content={"message": "UI not available — Dash is not installed or failed to mount.", "docs": "/docs"},
+    )
 
 # Try to import and mount the Dash frontend if Dash is available. On
 # environments where the frontend dependencies are not installed (e.g.
@@ -175,8 +181,7 @@ async def _download_db_from_gcs():
 
         def _do_download():
             client = _storage.Client()
-            _, path = faiss_db_gcs_uri.split("gs://", 1)
-            bucket_name, blob_name = path.split("/", 1)
+            bucket_name, blob_name = parse_gcs_uri(faiss_db_gcs_uri)
             client.bucket(bucket_name).blob(blob_name).download_to_filename(str(dest_db))
 
         loop = asyncio.get_running_loop()
@@ -248,9 +253,7 @@ async def load_index_background():
         if faiss_gcs_uri and not Path(idx_path).exists():
             logger.info(f"[BOOT] FAISS index missing locally — attempting GCS download: {faiss_gcs_uri}")
             try:
-                # Parse gs://bucket/path URI
-                _, path = faiss_gcs_uri.split("gs://", 1)
-                bucket_name, blob_name = path.split("/", 1)
+                bucket_name, blob_name = parse_gcs_uri(faiss_gcs_uri)
                 bucket = client.bucket(bucket_name)
                 blob = bucket.blob(blob_name)
                 dest = target_dir / Path(str(idx_path)).name
@@ -264,8 +267,7 @@ async def load_index_background():
         if mapping_gcs_uri and not mapping_path.exists():
             logger.info(f"[BOOT] embedding_id_mapping missing locally — attempting GCS download: {mapping_gcs_uri}")
             try:
-                _, path = mapping_gcs_uri.split("gs://", 1)
-                bucket_name, blob_name = path.split("/", 1)
+                bucket_name, blob_name = parse_gcs_uri(mapping_gcs_uri)
                 bucket = client.bucket(bucket_name)
                 blob = bucket.blob(blob_name)
                 dest_map = mapping_path
@@ -331,7 +333,11 @@ async def health():
 
 @app.get("/{path:path}")
 async def catch_all(path: str):
-    """Redirect unknown paths to the Dash UI so direct navigation works (e.g. /search -> /ui/search)."""
+    """Redirect unknown paths to the Dash UI so direct navigation works (e.g. /search -> /ui/search).
+    Paths already under /ui are not redirected to avoid infinite redirect loops."""
+    if path.startswith("ui"):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Not found")
     return RedirectResponse(url=f"/ui/{path}")
 
 

@@ -29,19 +29,7 @@ from pathlib import Path
 
 from backend.app.core.config import settings
 from backend.app.core.logger import logger
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _parse_gcs_uri(uri: str):
-    """Return (bucket_name, blob_name) from a gs://bucket/path URI."""
-    if not uri.startswith("gs://"):
-        raise ValueError(f"Invalid GCS URI: {uri}")
-    _, rest = uri.split("gs://", 1)
-    bucket_name, blob_name = rest.split("/", 1)
-    return bucket_name, blob_name
+from backend.app.utils.gcs_utils import parse_gcs_uri
 
 
 def checkpoint_wal(db_path: Path):
@@ -77,7 +65,7 @@ def upload_file(local_path: Path, gcs_uri: str):
             "Run: pip install google-cloud-storage"
         )
 
-    bucket_name, blob_name = _parse_gcs_uri(gcs_uri)
+    bucket_name, blob_name = parse_gcs_uri(gcs_uri)
     size_mb = local_path.stat().st_size / (1024 * 1024)
 
     logger.info(f"[GCS] Uploading {local_path.name} ({size_mb:.1f} MB) -> {gcs_uri}")

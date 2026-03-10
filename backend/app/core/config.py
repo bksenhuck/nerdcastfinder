@@ -23,11 +23,18 @@ class Settings:
     # - "all-MiniLM-L6-v2": Small, fast English-only (384 dims)
     # - "all-MiniLM-L12-v2": Medium, balanced English-only (384 dims)
     # - "all-mpnet-base-v2": Large, English-only (768 dims) — NOT suitable for PT-BR
-    # - "paraphrase-multilingual-mpnet-base-v2": Large, multilingual 50+ langs (768 dims) ✓
-    EMBEDDING_MODEL: str = "paraphrase-multilingual-mpnet-base-v2"
+    # - "paraphrase-multilingual-mpnet-base-v2": Symmetric, multilingual (768 dims) — good but not retrieval-optimized
+    # - "intfloat/multilingual-e5-base": Asymmetric, multilingual (768 dims) ✓ — trained for query↔passage retrieval
+    EMBEDDING_MODEL: str = "intfloat/multilingual-e5-base"
+
+    # E5-style asymmetric prefixes — required for query↔passage retrieval
+    # Set both to "" if using a symmetric model (e.g. paraphrase-multilingual-mpnet-base-v2)
+    EMBEDDING_QUERY_PREFIX: str = "query: "
+    EMBEDDING_PASSAGE_PREFIX: str = "passage: "
 
     # ===== Transcription Settings =====
-    CHUNK_SIZE: int = 750  # Target characters per chunk
+    CHUNK_SIZE: int = 750    # Target characters per chunk
+    CHUNK_OVERLAP: int = 150  # Overlap between adjacent chunks (improves boundary recall)
     TRANSCRIPTION_LANGUAGE: str = "pt"  # Portuguese for Nerdcast
     WHISPER_VERBOSE: bool = False
 

@@ -79,7 +79,7 @@ Segmentos de texto gerados pela transcrição (Whisper) de cada episódio. É a 
 
 **Estado atual:**
 - Vetores indexados: ~95.473
-- Dimensão dos vetores: 768 (modelo `paraphrase-multilingual-mpnet-base-v2`)
+- Dimensão dos vetores: 768 (modelo `intfloat/multilingual-e5-base`)
 - Tamanho estimado do índice: ~280 MB em memória, muito menor em disco (FlatL2)
 
 ---

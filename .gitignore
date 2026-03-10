@@ -56,6 +56,12 @@ backend/data/faiss_index/embeddings_ids.npy
 .env
 .env.local
 
+# Credentials & keys (never commit)
+*.pem
+*.key
+service-account*.json
+*-service-account.json
+
 # Models cache
 models/
 .cache/

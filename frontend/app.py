@@ -687,7 +687,7 @@ def about_layout():
                             ]),
                             html.Li([
                                 html.Strong("Embeddings (Sentence-Transformers):"), 
-                                " Modelo all-mpnet-base-v2 (768 dimensões) converte texto em vetores ",
+                                " Modelo multilingual-e5-base (768 dimensões) converte texto em vetores ",
                                 "numéricos que capturam significado semântico."
                             ]),
                             html.Li([
@@ -905,7 +905,7 @@ def welcome_layout():
                             html.I(className="bi bi-grid-3x3 mb-2", style={"fontSize": "1.6rem", "display": "block"}),
                             html.Strong("2. Embeddings", className="d-block mb-1"),
                             html.Small(
-                                "Trechos convertidos em vetores semânticos com all-mpnet-base-v2",
+                                "Trechos convertidos em vetores semânticos com multilingual-e5-base",
                                 style={"opacity": "0.7"}
                             )
                         ], className="text-center p-3")

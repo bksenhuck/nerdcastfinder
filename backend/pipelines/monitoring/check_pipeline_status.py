@@ -7,25 +7,15 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
-
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from backend.app.core.config import settings
 from backend.app.core.logger import logger
 from backend.app.db.session import get_db_session
 from backend.app.db.models import PodcastEpisode, PodcastSegment
+from backend.app.utils.faiss_utils import load_indexed_embedding_ids
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
-
-
-def load_faiss_ids() -> set:
-    mapping_path = settings.get_faiss_dir() / "embedding_id_mapping.npy"
-    if not mapping_path.exists():
-        logger.error(f"Mapping nao encontrado: {mapping_path}")
-        return set()
-    mapping = np.load(str(mapping_path))
-    return set(mapping.tolist())
 
 
 def icon(condition: bool) -> str:
@@ -56,7 +46,7 @@ def get_sort_key(ep):
 def run(output_dir: Path):
     logger.header("GERANDO RELATORIOS DE STATUS DO PIPELINE (INDIVIDUAIS)")
 
-    faiss_ids = load_faiss_ids()
+    faiss_ids = load_indexed_embedding_ids()
     logger.info(f"IDs carregados do FAISS: {len(faiss_ids):,}")
 
     db = get_db_session()

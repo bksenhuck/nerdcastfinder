@@ -4,39 +4,48 @@ Text processing utilities
 from typing import List
 
 
-def split_text_into_chunks(text: str, chunk_size: int = 750) -> List[str]:
+def split_text_into_chunks(text: str, chunk_size: int = 750, overlap: int = 150) -> List[str]:
     """
-    Split text into chunks of approximately chunk_size characters.
-    Tries to split on sentence boundaries when possible.
-    
+    Split text into chunks of approximately chunk_size characters with overlap.
+
+    Overlap ensures that content near chunk boundaries appears in two adjacent
+    chunks, so semantic search finds relevant passages regardless of where the
+    split falls.
+
     Args:
         text: Full text to split
         chunk_size: Target size for each chunk in characters
-        
+        overlap: Characters from the end of the previous chunk to carry into
+                 the next one (0 = no overlap)
+
     Returns:
         List of text chunks
     """
     if len(text) <= chunk_size:
         return [text]
-    
-    chunks = []
-    
+
     # Split on sentence boundaries
     sentences = text.replace("! ", "!|").replace("? ", "?|").replace(". ", ".|").split("|")
-    
+
+    chunks = []
     current_chunk = ""
+
     for sentence in sentences:
         if len(current_chunk) + len(sentence) <= chunk_size:
             current_chunk += sentence
         else:
             if current_chunk:
                 chunks.append(current_chunk.strip())
-            current_chunk = sentence
-    
-    # Add the last chunk
+            # Start next chunk with tail of previous chunk (overlap window)
+            if overlap > 0 and current_chunk:
+                tail = current_chunk[-overlap:]
+                current_chunk = tail + sentence
+            else:
+                current_chunk = sentence
+
     if current_chunk:
         chunks.append(current_chunk.strip())
-    
+
     return chunks
 
 

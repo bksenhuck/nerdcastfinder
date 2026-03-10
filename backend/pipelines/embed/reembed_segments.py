@@ -71,8 +71,21 @@ def reembed_segments(podcast_name: str = None, dry_run: bool = False) -> bool:
 
         batch_size = settings.EMBEDDING_BATCH_SIZE
         total = len(segments)
-        updated = 0
         errors = 0
+
+        # Load existing .npy as base so we preserve embeddings from other podcasts
+        # when running a partial reembed (--podcast filter).
+        faiss_dir = settings.get_faiss_dir()
+        matrix_path = faiss_dir / "embeddings_matrix.npy"
+        ids_path = faiss_dir / "embeddings_ids.npy"
+
+        merged: dict = {}  # embedding_id -> vector
+        if matrix_path.exists() and ids_path.exists():
+            existing_ids = np.load(str(ids_path))
+            existing_matrix = np.load(str(matrix_path))
+            for i, eid in enumerate(existing_ids.tolist()):
+                merged[eid] = existing_matrix[i]
+            logger.info(f"  Loaded {len(merged)} existing vectors from .npy")
 
         for batch_start in range(0, total, batch_size):
             batch = segments[batch_start: batch_start + batch_size]
@@ -82,26 +95,37 @@ def reembed_segments(podcast_name: str = None, dry_run: bool = False) -> bool:
                 embeddings = embedding_service.generate_embeddings(
                     texts,
                     batch_size=batch_size,
-                    show_progress=False
+                    show_progress=False,
+                    is_query=False,
                 )
 
                 for seg, emb in zip(batch, embeddings):
-                    seg.set_embedding(emb)
-                    updated += 1
-
-                db.commit()
+                    merged[seg.embedding_id] = emb.astype("float32")
 
                 progress = min(batch_start + batch_size, total)
                 logger.info(f"  Progress: {progress}/{total} segments")
 
             except Exception as e:
-                db.rollback()
                 errors += 1
                 logger.error(f"  Batch error at {batch_start}: {e}")
                 logger.warning("  Skipping batch and continuing...")
                 continue
 
-        logger.success(f"Re-embedded {updated}/{total} segments ({errors} batch errors)")
+        updated = total - (errors * batch_size)
+
+        # Write merged vectors to .npy
+        if not merged:
+            logger.error("No embeddings to save")
+            return False
+
+        ids_arr = np.array(list(merged.keys()), dtype="int32")
+        matrix_arr = np.array(list(merged.values()), dtype="float32")
+        faiss_dir.mkdir(parents=True, exist_ok=True)
+        np.save(str(ids_path), ids_arr)
+        np.save(str(matrix_path), matrix_arr)
+        logger.success(f"Saved {len(ids_arr)} vectors to .npy")
+
+        logger.success(f"Re-embedded ~{updated}/{total} segments ({errors} batch errors)")
 
         # Rebuild FAISS index
         logger.section("[3/3] Rebuilding FAISS index...")

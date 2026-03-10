@@ -46,7 +46,7 @@ ENV HF_HOME=/opt/huggingface
 # --- Pre-download sentence-transformers model into the image ---
 # Model name is taken from build ARG (defaults to the value in config.py).
 # Override at build time: gcloud builds submit --substitutions=_EMBEDDING_MODEL=all-MiniLM-L6-v2
-ARG EMBEDDING_MODEL=paraphrase-multilingual-mpnet-base-v2
+ARG EMBEDDING_MODEL=intfloat/multilingual-e5-base
 ENV EMBEDDING_MODEL=${EMBEDDING_MODEL}
 RUN python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['EMBEDDING_MODEL']); print('Model cached.')"
 

@@ -20,7 +20,6 @@ class EpisodeMetadata(BaseModel):
     title_original: str  # Original title from RSS
     published_date: Optional[datetime] = None
     duration_seconds: Optional[int] = None
-    file_size_mb: Optional[float] = None
     status: str  # downloaded, transcribed, indexed
     
     class Config:

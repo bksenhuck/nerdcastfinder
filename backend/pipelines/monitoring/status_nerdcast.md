@@ -1,6 +1,6 @@
 # Relatorio de Status: nerdcast
 
-> Gerado em: 2026-03-07 18:10
+> Gerado em: 2026-03-09 12:22
 
 | Data | Meta | Transcricao | Segs | FAISS | Episodio |
 |:---|:---:|:---:|---:|:---:|:---|
@@ -664,59 +664,59 @@
 | 2013-06-28 | ✅ | ❌ | - | ❌ | NerdCast 369 - Profissão: Médico |
 | 2013-06-21 | ✅ | ❌ | - | ❌ | NerdCast 368 - A previsível Guerra dos Tronos… Dracarys! |
 | 2013-06-14 | ✅ | ❌ | - | ❌ | NerdCast 367 - Nerdtour NZ – Terra Média |
-| 2013-06-07 | ✅ | ❌ | - | ❌ | NerdCast 366 - Especial Dia dos Namorados 2013 |
-| 2013-05-31 | ✅ | ❌ | - | ❌ | NerdCast 365 - Quantificando a Física Quântica |
-| 2013-05-24 | ✅ | ❌ | - | ❌ | NerdCast 364 - Walking Dead: HQ vs TV |
-| 2013-05-17 | ✅ | ❌ | - | ❌ | NerdCast 363 - The Deep, the bad and the dirty web |
-| 2013-05-10 | ✅ | ❌ | - | ❌ | NerdCast 362 - As Guerras dos Anjos da Morte |
-| 2013-05-03 | ✅ | ❌ | - | ❌ | NerdCast 361 - A batalha dos crossovers 4 |
-| 2013-04-26 | ✅ | ❌ | - | ❌ | NerdCast 360 - A utopia dos futuros distópicos |
-| 2013-04-19 | ✅ | ❌ | - | ❌ | NerdCast 359 - Aquele Tipinho de Pessoa |
-| 2013-04-12 | ✅ | ❌ | - | ❌ | NerdCast 358 - O Poder da Retórica |
-| 2013-04-05 | ✅ | ❌ | - | ❌ | NerdCast 357 - Mercenários e Tropas de Elite |
-| 2013-03-29 | ✅ | ❌ | - | ❌ | NerdCast 356 - Consultas, exames e check ups |
-| 2013-03-22 | ✅ | ❌ | - | ❌ | NerdCast 355 - Eu só quero chocolate |
-| 2013-03-15 | ✅ | ❌ | - | ❌ | NerdCast 354 - O turno dos RTS games |
-| 2013-03-08 | ✅ | ❌ | - | ❌ | NerdCast 353 - Coreia Style |
-| 2013-03-01 | ✅ | ❌ | - | ❌ | NerdCast 352 - A Ciência dos Super-Herois |
-| 2013-02-22 | ✅ | ❌ | - | ❌ | NerdCast 351 - Asteroides, meteoros e aerolitos |
-| 2013-02-15 | ✅ | ❌ | - | ❌ | NerdCast 350 - O Melhor de 350 Nerdcasts! |
-| 2013-02-08 | ✅ | ❌ | - | ❌ | NerdCast 349 - Ordens medievais |
-| 2013-02-01 | ✅ | ❌ | - | ❌ | NerdCast 348 - Profissão: Designer Gráfico |
-| 2013-01-25 | ✅ | ❌ | - | ❌ | NerdCast 347 - O que não mata, engorda |
-| 2013-01-18 | ✅ | ❌ | - | ❌ | NerdCast 346 - Hackers, Crackers e Dieckmans |
-| 2013-01-11 | ✅ | ❌ | - | ❌ | NerdCast 345 - No tempo do fliperama |
-| 2013-01-04 | ✅ | ❌ | - | ❌ | NerdCast 344 - O mundo de Walt Disney |
-| 2012-12-28 | ✅ | ❌ | - | ❌ | NerdCast 343 - O Hobbit: Uma jornada esperada |
-| 2012-12-21 | ✅ | ❌ | - | ❌ | NerdCast 342 - Áudio Drama – T-Zombii: A Gravação dos Mortos |
+| 2013-06-07 | ✅ | ✅ | 137 | ✅ | NerdCast 366 - Especial Dia dos Namorados 2013 |
+| 2013-05-31 | ✅ | ✅ | 102 | ✅ | NerdCast 365 - Quantificando a Física Quântica |
+| 2013-05-24 | ✅ | ✅ | 128 | ✅ | NerdCast 364 - Walking Dead: HQ vs TV |
+| 2013-05-17 | ✅ | ✅ | 105 | ✅ | NerdCast 363 - The Deep, the bad and the dirty web |
+| 2013-05-10 | ✅ | ✅ | 151 | ✅ | NerdCast 362 - As Guerras dos Anjos da Morte |
+| 2013-05-03 | ✅ | ✅ | 94 | ✅ | NerdCast 361 - A batalha dos crossovers 4 |
+| 2013-04-26 | ✅ | ✅ | 112 | ✅ | NerdCast 360 - A utopia dos futuros distópicos |
+| 2013-04-19 | ✅ | ✅ | 109 | ✅ | NerdCast 359 - Aquele Tipinho de Pessoa |
+| 2013-04-12 | ✅ | ✅ | 126 | ✅ | NerdCast 358 - O Poder da Retórica |
+| 2013-04-05 | ✅ | ✅ | 122 | ✅ | NerdCast 357 - Mercenários e Tropas de Elite |
+| 2013-03-29 | ✅ | ✅ | 119 | ✅ | NerdCast 356 - Consultas, exames e check ups |
+| 2013-03-22 | ✅ | ✅ | 113 | ✅ | NerdCast 355 - Eu só quero chocolate |
+| 2013-03-15 | ✅ | ✅ | 132 | ✅ | NerdCast 354 - O turno dos RTS games |
+| 2013-03-08 | ✅ | ✅ | 129 | ✅ | NerdCast 353 - Coreia Style |
+| 2013-03-01 | ✅ | ✅ | 144 | ✅ | NerdCast 352 - A Ciência dos Super-Herois |
+| 2013-02-22 | ✅ | ✅ | 106 | ✅ | NerdCast 351 - Asteroides, meteoros e aerolitos |
+| 2013-02-15 | ✅ | ✅ | 119 | ✅ | NerdCast 350 - O Melhor de 350 Nerdcasts! |
+| 2013-02-08 | ✅ | ✅ | 104 | ✅ | NerdCast 349 - Ordens medievais |
+| 2013-02-01 | ✅ | ✅ | 115 | ✅ | NerdCast 348 - Profissão: Designer Gráfico |
+| 2013-01-25 | ✅ | ✅ | 117 | ✅ | NerdCast 347 - O que não mata, engorda |
+| 2013-01-18 | ✅ | ✅ | 144 | ✅ | NerdCast 346 - Hackers, Crackers e Dieckmans |
+| 2013-01-11 | ✅ | ✅ | 124 | ✅ | NerdCast 345 - No tempo do fliperama |
+| 2013-01-04 | ✅ | ✅ | 142 | ✅ | NerdCast 344 - O mundo de Walt Disney |
+| 2012-12-28 | ✅ | ✅ | 152 | ✅ | NerdCast 343 - O Hobbit: Uma jornada esperada |
+| 2012-12-21 | ✅ | ✅ | 68 | ✅ | NerdCast 342 - Áudio Drama – T-Zombii: A Gravação dos Mortos |
 | 2012-12-14 | ✅ | ❌ | - | ❌ | NerdCast RPG 341 - RPG Ghanor 3: O Corvo, a Periguete e o Bucentauro |
-| 2012-12-07 | ✅ | ❌ | - | ❌ | NerdCast 340 - Nerdcast sobre aquilo! |
-| 2012-11-30 | ✅ | ❌ | - | ❌ | NerdCast 339 - Distúrbios mentais |
-| 2012-11-23 | ✅ | ❌ | - | ❌ | NerdCast 338 - O melhor e o pior dos filmes de games |
-| 2012-11-16 | ✅ | ❌ | - | ❌ | NerdCast 337 - Manual do protocolo social |
-| 2012-11-09 | ✅ | ❌ | - | ❌ | NerdCast 336 - A revolução americana |
-| 2012-11-02 | ✅ | ❌ | - | ❌ | NerdCast 335 - Hip hop: A revolução não televisionada |
-| 2012-10-26 | ✅ | ❌ | - | ❌ | NerdCast 334 - Remakes relembrados |
-| 2012-10-19 | ✅ | ❌ | - | ❌ | NerdCast 333 - Máquinas de guerra – Modernidade |
-| 2012-10-12 | ✅ | ❌ | - | ❌ | NerdCast 332 - Profissão: Professor |
-| 2012-10-05 | ✅ | ❌ | - | ❌ | NerdCast 331 - Conjecturas sobre viagens no tempo |
-| 2012-09-28 | ✅ | ❌ | - | ❌ | NerdCast 330 - Choque de gerações e outras reflexões |
-| 2012-09-21 | ✅ | ❌ | - | ❌ | NerdCast 329 - Bikini Girls with Machine Guns 2 |
-| 2012-09-15 | ✅ | ❌ | - | ❌ | NerdCast 328 - Pra sempre desgraçado da minha cabeça! |
-| 2012-09-07 | ✅ | ❌ | - | ❌ | NerdCast 327 - Making of Independência ou Mortos |
-| 2012-08-31 | ✅ | ❌ | - | ❌ | NerdCast 326 - Breve história do petróleo |
-| 2012-08-24 | ✅ | ❌ | - | ❌ | NerdCast 325 - A Era dos Adventure Games |
-| 2012-08-17 | ✅ | ❌ | - | ❌ | NerdCast 324 - Alô criançada, o Bóson chegou! |
-| 2012-08-10 | ✅ | ❌ | - | ❌ | NerdCast 323 - Marte, Curiosity e a Fronteira Final |
-| 2012-08-03 | ✅ | ❌ | - | ❌ | NerdCast 322 - The Bat, the Cat and the Bane |
-| 2012-07-27 | ✅ | ❌ | - | ❌ | NerdCast 321 - O universo inominável de H.P. Lovecraft |
+| 2012-12-07 | ✅ | ✅ | 109 | ✅ | NerdCast 340 - Nerdcast sobre aquilo! |
+| 2012-11-30 | ✅ | ✅ | 134 | ✅ | NerdCast 339 - Distúrbios mentais |
+| 2012-11-23 | ✅ | ✅ | 135 | ✅ | NerdCast 338 - O melhor e o pior dos filmes de games |
+| 2012-11-16 | ✅ | ✅ | 115 | ✅ | NerdCast 337 - Manual do protocolo social |
+| 2012-11-09 | ✅ | ✅ | 126 | ✅ | NerdCast 336 - A revolução americana |
+| 2012-11-02 | ✅ | ✅ | 144 | ✅ | NerdCast 335 - Hip hop: A revolução não televisionada |
+| 2012-10-26 | ✅ | ✅ | 118 | ✅ | NerdCast 334 - Remakes relembrados |
+| 2012-10-19 | ✅ | ✅ | 133 | ✅ | NerdCast 333 - Máquinas de guerra – Modernidade |
+| 2012-10-12 | ✅ | ✅ | 115 | ✅ | NerdCast 332 - Profissão: Professor |
+| 2012-10-05 | ✅ | ✅ | 109 | ✅ | NerdCast 331 - Conjecturas sobre viagens no tempo |
+| 2012-09-28 | ✅ | ✅ | 107 | ✅ | NerdCast 330 - Choque de gerações e outras reflexões |
+| 2012-09-21 | ✅ | ✅ | 92 | ✅ | NerdCast 329 - Bikini Girls with Machine Guns 2 |
+| 2012-09-15 | ✅ | ✅ | 122 | ✅ | NerdCast 328 - Pra sempre desgraçado da minha cabeça! |
+| 2012-09-07 | ✅ | ✅ | 120 | ✅ | NerdCast 327 - Making of Independência ou Mortos |
+| 2012-08-31 | ✅ | ✅ | 103 | ✅ | NerdCast 326 - Breve história do petróleo |
+| 2012-08-24 | ✅ | ✅ | 115 | ✅ | NerdCast 325 - A Era dos Adventure Games |
+| 2012-08-17 | ✅ | ✅ | 118 | ✅ | NerdCast 324 - Alô criançada, o Bóson chegou! |
+| 2012-08-10 | ✅ | ✅ | 114 | ✅ | NerdCast 323 - Marte, Curiosity e a Fronteira Final |
+| 2012-08-03 | ✅ | ✅ | 133 | ✅ | NerdCast 322 - The Bat, the Cat and the Bane |
+| 2012-07-27 | ✅ | ✅ | 127 | ✅ | NerdCast 321 - O universo inominável de H.P. Lovecraft |
 | 2012-07-20 | ✅ | ❌ | - | ❌ | NerdCast 320 - ~A cultura da internet~ |
-| 2012-07-13 | ✅ | ❌ | - | ❌ | NerdCast 319 - Causos e areias do antigo Egito |
-| 2012-07-06 | ✅ | ❌ | - | ❌ | NerdCast 318 - Eu Só Trabalho Aqui 2 |
-| 2012-06-29 | ✅ | ❌ | - | ❌ | NerdCast 317 - Isso é uma derrota! |
-| 2012-06-22 | ✅ | ❌ | - | ❌ | NerdCast 316 - A ciência daquilo |
-| 2012-06-15 | ✅ | ❌ | - | ❌ | NerdCast 315 - Pumping Schwarzenegger |
-| 2012-06-08 | ✅ | ❌ | - | ❌ | NerdCast 314 - Especial Dia dos Namorados 2012 |
+| 2012-07-13 | ✅ | ✅ | 116 | ✅ | NerdCast 319 - Causos e areias do antigo Egito |
+| 2012-07-06 | ✅ | ✅ | 95 | ✅ | NerdCast 318 - Eu Só Trabalho Aqui 2 |
+| 2012-06-29 | ✅ | ✅ | 69 | ✅ | NerdCast 317 - Isso é uma derrota! |
+| 2012-06-22 | ✅ | ✅ | 113 | ✅ | NerdCast 316 - A ciência daquilo |
+| 2012-06-15 | ✅ | ✅ | 131 | ✅ | NerdCast 315 - Pumping Schwarzenegger |
+| 2012-06-08 | ✅ | ✅ | 54 | ✅ | NerdCast 314 - Especial Dia dos Namorados 2012 |
 | 2012-06-01 | ✅ | ✅ | 143 | ✅ | NerdCast 313 - HQ: Os Velhos Novos 52 |
 | 2012-05-25 | ✅ | ✅ | 113 | ✅ | NerdCast 312 - Nerdcast do baralho! |
 | 2012-05-18 | ✅ | ✅ | 83 | ✅ | NerdCast 311 - Decifrando Donnie Darko. Ou não. |
@@ -1320,37 +1320,37 @@
 | 2019-02-01 | ✅ | ✅ | 305 | ✅ | NerdTech 36 - Tecnologias das Guerras |
 | 2017-12-29 | ✅ | ✅ | 305 | ✅ | Empreendedor 36 - O que esperar de 2018? |
 | 2006-10-27 | ✅ | ✅ | 305 | ✅ | NerdCast 36 - Pérolas do RPG 2 |
-| 2022-03-21 | ✅ | ✅ | 290 | ✅ | Lá do Bunker 35 - Tenho rinite, não quero chorar |
-| 2021-05-14 | ✅ | ✅ | 290 | ✅ | NerdCash 35 - Apocalipse econômico |
-| 2021-01-22 | ✅ | ✅ | 290 | ✅ | Speak English 35 - New Year’s Resolutions |
-| 2019-01-04 | ✅ | ✅ | 290 | ✅ | NerdTech 35 - Robôs da Ficção |
-| 2017-11-24 | ✅ | ✅ | 290 | ✅ | Empreendedor 35 - Seu dinheiro trabalhando. Ou não! |
-| 2006-10-20 | ✅ | ✅ | 290 | ✅ | NerdCast 35 - Star Wars: Mitos, Câmeras, Revolução! |
+| 2022-03-21 | ✅ | ✅ | 383 | ✅ | Lá do Bunker 35 - Tenho rinite, não quero chorar |
+| 2021-05-14 | ✅ | ✅ | 383 | ✅ | NerdCash 35 - Apocalipse econômico |
+| 2021-01-22 | ✅ | ✅ | 383 | ✅ | Speak English 35 - New Year’s Resolutions |
+| 2019-01-04 | ✅ | ✅ | 383 | ✅ | NerdTech 35 - Robôs da Ficção |
+| 2017-11-24 | ✅ | ✅ | 383 | ✅ | Empreendedor 35 - Seu dinheiro trabalhando. Ou não! |
+| 2006-10-20 | ✅ | ✅ | 383 | ✅ | NerdCast 35 - Star Wars: Mitos, Câmeras, Revolução! |
 | 2022-03-14 | ✅ | ✅ | 266 | ✅ | Lá do Bunker 34 - Muita coisa ao mesmo tempo |
 | 2021-04-09 | ✅ | ✅ | 266 | ✅ | NerdCash 34 - As techs e a bolsa em 2021 |
 | 2020-12-18 | ✅ | ✅ | 266 | ✅ | Speak English 34 - A arte do regifting |
 | 2018-12-07 | ✅ | ✅ | 266 | ✅ | NerdTech 34 - Multiplayer: um ping de amor! |
 | 2017-10-27 | ✅ | ✅ | 266 | ✅ | Empreendedor 34 - Reconfigurando o seu negócio |
-| 2022-03-07 | ✅ | ✅ | 328 | ✅ | Lá do Bunker 33 - É proibido, mas se quiser pode |
-| 2021-03-12 | ✅ | ✅ | 328 | ✅ | NerdCash 33 - Bitcoin é moeda, colecionável ou investimento? |
-| 2020-11-20 | ✅ | ✅ | 328 | ✅ | Speak English 33 - Nobody diets on Thanksgiving |
-| 2018-11-02 | ✅ | ✅ | 328 | ✅ | NerdTech 33 - O emprego dos sonhos |
-| 2017-09-29 | ✅ | ✅ | 328 | ✅ | Empreendedor 33 - Ray Kroc: Fome de expansão |
-| 2006-10-06 | ✅ | ✅ | 328 | ✅ | NerdCast 33 - TV inteligente é interessante? |
-| 2024-07-12 | ✅ | ✅ | 359 | ✅ | Papo de Parceiro 32 - Cloud de Parceiro |
-| 2022-02-28 | ✅ | ✅ | 359 | ✅ | Lá do Bunker 32 - Ryu, futuro ex-BBB? |
-| 2021-02-12 | ✅ | ✅ | 359 | ✅ | NerdCash 32 - GameStop: Ataque aos Titãs |
-| 2020-10-16 | ✅ | ✅ | 359 | ✅ | Speak English 32  - Programando em Inglês |
-| 2018-10-05 | ✅ | ✅ | 359 | ✅ | NerdTech 32 - Era uma vez na internet |
-| 2017-08-25 | ✅ | ✅ | 359 | ✅ | Empreendedor 32 - Shiba in box |
-| 2006-09-29 | ✅ | ✅ | 359 | ✅ | NerdCast 32 - Jogos de Tabuleiro: Coronel Mostarda na Oceania com o Cuscuz |
-| 2024-05-24 | ✅ | ✅ | 257 | ✅ | Papo de Parceiro 31 - Todas as vantagens do Magalu Pay |
-| 2022-02-21 | ✅ | ✅ | 257 | ✅ | Lá do Bunker 31 - Só quem viveu sabe |
-| 2021-01-15 | ✅ | ✅ | 257 | ✅ | NerdCash 31 - O que esperar de 2021? |
-| 2020-09-18 | ✅ | ✅ | 257 | ✅ | Speak English 31 - Inglês Abrasileirado |
-| 2018-09-07 | ✅ | ✅ | 257 | ✅ | NerdTech 31 - Desenvolvendo Apps |
-| 2017-07-28 | ✅ | ✅ | 257 | ✅ | Empreendedor 31 - Branding e construção de marca |
-| 2006-09-22 | ✅ | ✅ | 257 | ✅ | NerdCast 31 - DO IT NOW, DAMMIT! |
+| 2022-03-07 | ✅ | ✅ | 411 | ✅ | Lá do Bunker 33 - É proibido, mas se quiser pode |
+| 2021-03-12 | ✅ | ✅ | 411 | ✅ | NerdCash 33 - Bitcoin é moeda, colecionável ou investimento? |
+| 2020-11-20 | ✅ | ✅ | 411 | ✅ | Speak English 33 - Nobody diets on Thanksgiving |
+| 2018-11-02 | ✅ | ✅ | 411 | ✅ | NerdTech 33 - O emprego dos sonhos |
+| 2017-09-29 | ✅ | ✅ | 411 | ✅ | Empreendedor 33 - Ray Kroc: Fome de expansão |
+| 2006-10-06 | ✅ | ✅ | 411 | ✅ | NerdCast 33 - TV inteligente é interessante? |
+| 2024-07-12 | ✅ | ✅ | 426 | ✅ | Papo de Parceiro 32 - Cloud de Parceiro |
+| 2022-02-28 | ✅ | ✅ | 426 | ✅ | Lá do Bunker 32 - Ryu, futuro ex-BBB? |
+| 2021-02-12 | ✅ | ✅ | 426 | ✅ | NerdCash 32 - GameStop: Ataque aos Titãs |
+| 2020-10-16 | ✅ | ✅ | 426 | ✅ | Speak English 32  - Programando em Inglês |
+| 2018-10-05 | ✅ | ✅ | 426 | ✅ | NerdTech 32 - Era uma vez na internet |
+| 2017-08-25 | ✅ | ✅ | 426 | ✅ | Empreendedor 32 - Shiba in box |
+| 2006-09-29 | ✅ | ✅ | 426 | ✅ | NerdCast 32 - Jogos de Tabuleiro: Coronel Mostarda na Oceania com o Cuscuz |
+| 2024-05-24 | ✅ | ✅ | 352 | ✅ | Papo de Parceiro 31 - Todas as vantagens do Magalu Pay |
+| 2022-02-21 | ✅ | ✅ | 352 | ✅ | Lá do Bunker 31 - Só quem viveu sabe |
+| 2021-01-15 | ✅ | ✅ | 352 | ✅ | NerdCash 31 - O que esperar de 2021? |
+| 2020-09-18 | ✅ | ✅ | 352 | ✅ | Speak English 31 - Inglês Abrasileirado |
+| 2018-09-07 | ✅ | ✅ | 352 | ✅ | NerdTech 31 - Desenvolvendo Apps |
+| 2017-07-28 | ✅ | ✅ | 352 | ✅ | Empreendedor 31 - Branding e construção de marca |
+| 2006-09-22 | ✅ | ✅ | 352 | ✅ | NerdCast 31 - DO IT NOW, DAMMIT! |
 | 2024-04-19 | ✅ | ✅ | 465 | ✅ | Papo de Parceiro 30 - Como anunciar melhor os seus produtos |
 | 2022-02-14 | ✅ | ✅ | 465 | ✅ | Lá do Bunker 30 - Tudo o que vai, volta |
 | 2020-12-11 | ✅ | ✅ | 465 | ✅ | NerdCash 30 - Organizando as metas pessoais com Nathalia Arcuri |

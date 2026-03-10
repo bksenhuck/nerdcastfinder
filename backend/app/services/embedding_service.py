@@ -68,54 +68,67 @@ class EmbeddingService:
                 f"Embedding dimension: {self.embedding_dim}"
             )
     
-    def generate_embedding(self, text: str) -> np.ndarray:
+    def generate_embedding(self, text: str, is_query: bool = True) -> np.ndarray:
         """
-        Generate embedding for a single text
-        
+        Generate embedding for a single text.
+
         Args:
             text: Text to embed
-            
+            is_query: If True, apply EMBEDDING_QUERY_PREFIX (default).
+                      If False, apply EMBEDDING_PASSAGE_PREFIX.
+
         Returns:
             Numpy array of embedding vector
         """
         self.load_model()
-        embedding = self.model.encode(text, convert_to_numpy=True)
+        prefix = (
+            settings.EMBEDDING_QUERY_PREFIX if is_query
+            else settings.EMBEDDING_PASSAGE_PREFIX
+        )
+        embedding = self.model.encode(prefix + text, convert_to_numpy=True)
         return embedding
-    
+
     def generate_embeddings(
         self,
         texts: List[str],
         batch_size: int = None,
-        show_progress: bool = None
+        show_progress: bool = None,
+        is_query: bool = False,
     ) -> np.ndarray:
         """
-        Generate embeddings for multiple texts
-        
+        Generate embeddings for multiple texts.
+
         Args:
             texts: List of texts to embed
             batch_size: Batch size for processing (default: from settings)
-            show_progress: Whether to show progress bar
-                (default: from settings)
-            
+            show_progress: Whether to show progress bar (default: from settings)
+            is_query: If True, apply EMBEDDING_QUERY_PREFIX.
+                      If False (default), apply EMBEDDING_PASSAGE_PREFIX.
+
         Returns:
             Numpy array of shape (len(texts), embedding_dim)
         """
         self.load_model()
-        
+
         batch_size = batch_size or settings.EMBEDDING_BATCH_SIZE
         show_progress = (
             show_progress if show_progress is not None
             else settings.EMBEDDING_SHOW_PROGRESS
         )
-        
+        prefix = (
+            settings.EMBEDDING_QUERY_PREFIX if is_query
+            else settings.EMBEDDING_PASSAGE_PREFIX
+        )
+        prefixed_texts = [prefix + t for t in texts]
+
         logger.info(f"Generating embeddings for {len(texts)} texts...")
         embeddings = self.model.encode(
-            texts,
+            prefixed_texts,
             batch_size=batch_size,
             show_progress_bar=show_progress,
             convert_to_numpy=True
         )
-        
+
         return embeddings
     
     def get_embedding_dimension(self) -> int:

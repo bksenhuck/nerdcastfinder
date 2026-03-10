@@ -50,6 +50,7 @@ class TranscriptionService:
         """
         self.model_name = model_name or settings.WHISPER_MODEL
         self.chunk_size = chunk_size or settings.CHUNK_SIZE
+        self.chunk_overlap = settings.CHUNK_OVERLAP
         self.language = language or settings.TRANSCRIPTION_LANGUAGE
         self.model = None
         
@@ -107,7 +108,7 @@ class TranscriptionService:
         Returns:
             List of text chunks
         """
-        return split_text_into_chunks(text, self.chunk_size)
+        return split_text_into_chunks(text, self.chunk_size, self.chunk_overlap)
     
     def process_audio_file(self, audio_path: str, podcast_source: str = "nerdcast") -> List[TranscriptChunk]:
         """

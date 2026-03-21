@@ -59,6 +59,8 @@ class EmbeddingService:
                     logger.info("✓ GPU not available, using CPU")
             
             self.device = device
+            if device == 'cpu':
+                torch.set_num_threads(2)
             self.model = SentenceTransformer(self.model_name, device=device)
             self.embedding_dim = (
                 self.model.get_sentence_embedding_dimension()

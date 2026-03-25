@@ -6,42 +6,43 @@
 
 /* Dash Select/Dropdown customization */
 [data-theme="dark"] .Select-control {
-    background-color: #2d2d2d !important;
+    background-color: #ffffff !important;
     border-color: #444444 !important;
-    color: #f8f9fa !important;
+    color: #212529 !important;
 }
 
 [data-theme="dark"] .Select-value {
-    color: #f8f9fa !important;
-    background-color: #2d2d2d !important;
+    color: #212529 !important;
+    background-color: #ffffff !important;
 }
 
 [data-theme="dark"] .Select-arrow-zone {
-    background-color: #2d2d2d !important;
+    background-color: #ffffff !important;
 }
 
 [data-theme="dark"] .Select-arrow {
-    border-color: #f8f9fa transparent transparent !important;
+    border-color: #212529 transparent transparent !important;
 }
 
 [data-theme="dark"] .Select-menu-outer {
-    background-color: #1a1a1a !important;
-    border-color: #444444 !important;
+    background-color: #ffffff !important;
+    border-color: #cccccc !important;
 }
 
 [data-theme="dark"] .Select-menu {
-    background-color: #1a1a1a !important;
+    background-color: #ffffff !important;
     max-height: 200px !important;
 }
 
 [data-theme="dark"] .Select-option {
-    background-color: #1a1a1a !important;
-    color: #f8f9fa !important;
+    background-color: #ffffff !important;
+    color: #212529 !important;
     padding: 8px 10px !important;
 }
 
 [data-theme="dark"] .Select-option:hover {
-    background-color: #333333 !important;
+    background-color: #e9ecef !important;
+    color: #212529 !important;
 }
 
 [data-theme="dark"] .Select-option.is-selected {
@@ -50,16 +51,17 @@
 }
 
 [data-theme="dark"] .Select-option.is-focused {
-    background-color: #333333 !important;
+    background-color: #e9ecef !important;
+    color: #212529 !important;
 }
 
 [data-theme="dark"] .Select-input input {
-    background-color: #2d2d2d !important;
-    color: #f8f9fa !important;
+    background-color: #ffffff !important;
+    color: #212529 !important;
 }
 
 [data-theme="dark"] .Select-input input::placeholder {
-    color: #999999 !important;
+    color: #666666 !important;
 }
 
 /* Dash bootstrap dropdown styling for dark theme */
@@ -86,6 +88,28 @@
 html[data-theme="dark"] #search-info-alert,
 html[data-theme="dark"] #search-info-alert * {
     color: #000000 !important;
+}
+
+/* ── Elements with permanently white backgrounds ─────────────────────────────
+   These components always render with a white background regardless of theme.
+   Forcing black text here avoids the dark-theme global "body *" rule making
+   the text invisible (white-on-white). No theme selector needed. */
+
+/* dcc.Dropdown controls */
+.dash-dropdown .Select-control,
+.dash-dropdown .Select-control *,
+.dash-dropdown .Select-placeholder,
+.dash-dropdown .Select-value-label,
+.dash-dropdown .Select-multi-value-wrapper,
+.dash-dropdown .Select-multi-value-wrapper * {
+    color: #212529 !important;
+}
+
+/* dcc.Slider always-visible tooltip boxes */
+.rc-slider-tooltip-inner,
+.rc-slider-tooltip-content,
+.rc-slider-tooltip-inner * {
+    color: #212529 !important;
 }
 
 /* Highlight the first search result */

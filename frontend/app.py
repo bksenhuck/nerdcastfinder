@@ -113,6 +113,10 @@ def get_available_filters():
 
 
 # Initialize Dash app with Bootstrap theme
+# When mounted behind FastAPI (/ui), requests_pathname_prefix must be "/ui/"
+# so the client JS fetches resources from the correct path.
+# When running standalone (python app.py), use "/" instead.
+_STANDALONE = __name__ == "__main__"
 app = Dash(
     __name__,
     external_stylesheets=[
@@ -121,14 +125,7 @@ app = Dash(
     ],
     title="Podcast Finder",
     suppress_callback_exceptions=True,
-    # FastAPI's WSGIMiddleware strips the mount prefix (/ui) before
-    # forwarding requests to the WSGI app, so PATH_INFO arrives without
-    # the /ui prefix. routes_pathname_prefix must be "/" so Dash registers
-    # Flask routes at the stripped paths (e.g. "/" not "/ui/").
-    # requests_pathname_prefix="/ui/" tells the client-side JS to use
-    # the full /ui/... URLs when fetching Dash resources, which FastAPI
-    # will then strip and forward correctly.
-    requests_pathname_prefix="/ui/",
+    requests_pathname_prefix="/" if _STANDALONE else "/ui/",
     routes_pathname_prefix="/",
     assets_url_path="assets"
 )
@@ -481,10 +478,6 @@ def home_layout():
                                                 10: "10",
                                                 15: "15",
                                                 20: "20"
-                                            },
-                                            tooltip={
-                                                "placement": "bottom",
-                                                "always_visible": True
                                             }
                                         )
                                     ], md=6, className="mb-3"),
@@ -528,10 +521,6 @@ def home_layout():
                                                 0.6: "0.6",
                                                 0.8: "0.8",
                                                 1.0: "1.0"
-                                            },
-                                            tooltip={
-                                                "placement": "bottom",
-                                                "always_visible": True
                                             }
                                         )
                                     ], md=6, className="mb-3")
@@ -563,6 +552,32 @@ def home_layout():
             ], md=8, className="mx-auto")
         ])
     ], fluid=True, className="py-4")
+
+
+def _pipeline_step(label: str, desc: str):
+    """Render a single step box for the pipeline diagrams."""
+    return html.Div([
+        html.Div(html.Strong(label, style={"fontSize": "0.78rem"})),
+        html.Div(desc, style={"fontSize": "0.68rem", "opacity": "0.65", "marginTop": "2px"}),
+    ], style={
+        "textAlign": "center",
+        "padding": "8px 10px",
+        "borderRadius": "6px",
+        "border": "1px solid var(--bs-border-color, #dee2e6)",
+        "minWidth": "90px",
+        "flex": "0 0 auto",
+    })
+
+
+def _arrow():
+    """Render an arrow separator between pipeline steps."""
+    return html.Span("→", style={
+        "alignSelf": "center",
+        "opacity": "0.35",
+        "fontSize": "1.1rem",
+        "flex": "0 0 auto",
+        "padding": "0 2px",
+    })
 
 
 def about_layout():
@@ -652,84 +667,124 @@ def about_layout():
                     ])
                 ], className="mb-4"),
                 
-                # Technical Section
+                # Technical Section — Como Funciona
                 dbc.Card(id="technical-card", children=[
                     dbc.CardHeader(id="technical-header", children=html.H4("Como Funciona", className="mb-0")),
                     dbc.CardBody([
                         html.P([
                             "O Podcast Finder é uma aplicação de ",
-                            html.Strong("busca semântica"), 
-                            " que permite encontrar episódios de podcast por significado e contexto, ",
-                            "não apenas por palavras-chave exatas."
-                        ], className="mb-3"),
-                        
-                        html.H5("Arquitetura e Tecnologias:", className="mt-4 mb-3"),
+                            html.Strong("busca semântica"),
+                            " que encontra episódios por significado e contexto, não por palavras-chave exatas. "
+                            "O sistema usa ",
+                            html.Strong("recuperação assimétrica"),
+                            " — a query e os trechos indexados recebem prefixos diferentes para maximizar "
+                            "a qualidade da correspondência semântica.",
+                        ], className="mb-4"),
+
+                        # ── Pipeline de Ingestão ──────────────────────────
+                        html.H5([
+                            html.I(className="bi bi-arrow-down-circle me-2"),
+                            "Pipeline de Ingestão",
+                            html.Small(" (executado offline)", className="text-muted fw-normal ms-2"),
+                        ], className="mt-2 mb-3"),
+                        html.Div([
+                            _pipeline_step("RSS Feed", "metadados dos episódios"),
+                            _arrow(),
+                            _pipeline_step("Download", "áudio MP3"),
+                            _arrow(),
+                            _pipeline_step("Whisper", "transcrição automática"),
+                            _arrow(),
+                            _pipeline_step("Segmentação", "trechos de ~30s"),
+                            _arrow(),
+                            _pipeline_step("multilingual-e5-base", 'prefix: "passage:"'),
+                            _arrow(),
+                            _pipeline_step("FAISS + SQLite", "vetores + metadados"),
+                            _arrow(),
+                            _pipeline_step("GCS", "persistência em nuvem"),
+                        ], style={
+                            "display": "flex",
+                            "alignItems": "stretch",
+                            "flexWrap": "wrap",
+                            "gap": "4px",
+                            "marginBottom": "8px",
+                        }),
+                        html.P(
+                            "137.897 segmentos indexados · modelo carregado offline no container Docker",
+                            className="text-muted small mt-2 mb-4"
+                        ),
+
+                        # ── Fluxo de Busca ────────────────────────────────
+                        html.H5([
+                            html.I(className="bi bi-search me-2"),
+                            "Fluxo de Busca",
+                            html.Small(" (em tempo real)", className="text-muted fw-normal ms-2"),
+                        ], className="mt-2 mb-3"),
+                        html.Div([
+                            _pipeline_step("Query do usuário", "texto livre"),
+                            _arrow(),
+                            _pipeline_step("multilingual-e5-base", 'prefix: "query:"'),
+                            _arrow(),
+                            _pipeline_step("Vetor 768d", "representação semântica"),
+                            _arrow(),
+                            _pipeline_step("FAISS Top-K", "similaridade por produto interno"),
+                            _arrow(),
+                            _pipeline_step("SQLite", "título, data, trecho"),
+                            _arrow(),
+                            _pipeline_step("Resultados", "ranqueados por score"),
+                        ], style={
+                            "display": "flex",
+                            "alignItems": "stretch",
+                            "flexWrap": "wrap",
+                            "gap": "4px",
+                            "marginBottom": "8px",
+                        }),
+                        html.P(
+                            "Latência típica < 500ms após warm-up · cache LRU em memória por worker",
+                            className="text-muted small mt-2 mb-4"
+                        ),
+
+                        # ── Decisoes de design ─────────────────────────────────
+                        html.H5("Decisoes de Design", className="mt-2 mb-3"),
                         html.Ul([
-                            html.Li([
-                                html.Strong("Backend (FastAPI):"), 
-                                " API REST construída com FastAPI, responsável por processar ",
-                                "as buscas e retornar resultados ranqueados por confiabilidade semântica."
-                            ]),
-                            html.Li([
-                                html.Strong("Banco de Dados (SQLite):"), 
-                                " Armazena metadados dos episódios (título, data de publicação, duração, ",
-                                "tamanho do arquivo, etc.) e segmentos transcritos do conteúdo de áudio."
-                            ]),
-                            html.Li([
-                                html.Strong("Coleta de Metadados (RSS Feed):"), 
-                                " Os metadados dos episódios são carregados automaticamente do feed RSS ",
-                                "oficial do Nerdcast, garantindo informações atualizadas sobre cada episódio."
-                            ]),
-                            html.Li([
-                                html.Strong("Transcrição (Whisper):"), 
-                                " Utiliza o modelo Whisper da OpenAI para converter áudio em texto, ",
-                                "permitindo a indexação do conteúdo falado dos episódios."
-                            ]),
-                            html.Li([
-                                html.Strong("Embeddings (Sentence-Transformers):"), 
-                                " Modelo multilingual-e5-base (768 dimensões) converte texto em vetores ",
-                                "numéricos que capturam significado semântico."
-                            ]),
-                            html.Li([
-                                html.Strong("Busca Vetorial (FAISS):"), 
-                                " Facebook AI Similarity Search (IndexFlatL2) permite busca rápida ",
-                                "por confiabilidade de cosseno em milhares de vetores."
-                            ]),
-                            html.Li([
-                                html.Strong("Frontend (Dash + Bootstrap):"), 
-                                " Interface web responsiva com suporte a temas claro/escuro, ",
-                                "construída com Plotly Dash e Bootstrap components."
-                            ])
-                        ], className="mb-3"),
-                        
-                        html.H5("Fluxo de Funcionamento:", className="mt-4 mb-3"),
-                        html.Ol([
-                            html.Li("Os metadados dos episódios são extraídos do feed RSS oficial"),
-                            html.Li("O áudio do episódio é transcrito usando o modelo Whisper"),
-                            html.Li("A transcrição é segmentada em partes menores para indexação"),
-                            html.Li("Cada segmento é convertido em embedding vetorial (768 dims)"),
-                            html.Li("Os vetores são indexados no FAISS para busca eficiente"),
-                            html.Li("Quando você faz uma busca, sua query também é vetorizada"),
-                            html.Li("O FAISS compara seu vetor com todos os segmentos indexados"),
-                            html.Li("Resultados são ranqueados por confiabilidade semântica"),
-                            html.Li("A interface exibe os trechos mais relevantes com metadados")
-                        ], className="mb-3")
+                            html.Li([html.Strong("Whisper para transcrição: "), "melhor custo-benefício open-source para PT-BR; roda offline, sem custo por minuto."]),
+                            html.Li([html.Strong("multilingual-e5-base para embeddings: "), "suporta busca assimétrica query/passage nativamente; bom desempenho em português sem fine-tuning."]),
+                            html.Li([html.Strong("FAISS + SQLite: "), "FAISS para busca vetorial em memória (sub-ms), SQLite para metadados — zero infra extra, tudo em um container."]),
+                            html.Li([html.Strong("Segmentação em trechos de ~30s: "), "balanceia granularidade (encontrar o trecho certo) com custo de indexação e tamanho do índice."]),
+                            html.Li([html.Strong("FastAPI + Dash via WSGIMiddleware: "), "API REST separada do frontend facilita testes, rate limiting e evolução independente."]),
+                        ], className="small mb-0"),
                     ])
-                ], className="mb-4")
-                ,
-                # Nova seção adicionada: Próximos passos
+                ], className="mb-4"),
+
+                # Próximos Passos
                 dbc.Card(id="next-steps-card", children=[
-                    dbc.CardHeader(children=html.H4("Próximos passos", className="mb-0")),
+                    dbc.CardHeader(children=html.H4("Próximos Passos", className="mb-0")),
                     dbc.CardBody([
-                        html.Ul([
-                            html.Li("Abstração da camada de busca para suportar múltiplos backends (ex: interface VectorStore)"),
-                            html.Li("Suporte opcional a banco vetorial dedicado para escalabilidade (ex: pgvector ou Qdrant)"),
-                            html.Li("Implementação de cache de consultas para reduzir latência e custo computacional"),
-                            html.Li("Automação da ingestão de novos episódios (ex: processamento via RSS)"),
-                            html.Li("Adição de observabilidade básica (logs estruturados e métricas de busca)"),
-                            html.Li("Containerização do ambiente com Docker para facilitar deploy e reprodução"),
-                            html.Li("Experimentos futuros com geração de respostas resumidas (RAG)")
-                        ], className="mb-0")
+                        dbc.Row([
+                            dbc.Col([
+                                html.Div(html.Strong("Arquitetura"), className="small text-muted mb-2"),
+                                html.Ul([
+                                    html.Li("Abstração VectorStore para trocar backend de busca"),
+                                    html.Li("Suporte a banco vetorial dedicado (pgvector / Qdrant)"),
+                                    html.Li("Cache de consultas distribuído (Redis)"),
+                                ], className="small mb-0")
+                            ], xs=12, md=4, className="mb-3"),
+                            dbc.Col([
+                                html.Div(html.Strong("Conteúdo"), className="small text-muted mb-2"),
+                                html.Ul([
+                                    html.Li("Ingestão contínua automática de novos episódios"),
+                                    html.Li("Suporte a múltiplas redes de podcast"),
+                                    html.Li("Detecção e deduplicação de conteúdo"),
+                                ], className="small mb-0")
+                            ], xs=12, md=4, className="mb-3"),
+                            dbc.Col([
+                                html.Div(html.Strong("IA Generativa"), className="small text-muted mb-2"),
+                                html.Ul([
+                                    html.Li("RAG — respostas resumidas com LLM"),
+                                    html.Li("Reranking semântico pós-retrieval"),
+                                    html.Li("Sugestão de buscas relacionadas"),
+                                ], className="small mb-0")
+                            ], xs=12, md=4, className="mb-3"),
+                        ])
                     ])
                 ], className="mb-4")
             ], md=10, lg=8, className="mx-auto")

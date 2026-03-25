@@ -123,30 +123,58 @@ html[data-theme="dark"] .alert * {
     color: #212529 !important;
 }
 
-/* dcc.Dropdown (react-select) — these elements have white/light backgrounds
-   so their text must stay dark in dark mode. */
-html[data-theme="dark"] .Select-value-label,
-html[data-theme="dark"] .Select-placeholder,
-html[data-theme="dark"] .Select-option,
-html[data-theme="dark"] .Select-option *,
-html[data-theme="dark"] .Select-menu-outer,
-html[data-theme="dark"] .Select-menu-outer *,
-html[data-theme="dark"] .VirtualizedSelectOption,
-html[data-theme="dark"] .VirtualizedSelectFocusedOption {
-    color: #212529 !important;
-}
-
-/* Search input inside the dropdown */
-html[data-theme="dark"] .Select-input input {
+/* dcc.Dropdown — force white background + black text in dark mode.
+   Uses "body .dash-dropdown" (specificity 0,3,2) to beat "body *" (0,1,2). */
+html[data-theme="dark"] body .dash-dropdown,
+html[data-theme="dark"] body .dash-dropdown * {
     color: #212529 !important;
     background-color: #ffffff !important;
 }
 
-/* dcc.Slider tooltip — white background, needs dark text */
+/* Dropdown open menu */
+html[data-theme="dark"] body .dash-dropdown .Select-menu-outer,
+html[data-theme="dark"] body .dash-dropdown .Select-menu,
+html[data-theme="dark"] body .dash-dropdown .Select-menu-outer *,
+html[data-theme="dark"] body .dash-dropdown .VirtualizedSelectOption {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border-color: #cccccc !important;
+}
+
+/* Hover / focus state */
+html[data-theme="dark"] body .dash-dropdown .Select-option:hover,
+html[data-theme="dark"] body .dash-dropdown .Select-option.is-focused,
+html[data-theme="dark"] body .dash-dropdown .VirtualizedSelectFocusedOption {
+    background-color: #e9ecef !important;
+    color: #212529 !important;
+}
+
+/* Selected item keeps blue */
+html[data-theme="dark"] body .dash-dropdown .Select-option.is-selected {
+    background-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+
+/* Arrow (no background) */
+html[data-theme="dark"] body .dash-dropdown .Select-arrow-zone,
+html[data-theme="dark"] body .dash-dropdown .Select-arrow {
+    background-color: #ffffff !important;
+}
+
+/* Input inside dropdown */
+html[data-theme="dark"] body .dash-dropdown input,
+html[data-theme="dark"] body .dash-dropdown .Select-input input {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+}
+
+/* dcc.Slider tooltip bubble — white background, text must be dark */
 html[data-theme="dark"] .rc-slider-tooltip-content,
 html[data-theme="dark"] .rc-slider-tooltip-inner,
+html[data-theme="dark"] .rc-slider-tooltip-inner *,
 html[data-theme="dark"] .dash-tooltip,
-html[data-theme="dark"] .dash-tooltip * {
+html[data-theme="dark"] .dash-tooltip *,
+html[data-theme="dark"] [class*="rc-slider-tooltip"] {
     color: #212529 !important;
 }
 
